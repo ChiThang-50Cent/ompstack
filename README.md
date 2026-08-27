@@ -17,7 +17,6 @@ This repository is an OhMyPi plugin package. After publishing it to GitHub, inst
 omp plugin install github:<owner>/<repository>
 ```
 
-Restart OMP, or run `/reload-plugins` in an existing interactive session, before invoking the installed skill or command.
 
 
 ## Develop locally
@@ -27,6 +26,8 @@ Link the checkout without copying files into an OMP configuration directory:
 ```sh
 omp plugin link .
 ```
+
+Restart OMP, or run `/reload-plugins` in the active interactive session, before invoking the installed skill or command.
 
 The same plugin layout is used for local links and direct GitHub installs:
 

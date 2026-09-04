@@ -4,7 +4,7 @@ A small pstack-inspired workflow built around OhMyPi's native skill, task/subage
 
 It intentionally does **not** recreate OhMyPi's bundled `task`, `scout`, `reviewer`, or `security-reviewer` agents. The plugin adds:
 
-- `skills/ompstack/` — routing/workflow control plane
+- `skills/ompstack/` — risk routing, preflight contract, workflow evaluation, and measurement-first runtime playbooks
 - `agents/ompstack-architect.md` — read-only design advisor
 - `agents/ompstack-verifier.md` — runtime/behavior verifier that cannot edit
 - `commands/ompstack.md` — `/ompstack ...` convenience entry point
@@ -78,6 +78,16 @@ fix-forward + fresh affected verdict
 Avoid copying Cursor-specific cloud-agent, overnight-loop, PR-auto-merge, and Graphite machinery into a local OMP skill without a native equivalent.
 
 See `docs/DESIGN.md` for the mapping and `examples/usage.md` for task-batch examples.
+
+## Validate
+
+Run the deterministic plugin contract checks before changing routing, custom agents, or playbooks:
+
+```sh
+bun run check
+```
+
+The check validates skill and command wiring, custom-agent frontmatter, required preflight rules, and golden routing-case structure. The Eval playbook defines the separate paired behavioral evaluation required for a workflow-policy change.
 
 ## Attribution
 

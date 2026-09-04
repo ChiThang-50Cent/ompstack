@@ -16,10 +16,14 @@ The first attempt incorrectly rebuilt several roles that OhMyPi already provides
 | read-only explanation or recommendation | parent direct inspection; bundled `scout` only for broad unknown discovery |
 | behavior-preserving refactor | `ompstack` Refactoring playbook with a pre-edit behavior pin |
 | empirical design/interaction/timing fork | `ompstack` Prototype playbook and matching-surface observation |
+| measured performance regression | `ompstack` Performance issue playbook with baseline and post-change measurement |
+| live runtime diagnosis | `ompstack` Runtime forensics playbook with captured live evidence |
+| captured profile diagnosis | `ompstack` Trace forensics playbook with artifact-scoped evidence |
+| workflow-policy evaluation | `ompstack` Eval playbook, deterministic contract checks, and paired behavioral evaluation |
 | fan-out/swarm | native `tasks[]` batching, risk-gated rather than always-on |
-| context control | one shared batch `context`, self-contained task contracts, `local://` references for bulky payloads |
+| context control | one shared batch `context`, a structured preflight contract, self-contained task contracts, `local://` references for bulky payloads |
 | per-role models | OMP role aliases such as `@slow`, `@task`; no model vendor pinned in the package |
-| worktree-like isolation | native `isolated` task field only when exposed/configured by the current OMP runtime |
+| worktree-like isolation | native per-task `isolated` field when it is enabled, plan mode is off, and the current schema exposes it |
 | PR/merge gate | produce evidence/verdict only; do not merge unless user explicitly asks |
 
 
@@ -50,14 +54,20 @@ The port keeps only workflow distinctions that OMP can execute natively:
 | pstack workflow | ompstack route |
 | --- | --- |
 | investigation | Read-only evidence and recommendation. It never opens a write lane. |
-| feature | New or intentionally changed behavior, named data shape, and bounded write ownership. |
+| feature | New or intentionally changed behavior, named data shape, bounded write ownership, and an explicit preflight contract. |
 | refactoring | Structure-only work. Pin observable behavior before edits; migrate callers and delete the superseded path in the same change. |
 | prototype | A disposable probe for one empirical decision. It is not production code. |
 | bug fix | Reproduce, identify the mechanism, fix narrowly, and prove the same surface. |
+| performance issue | Measure a baseline and the same workload after a targeted optimization. |
+| runtime forensics | Diagnose a live symptom from an artifact and a mechanism check; it does not edit source. |
+| trace forensics | Diagnose a provided trace/profile artifact and name the evidence needed for causality. |
+| workflow evaluation | Validate this plugin's contract and compare policy changes before promotion. |
+
+For Medium, High, and Critical write work, the parent records route, risk, proof surface, write ownership, shared-contract owner, and independent-evidence lane in the batch context. Every shared type, schema, or API has exactly one write owner; the parent owns integration and runs the shared gate once after fan-in.
 
 All behavior-affecting routes name the closest available real proof surface. Tests, typechecks, and builds support that evidence; they cannot replace a browser flow, CLI/API behavior, migration replay, or equivalent runtime observation.
 
-For a contested design, one or two `ompstack-architect` tasks may be sent in the same `tasks[]` batch with identical decision criteria. `blocking: true` gates the parent before writes but does not promise serial execution inside a batch. When batching is unavailable, use one architect rather than claim false parallelism.
+For a contested design, one or two `ompstack-architect` tasks run in a design-only batch with identical decision criteria. The parent synthesizes their results before opening a separate implementation batch. A blocking item does not prevent non-blocking siblings in the same batch from starting.
 
 ## Deliberate omissions
 

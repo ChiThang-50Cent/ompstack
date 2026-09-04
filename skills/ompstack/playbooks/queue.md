@@ -4,12 +4,18 @@ Use this workflow when there are two or more work items that can make progress i
 
 ## Before spawning
 
-Create one shared batch context containing:
-- overall goal
-- repository constraints
-- cross-task contracts
-- dependencies already decided
-- files or surfaces that must remain compatible
+Create one shared batch context using the preflight contract:
+
+```text
+# Goal
+Observable behavior and proof surface.
+
+# Constraints
+Route, risk, repository constraints, and compatibility requirements.
+
+# Contract
+Each lane's writable and read-only files/symbols, one owner for every shared type/schema/API, parent integration ownership, fan-in order, and the one shared deterministic gate.
+```
 
 Each task must still be self-contained and use `# Target`, `# Change`, and `# Acceptance`.
 
@@ -23,10 +29,12 @@ After all lanes return, the parent performs fan-in review and shared determinist
 
 ## Isolation
 
-Set `isolated: true` only if that field is available in the current OhMyPi task schema and the repository/workflow benefits from independent workspaces. Do not depend on isolation for correctness unless the runtime confirms it is active.
+Set `isolated: true` only when the current task schema exposes it, isolation is enabled, plan mode is off, and the repository/workflow benefits from a separate workspace. Isolated work returns a patch or branch result and is not revivable. Do not depend on isolation for correctness.
 
 ## Overlap
 
-File overlap alone is not a reason to serialize everything. Define the shared contract first, keep ownership clear, then let the parent resolve integration after fan-in.
+File overlap alone is not a reason to serialize everything. Define the shared contract first, assign exactly one owner to every shared write surface, then let the parent resolve integration after fan-in.
 
 If the tasks are causally dependent, do not pretend they are parallel: complete the prerequisite first and pass its concrete result to the dependent task.
+
+A blocking item waits inline, but non-blocking items in the same `tasks[]` call can start in parallel. Put architecture comparison and implementation in separate batches.

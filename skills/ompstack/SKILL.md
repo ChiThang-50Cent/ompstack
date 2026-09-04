@@ -28,20 +28,47 @@ Select one primary workflow:
 - New or intentionally changed behavior: read `skill://ompstack/playbooks/feature.md`.
 - Structural change with unchanged behavior: read `skill://ompstack/playbooks/refactoring.md`.
 - Empirical design, interaction, behavior, or timing decision: read `skill://ompstack/playbooks/prototype.md`.
+- Measured slowness or throughput regression: read `skill://ompstack/playbooks/perf-issue.md`.
+- Live leak, idle CPU spin, race, or glitch diagnosis: read `skill://ompstack/playbooks/runtime-forensics.md`.
+- Captured trace, profile, heap snapshot, or spindump diagnosis: read `skill://ompstack/playbooks/trace-forensics.md`.
 - Several independent work items: read `skill://ompstack/playbooks/queue.md`.
+- Change to this plugin's skill, agent, command, or routing policy: read `skill://ompstack/playbooks/eval.md`.
 - Verification or merge-readiness: read `skill://ompstack/playbooks/verification.md`.
 
 ## Default workflow
 
-1. Establish the target, constraints, and acceptance criteria.
+1. Establish the target, constraints, acceptance criteria, and proof surface.
 2. Inspect the current state. Use `scout` only if discovery is genuinely broad or the affected files are unknown.
-3. Decide whether architecture work is necessary. Skip it for obvious local changes. For a contested design, submit one or two `ompstack-architect` candidates in one `tasks[]` batch against the same brief, then synthesize the decision before any write lane starts.
-4. Implement in the smallest useful number of write lanes. Prefer one-pass workers that investigate and edit in the same task.
-5. After fan-in, run deterministic validation once from the parent: the narrowest relevant tests, typecheck/lint/build, and the original reproduction for bugs.
-6. Route independent review according to risk. Do not fan out reviewers before deterministic gates pass.
-7. Triage findings. Send accepted findings back to the original write lane or fix them in the parent when the parent owns the change.
-8. If behavior-affecting code changes after a verdict, invalidate the relevant verdict and rerun only the gates/review lanes that could be affected.
-9. Finish with evidence: changed scope, tests/reproduction, review findings, and anything not verified.
+3. For Medium, High, or Critical write work, record the preflight contract below before opening a write lane.
+4. Decide whether architecture work is necessary. Skip it for obvious local changes. For a contested design, submit one or two `ompstack-architect` candidates in a design-only `tasks[]` batch against the same brief. Synthesize their output before starting a separate implementation batch.
+5. Implement in the smallest useful number of write lanes. Prefer one-pass workers that investigate and edit in the same task.
+6. After fan-in, run deterministic validation once from the parent: the narrowest relevant tests, typecheck/lint/build, and the original reproduction for bugs.
+7. Route independent review according to risk. Do not fan out reviewers before deterministic gates pass.
+8. Triage findings. Send accepted findings back to the original write lane or fix them in the parent when the parent owns the change.
+9. If behavior-affecting code changes after a verdict, invalidate the relevant verdict and rerun only the gates/review lanes that could be affected.
+10. Finish with evidence: changed scope, tests/reproduction, review findings, and anything not verified.
+
+## Preflight contract
+
+For Medium, High, or Critical write work, record this state in the parent and carry it in every implementation batch `context`:
+
+```text
+# Goal
+Observable behavior and exact proof surface.
+
+# Constraints
+Route: <playbook>
+Risk: <low|medium|high|critical>
+Compatibility and repository constraints.
+
+# Contract
+Write owner: parent or named lane.
+Writable files/symbols: known targets, or "discover before edit".
+Shared contract: data/API/ordering invariants and their owner.
+Independent evidence: none, reviewer, verifier, reviewer + verifier, security-reviewer, or reviewer + verifier + security-reviewer.
+```
+
+For parallel work, add each lane's writable and read-only surfaces, one owner for every shared type/schema/API, the parent as integration owner, fan-in order, and the single shared deterministic gate. Do not require exact filenames before discovery establishes them.
 
 ## Task contract
 
@@ -62,7 +89,9 @@ Concrete local evidence this worker should leave behind.
 
 Do not ask each implementation worker to run whole-project formatters, linters, or broad test suites. Run shared deterministic gates once after fan-in unless a worker needs a narrow command to prove its own change.
 
-When batching work, put common context and cross-task contracts in the batch `context` once. Keep each task focused on its owned change.
+When batching work, put the preflight contract in the required shared `context` once. Keep each task focused on its owned change.
+
+Use `outputSchema` with `schemaMode: "strict"` when a subagent must return a machine-checked contract or verdict.
 
 For large logs or payloads, prefer a file or `local://` reference rather than duplicating the payload into every task prompt.
 
@@ -72,7 +101,9 @@ Parallelize independent investigation, design comparisons, implementation lanes,
 
 Do not use multi-agent ceremony as a default quality signal. A three-line isolated change should not trigger scout + architect + writer + reviewer + verifier.
 
-When tasks may touch the same subsystem, define shared contracts first. Use OhMyPi isolation only when the runtime exposes it and the work really benefits from separate workspaces; never assume isolation is available.
+When tasks may touch the same subsystem, define shared contracts first. Use OhMyPi isolation only when the current task schema exposes `isolated` and the work benefits from separate workspaces. Isolation does not replace ownership boundaries.
+
+A blocking architecture task waits inline, but non-blocking items in the same batch may still start. Never mix design and implementation lanes in one batch.
 
 ## Human boundary
 

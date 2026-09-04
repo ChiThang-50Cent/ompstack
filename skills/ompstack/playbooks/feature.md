@@ -16,7 +16,7 @@ Use `ompstack-architect` when:
 - migration/compatibility is non-trivial
 - the wrong shape would make later work expensive
 
-For a contested high-risk design, submit up to two `ompstack-architect` tasks in one `tasks[]` batch with the same context and decision criteria. Their blocking result gates writes, but the batch may still fan out. The parent selects or synthesizes the contract before implementation.
+For a contested high-risk design, submit up to two `ompstack-architect` tasks in a design-only `tasks[]` batch with the same context and decision criteria. Wait for those blocking results, select or synthesize the contract, then start a separate implementation batch.
 
 ## 3. Implement with bounded lanes
 

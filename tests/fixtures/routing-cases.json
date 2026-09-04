@@ -1,0 +1,134 @@
+[
+  {
+    "id": "read-only-explanation",
+    "prompt": "Explain why this cache invalidates after a user changes organizations.",
+    "expected": {
+      "route": "investigation",
+      "risk": "low",
+      "proofSurface": "source evidence",
+      "writeOwnership": "parent",
+      "independentEvidence": "none"
+    }
+  },
+  {
+    "id": "reproduced-local-bug",
+    "prompt": "Fix the cache lookup regression. Reproduce the failing request first.",
+    "expected": {
+      "route": "bug-fix",
+      "risk": "medium",
+      "proofSurface": "exact failing request",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier"
+    }
+  },
+  {
+    "id": "small-feature",
+    "prompt": "Add an API field that exposes a user's verified email address.",
+    "expected": {
+      "route": "feature",
+      "risk": "medium",
+      "proofSurface": "API request",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer"
+    }
+  },
+  {
+    "id": "concurrent-idempotency",
+    "prompt": "Make webhook delivery idempotent across concurrent duplicate requests.",
+    "expected": {
+      "route": "feature",
+      "risk": "high",
+      "proofSurface": "duplicate delivery reproduction",
+      "writeOwnership": "one task lane per owned subsystem",
+      "independentEvidence": "reviewer + verifier"
+    }
+  },
+  {
+    "id": "behavior-preserving-extraction",
+    "prompt": "Extract the validation helper without changing behavior.",
+    "expected": {
+      "route": "refactoring",
+      "risk": "medium",
+      "proofSurface": "existing behavior test",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer"
+    }
+  },
+  {
+    "id": "interaction-decision",
+    "prompt": "Prototype two keyboard-navigation designs and select one from observed behavior.",
+    "expected": {
+      "route": "prototype",
+      "risk": "medium",
+      "proofSurface": "CLI or browser interaction",
+      "writeOwnership": "parent or disposable task lane",
+      "independentEvidence": "none"
+    }
+  },
+  {
+    "id": "measured-slowness",
+    "prompt": "A virtualized list takes two seconds to load. Measure and improve it.",
+    "expected": {
+      "route": "perf-issue",
+      "risk": "medium",
+      "proofSurface": "baseline and post-change measurement",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier"
+    }
+  },
+  {
+    "id": "idle-cpu-spin",
+    "prompt": "Diagnose why the process consumes CPU while idle. Do not fix it yet.",
+    "expected": {
+      "route": "runtime-forensics",
+      "risk": "medium",
+      "proofSurface": "live CPU profile",
+      "writeOwnership": "parent",
+      "independentEvidence": "none"
+    }
+  },
+  {
+    "id": "captured-heap-profile",
+    "prompt": "Analyze this heap snapshot and identify the retainer chain. Do not modify code.",
+    "expected": {
+      "route": "trace-forensics",
+      "risk": "medium",
+      "proofSurface": "provided heap artifact",
+      "writeOwnership": "parent",
+      "independentEvidence": "none"
+    }
+  },
+  {
+    "id": "independent-package-queue",
+    "prompt": "Update the API client and documentation in independent work lanes.",
+    "expected": {
+      "route": "queue",
+      "risk": "medium",
+      "proofSurface": "combined consumer check",
+      "writeOwnership": "one task lane per owned surface",
+      "independentEvidence": "reviewer"
+    }
+  },
+  {
+    "id": "workflow-policy-change",
+    "prompt": "Change ompstack routing so high-risk work always names its proof surface.",
+    "expected": {
+      "route": "eval",
+      "risk": "medium",
+      "proofSurface": "routing suite and paired evaluation",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer"
+    }
+  },
+  {
+    "id": "critical-authz-change",
+    "prompt": "Enforce tenant authorization on an externally exposed webhook endpoint.",
+    "expected": {
+      "route": "feature",
+      "risk": "critical",
+      "proofSurface": "authorized and unauthorized delivery reproduction",
+      "writeOwnership": "one task lane per owned subsystem",
+      "independentEvidence": "reviewer + verifier + security-reviewer"
+    }
+  }
+]

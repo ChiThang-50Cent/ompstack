@@ -3,5 +3,8 @@
   "version": "0.1.0",
   "description": "Risk-routed engineering workflow for OhMyPi",
   "private": true,
+  "scripts": {
+    "check": "bun scripts/validate-plugin.mjs"
+  },
   "omp": {}
 }

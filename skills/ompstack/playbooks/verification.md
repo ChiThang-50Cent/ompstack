@@ -1,6 +1,6 @@
-# Verification workflow
+# Verification phase
 
-Verification is evidence about the current state, not a permanent badge.
+Apply this phase after the primary workflow, or with Investigation for a standalone read-only verification request. Verification is evidence about the current state, not a permanent badge or a replacement primary route.
 
 ## Order
 
@@ -32,7 +32,9 @@ Use `reviewer` for patch-introduced correctness problems, edge cases, regression
 
 ### Behavioral verifier
 
-Use `ompstack-verifier` when correctness depends on executing a command, reproduction, service endpoint, integration test, or other real surface. It may execute tests/commands but must not edit.
+Use `ompstack-verifier` when correctness depends on executing a command, reproduction, service endpoint, integration test, browser flow through Eval, or another real surface. It is a trusted agent instructed not to edit; Bash and Eval are not a write sandbox. If the required surface is unavailable, require `BLOCKED` instead of accepting weaker evidence.
+
+After the verifier returns, the parent checks for unexpected worktree mutations before accepting its verdict.
 
 ### Security reviewer
 

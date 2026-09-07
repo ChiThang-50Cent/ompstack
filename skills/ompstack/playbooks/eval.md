@@ -10,11 +10,13 @@ State the behavior expected to improve and the quality gate that must not regres
 
 Run `bun run check`. It validates skill routing, custom-agent definitions, command wiring, preflight requirements, and the shape of the golden routing set in `tests/fixtures/routing-cases.json`.
 
-Update the golden routing set whenever a route or preflight policy changes. Each case must name route, risk, proof surface, write ownership, and independent evidence.
+Update the golden routing set whenever a route, overlay, phase, or preflight policy changes. Each case must name its primary route, overlays, phases, risk, proof surface, write ownership, and independent evidence.
 
-## 3. Design a paired behavioral evaluation
+## 3. Design a blinded paired behavioral evaluation
 
 Use the same repository revision, user prompt, model, thinking level, tool availability, timeout, and budget for a bare run and an `ompstack` run. The bare arm must run with this plugin/skill disabled so automatic skill selection cannot apply the policy under test. If that control cannot be isolated while preserving the other controls, record the evaluation as invalid. Record unavailable controls such as seed rather than pretending they were fixed.
+
+Give the arms neutral identifiers. Remove baseline/candidate labels from prompts, filenames, directories, artifact names, and metadata visible to the judge. Use one blinded judge to score both arms against the same rubric in one comparison. Require the judge to inspect transcripts, tool calls, and produced artifacts rather than accepting each arm's self-report.
 
 Require structured output for the route decision with this `outputSchema` and `schemaMode: "strict"`:
 
@@ -23,7 +25,29 @@ Require structured output for the route decision with this `outputSchema` and `s
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "route": { "type": "string" },
+    "route": {
+      "enum": [
+        "investigation",
+        "bug-fix",
+        "feature",
+        "refactoring",
+        "prototype",
+        "perf-issue",
+        "runtime-forensics",
+        "trace-forensics",
+        "eval"
+      ]
+    },
+    "overlays": {
+      "type": "array",
+      "items": { "enum": ["queue"] },
+      "uniqueItems": true
+    },
+    "phases": {
+      "type": "array",
+      "items": { "enum": ["verification"] },
+      "uniqueItems": true
+    },
     "risk": { "enum": ["low", "medium", "high", "critical"] },
     "proofSurface": { "type": "string", "minLength": 1 },
     "writeOwnership": { "type": "string", "minLength": 1 },
@@ -40,6 +64,8 @@ Require structured output for the route decision with this `outputSchema` and `s
   },
   "required": [
     "route",
+    "overlays",
+    "phases",
     "risk",
     "proofSurface",
     "writeOwnership",

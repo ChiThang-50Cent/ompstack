@@ -12,7 +12,7 @@ The first attempt incorrectly rebuilt several roles that OhMyPi already provides
 | architecture comparison | custom `ompstack-architect` because this is a workflow-specific role |
 | static independent code review | bundled `reviewer` |
 | security review | bundled `security-reviewer` |
-| live/real-surface verification | custom `ompstack-verifier` because bundled reviewer is read-only and does not run the verification workflow |
+| live/real-surface verification | custom trusted `ompstack-verifier`, instructed not to edit, because bundled reviewer does not run the verification workflow |
 | read-only explanation or recommendation | parent direct inspection; bundled `scout` only for broad unknown discovery |
 | behavior-preserving refactor | `ompstack` Refactoring playbook with a pre-edit behavior pin |
 | empirical design/interaction/timing fork | `ompstack` Prototype playbook and matching-surface observation |
@@ -20,10 +20,10 @@ The first attempt incorrectly rebuilt several roles that OhMyPi already provides
 | live runtime diagnosis | `ompstack` Runtime forensics playbook with captured live evidence |
 | captured profile diagnosis | `ompstack` Trace forensics playbook with artifact-scoped evidence |
 | workflow-policy evaluation | `ompstack` Eval playbook, deterministic contract checks, and paired behavioral evaluation |
-| fan-out/swarm | native `tasks[]` batching, risk-gated rather than always-on |
+| fan-out/swarm | native `tasks[]` batching through a queue overlay, risk-gated rather than always-on |
 | context control | one shared batch `context`, a structured preflight contract, self-contained task contracts, `local://` references for bulky payloads |
 | per-role models | OMP role aliases such as `@slow`, `@task`; no model vendor pinned in the package |
-| worktree-like isolation | native per-task `isolated` field when it is enabled, plan mode is off, and the current schema exposes it |
+| worktree-like isolation | native per-task `isolated` field when useful; OMP may also auto-isolate eligible tasks, so the parent inspects result metadata and the target worktree |
 | PR/merge gate | produce evidence/verdict only; do not merge unless user explicitly asks |
 
 
@@ -45,7 +45,7 @@ This is a workflow-specific read-only role. It exists only to make architecture 
 
 ### `ompstack-verifier`
 
-The bundled reviewer is intended for independent patch review and is read-only. Behavioral verification needs permission to execute targeted commands and drive matching browser flows while still forbidding edits. That is a distinct tool/behavior boundary, so a small custom agent is justified.
+The bundled reviewer is intended for independent patch review and is read-only. Behavioral verification needs permission to execute targeted commands and drive matching browser flows through OMP's Eval prelude. The custom verifier is therefore a trusted role instructed not to edit, not a write sandbox: Bash and Eval retain their normal process permissions.
 
 ## Playbook boundary
 
@@ -63,9 +63,11 @@ The port keeps only workflow distinctions that OMP can execute natively:
 | trace forensics | Diagnose a provided trace/profile artifact and name the evidence needed for causality. |
 | workflow evaluation | Validate this plugin's contract and compare policy changes before promotion. |
 
-For Medium, High, and Critical write work, the parent records route, risk, proof surface, write ownership, shared-contract owner, and independent-evidence lane in the batch context. Every shared type, schema, or API has exactly one write owner; the parent owns integration and runs the shared gate once after fan-in.
+Queue is an execution overlay applied after selecting a primary route. Verification is a post-change phase, or a phase paired with Investigation for a standalone read-only verification request. Neither replaces the primary workflow.
 
-All behavior-affecting routes name the closest available real proof surface. Tests, typechecks, and builds support that evidence; they cannot replace a browser flow, CLI/API behavior, migration replay, or equivalent runtime observation.
+For Medium, High, and Critical write work, the parent records primary route, execution overlays/phases, risk, proof surface, write ownership, shared-contract owner, and independent-evidence lane in the batch context. Every shared type, schema, or API has exactly one write owner; the parent owns integration, explicitly collects asynchronous task results, and runs the shared gate once after fan-in.
+
+All behavior-affecting routes name the closest available real proof surface. Tests, typechecks, and builds support that evidence; they cannot replace a browser flow through Eval, CLI/API behavior, migration replay, or equivalent runtime observation.
 
 For a contested design, one or two `ompstack-architect` tasks run in a design-only batch with identical decision criteria. The parent synthesizes their results before opening a separate implementation batch. A blocking item does not prevent non-blocking siblings in the same batch from starting.
 
@@ -90,6 +92,6 @@ This also follows OMP's task guidance: favor one-pass agents that investigate an
 
 ## State and verdicts
 
-A verdict is scoped to the current diff/worktree it actually inspected. After an accepted finding changes behavior-affecting code, rerun the original deterministic evidence and only the independent lanes whose claims may have become stale.
+A verdict is scoped to the current diff/worktree it actually inspected. The parent checks for unexpected worktree mutations after trusted verification. After an accepted finding changes behavior-affecting code, rerun the original deterministic evidence and only the independent lanes whose claims may have become stale.
 
 This preserves pstack's useful 'fresh verdict after fix-forward' principle without requiring a GitHub/PR automation layer.

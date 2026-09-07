@@ -4,6 +4,8 @@
     "prompt": "Explain why this cache invalidates after a user changes organizations.",
     "expected": {
       "route": "investigation",
+      "overlays": [],
+      "phases": [],
       "risk": "low",
       "proofSurface": "source evidence",
       "writeOwnership": "parent",
@@ -15,6 +17,8 @@
     "prompt": "Fix the cache lookup regression. Reproduce the failing request first.",
     "expected": {
       "route": "bug-fix",
+      "overlays": [],
+      "phases": ["verification"],
       "risk": "medium",
       "proofSurface": "exact failing request",
       "writeOwnership": "parent or one task lane",
@@ -26,6 +30,8 @@
     "prompt": "Add an API field that exposes a user's verified email address.",
     "expected": {
       "route": "feature",
+      "overlays": [],
+      "phases": ["verification"],
       "risk": "medium",
       "proofSurface": "API request",
       "writeOwnership": "parent or one task lane",
@@ -37,6 +43,8 @@
     "prompt": "Make webhook delivery idempotent across concurrent duplicate requests.",
     "expected": {
       "route": "feature",
+      "overlays": ["queue"],
+      "phases": ["verification"],
       "risk": "high",
       "proofSurface": "duplicate delivery reproduction",
       "writeOwnership": "one task lane per owned subsystem",
@@ -48,6 +56,8 @@
     "prompt": "Extract the validation helper without changing behavior.",
     "expected": {
       "route": "refactoring",
+      "overlays": [],
+      "phases": ["verification"],
       "risk": "medium",
       "proofSurface": "existing behavior test",
       "writeOwnership": "parent or one task lane",
@@ -59,6 +69,8 @@
     "prompt": "Prototype two keyboard-navigation designs and select one from observed behavior.",
     "expected": {
       "route": "prototype",
+      "overlays": [],
+      "phases": [],
       "risk": "medium",
       "proofSurface": "CLI or browser interaction",
       "writeOwnership": "parent or disposable task lane",
@@ -70,6 +82,8 @@
     "prompt": "A virtualized list takes two seconds to load. Measure and improve it.",
     "expected": {
       "route": "perf-issue",
+      "overlays": [],
+      "phases": ["verification"],
       "risk": "medium",
       "proofSurface": "baseline and post-change measurement",
       "writeOwnership": "parent or one task lane",
@@ -81,6 +95,8 @@
     "prompt": "Diagnose why the process consumes CPU while idle. Do not fix it yet.",
     "expected": {
       "route": "runtime-forensics",
+      "overlays": [],
+      "phases": [],
       "risk": "medium",
       "proofSurface": "live CPU profile",
       "writeOwnership": "parent",
@@ -92,6 +108,8 @@
     "prompt": "Analyze this heap snapshot and identify the retainer chain. Do not modify code.",
     "expected": {
       "route": "trace-forensics",
+      "overlays": [],
+      "phases": [],
       "risk": "medium",
       "proofSurface": "provided heap artifact",
       "writeOwnership": "parent",
@@ -100,9 +118,11 @@
   },
   {
     "id": "independent-package-queue",
-    "prompt": "Update the API client and documentation in independent work lanes.",
+    "prompt": "Add API-client support and update its documentation in independent work lanes.",
     "expected": {
-      "route": "queue",
+      "route": "feature",
+      "overlays": ["queue"],
+      "phases": ["verification"],
       "risk": "medium",
       "proofSurface": "combined consumer check",
       "writeOwnership": "one task lane per owned surface",
@@ -114,6 +134,8 @@
     "prompt": "Change ompstack routing so high-risk work always names its proof surface.",
     "expected": {
       "route": "eval",
+      "overlays": [],
+      "phases": ["verification"],
       "risk": "medium",
       "proofSurface": "routing suite and paired evaluation",
       "writeOwnership": "parent or one task lane",
@@ -121,10 +143,25 @@
     }
   },
   {
+    "id": "standalone-behavior-verification",
+    "prompt": "Verify that the current CLI prints its version and exits successfully. Do not edit.",
+    "expected": {
+      "route": "investigation",
+      "overlays": [],
+      "phases": ["verification"],
+      "risk": "medium",
+      "proofSurface": "CLI invocation",
+      "writeOwnership": "parent",
+      "independentEvidence": "verifier"
+    }
+  },
+  {
     "id": "critical-authz-change",
     "prompt": "Enforce tenant authorization on an externally exposed webhook endpoint.",
     "expected": {
       "route": "feature",
+      "overlays": [],
+      "phases": ["verification"],
       "risk": "critical",
       "proofSurface": "authorized and unauthorized delivery reproduction",
       "writeOwnership": "one task lane per owned subsystem",

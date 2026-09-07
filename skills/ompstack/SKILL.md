@@ -15,13 +15,13 @@ Treat this skill as the control plane for engineering work. Reuse OhMyPi primiti
 - Use bundled `reviewer` for independent patch review.
 - Use bundled `security-reviewer` only when the change has a meaningful security boundary.
 - Use `ompstack-architect` only when a design choice is material or contested.
-- Use `ompstack-verifier` for independent behavioral verification by running targeted commands or reproductions without editing.
+- Use `ompstack-verifier` as a trusted independent behavioral verifier. It may run targeted commands or reproductions and is instructed not to edit, but its tools are not a write sandbox.
 
 ## Start by routing risk
 
 Classify the change before spawning agents. Read `skill://ompstack/playbooks/risk-routing.md`.
 
-Select one primary workflow:
+Select one primary workflow by task intent:
 
 - Read-only question, explanation, or evidence-backed recommendation: read `skill://ompstack/playbooks/investigation.md`.
 - Bug or regression: read `skill://ompstack/playbooks/bug-fix.md`.
@@ -31,9 +31,12 @@ Select one primary workflow:
 - Measured slowness or throughput regression: read `skill://ompstack/playbooks/perf-issue.md`.
 - Live leak, idle CPU spin, race, or glitch diagnosis: read `skill://ompstack/playbooks/runtime-forensics.md`.
 - Captured trace, profile, heap snapshot, or spindump diagnosis: read `skill://ompstack/playbooks/trace-forensics.md`.
-- Several independent work items: read `skill://ompstack/playbooks/queue.md`.
-- Change to this plugin's skill, agent, command, or routing policy: read `skill://ompstack/playbooks/eval.md`.
-- Verification or merge-readiness: read `skill://ompstack/playbooks/verification.md`.
+- Change to this plugin's skill, agent, command, routing policy, or fixtures: read `skill://ompstack/playbooks/eval.md`.
+
+Then apply execution guidance without replacing the primary workflow:
+
+- Several independent work items: apply the queue overlay in `skill://ompstack/playbooks/queue.md`.
+- Verification or merge-readiness: apply the verification phase in `skill://ompstack/playbooks/verification.md`.
 
 ## Default workflow
 
@@ -57,7 +60,8 @@ For Medium, High, or Critical write work, record this state in the parent and ca
 Observable behavior and exact proof surface.
 
 # Constraints
-Route: <playbook>
+Primary route: <playbook>
+Execution overlays/phases: <none|queue|verification|queue + verification>
 Risk: <low|medium|high|critical>
 Compatibility and repository constraints.
 
@@ -94,6 +98,8 @@ When batching work, put the preflight contract in the required shared `context` 
 Use `outputSchema` with `schemaMode: "strict"` when a subagent must return a machine-checked contract or verdict.
 
 For large logs or payloads, prefer a file or `local://` reference rather than duplicating the payload into every task prompt.
+
+Task jobs may complete asynchronously. Before synthesis or a shared gate, collect every required result through auto-delivery or `hub wait`, then read the relevant `agent://`, `history://`, or artifact payload. A successful `task` call is not itself fan-in.
 
 ## Parallelism rules
 

@@ -6,7 +6,7 @@ It intentionally does **not** recreate OhMyPi's bundled `task`, `scout`, `review
 
 - `skills/ompstack/` — risk routing, preflight contract, workflow evaluation, and measurement-first runtime playbooks
 - `agents/ompstack-architect.md` — read-only design advisor
-- `agents/ompstack-verifier.md` — runtime/behavior verifier that cannot edit
+- `agents/ompstack-verifier.md` — trusted runtime/behavior verifier instructed not to edit; execution tools are not a write sandbox
 - `commands/ompstack.md` — `/ompstack ...` convenience entry point
 
 ## Install from GitHub
@@ -28,6 +28,8 @@ omp plugin link .
 ```
 
 Restart OMP, or run `/reload-plugins` in the active interactive session, before invoking the installed skill or command.
+
+OMP discovery is first-wins when multiple plugins or configuration roots define the same skill, command, or agent name. If an update is not visible, confirm which plugin path won discovery, reload plugins, and spawn a fresh custom agent before diagnosing the new contract.
 
 The same plugin layout is used for local links and direct GitHub installs:
 
@@ -87,7 +89,7 @@ Run the deterministic plugin contract checks before changing routing, custom age
 bun run check
 ```
 
-The check validates skill and command wiring, custom-agent frontmatter, required preflight rules, and golden routing-case structure. The Eval playbook defines the separate paired behavioral evaluation required for a workflow-policy change.
+The check validates primary-route versus overlay/phase wiring, structured custom-agent capabilities (`tools`, `model`, and `blocking`), preflight rules, self-contained task examples, and complete golden routing coverage. It remains a static contract check; the Eval playbook defines the separate blinded paired behavioral evaluation required for a workflow-policy change.
 
 ## Attribution
 

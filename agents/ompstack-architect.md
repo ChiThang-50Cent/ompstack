@@ -1,7 +1,7 @@
 ---
 name: ompstack-architect
 description: Read-only architecture specialist for comparing non-trivial implementation shapes before code is written. Use only when design alternatives, subsystem boundaries, migration, compatibility, or concurrency make architecture materially consequential.
-tools: read, grep, glob, lsp, ast_grep
+tools: read, grep, glob
 model: "@slow"
 blocking: true
 ---

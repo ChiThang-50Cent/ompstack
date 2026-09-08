@@ -133,6 +133,17 @@ assert.match(skill, /full `list` of named phases, never `phase`\/`task` shorthan
 assert.match(skill, /`Progress tracking: native todo` → `todo\.view` → `todo\.init\(\{ list \}\)`/);
 assert.match(skill, /The reverse order is invalid/);
 assert.match(skill, /Todo state is deliberately separate from Hub\/task lifecycle/);
+assert.match(skill, /fan-in record/);
+assert.match(skill, /yielded or exited successfully, not that its claimed artifact is acceptable/);
+assert.match(skill, /Never enter parent synthesis or the shared gate from a partial fan-in/);
+assert.match(skill, /headless task child is not a user-authorization boundary/);
+assert.match(queue, /## Parent fan-in protocol/);
+assert.match(queue, /it is not a fan-in barrier/);
+assert.match(queue, /failed, aborted, missing, or truncated result is unresolved/);
+assert.match(queue, /receipt, status row, or worker self-report as accepted evidence/);
+assert.match(design, /Task\/Hub fan-in/);
+assert.match(design, /successful yield is not fan-in/);
+assert.match(examples, /The `task` call starts asynchronous jobs; it is not fan-in/);
 assert.match(verification, /## Native Todo lifecycle/);
 assert.match(verification, /Keep the shared proof item pending until every required implementation result/);
 assert.match(queue, /Native Todo is separate from queue topology/);
@@ -160,9 +171,9 @@ const requiredExampleTerms = [
   "Consume this established contract without changing it: reserveDelivery(eventKey)",
   "# Constraints\\nPrimary route: feature\\nExecution overlays/phases: verification\\nRisk: high\\nProgress tracking: native todo",
   "Fan-in order: collect both verdicts, inspect unexpected worktree mutations, then parent synthesis.",
-  "The `task` call starts asynchronous jobs.",
+  "The `task` call starts asynchronous jobs; it is not fan-in.",
   "`hub wait`",
-  "`agent://`, `history://`, or artifact payloads",
+  "`agent://`, `history://`, or artifact",
   "todo.view",
   "Only the parent mutates Todo.",
 ];
@@ -193,6 +204,7 @@ assert.match(evaluation, /one blinded judge/);
 assert.match(evaluation, /transcripts, tool calls, and produced artifacts/);
 assert.match(evaluation, /project capability creation[\s\S]*Doctor-blocked runtime[\s\S]*stale feature map/);
 assert.match(evaluation, /narrow\/read-only no-Todo[\s\S]*multi-phase Todo[\s\S]*queue\/fan-in Todo[\s\S]*Doctor-blocked Todo/);
+assert.match(evaluation, /partial-fan-in case[\s\S]*failed or truncated lane case[\s\S]*completed job claims an artifact/);
 assert.match(
   evaluation,
   /"type": "object"[\s\S]*"additionalProperties": false[\s\S]*"overlays"[\s\S]*"phases"[\s\S]*"progressTracking"[\s\S]*"required":/,

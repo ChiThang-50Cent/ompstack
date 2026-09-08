@@ -124,3 +124,33 @@ Arm A was the Ompstack treatment. The blinded judge awarded A `4/4`, B `0/4`, an
 - Todo state was intentionally memory-only because every run used `--no-session`.
 - Raw anonymized transcripts were transient `/tmp` files and were removed after judging; the commands, model configuration, rubric, and scored result above are retained.
 
+## `ompstack-task-hub-fanin-policy` — paired behavior evaluation
+
+**Recorded:** 2026-09-08  
+**Verdict:** `PROMOTED`
+
+### Scope
+
+This record evaluates the Task/Hub fan-in policy against a bare OMP arm. It calibrates coordination decisions from supplied lane states; it does not claim to measure worker throughput or full multi-process lifecycle behavior.
+
+### Method
+
+Both arms used `google-antigravity/gemini-3.8-flash`, `--thinking low`, `--no-session`, `--no-rules`, `--no-extensions`, `--tools read,hub`, and the same repository revision. Source writes were disabled. The treatment used `--skills ompstack --plugin-dir /home/vmn/code/ompstack`; the bare arm used `--no-skills`.
+
+All six task runs exited zero. The treatment read `skill://ompstack`; the bare arm did not load the skill. A separate Gemini Flash 3.8 low judge received compacted anonymized A/B transcripts containing tool calls and complete final answers.
+
+### Cases and result
+
+| Case | Required behavior | Blinded result |
+| --- | --- | --- |
+| One claimed result; one lane still running | Prohibit synthesis/gate; await and inspect every required lane. | A |
+| Claimed success plus aborted lane | Keep fan-in unresolved; inspect output/history and repair, replace, or block. | A |
+| One-line local correction | Select no progress tracking and no Task/Hub ceremony. | A |
+
+Arm A was the Ompstack treatment. The blinded judge awarded A `3/3`, B `0/3`, and preferred A. It cited the treatment's queue selection, explicit partial-fan-in hold, artifact/history inspection, and no-ceremony narrow route. The bare arm made an unnecessary `hub jobs` lookup after supplied job completion and lacked the same acceptance boundary.
+
+### Limits
+
+- The lane states were supplied by the prompt; no worker was actually spawned in these three cases.
+- The evaluator cannot control model sampling seeds.
+- Raw and compacted anonymized `/tmp` transcripts were transient and removed after judging. The commands, settings, rubric, and result above are retained.

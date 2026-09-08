@@ -269,5 +269,19 @@
       "writeOwnership": "parent or one task lane",
       "independentEvidence": "reviewer"
     }
+  },
+  {
+    "id": "partial-fan-in-queue",
+    "prompt": "Coordinate independent API-client and documentation lanes. Do not run the shared consumer check until every lane outcome and artifact has been inspected.",
+    "expected": {
+      "route": "feature",
+      "overlays": ["queue"],
+      "phases": ["verification"],
+      "progressTracking": "native todo",
+      "risk": "medium",
+      "proofSurface": "inspected API-client and documentation artifacts before combined consumer check",
+      "writeOwnership": "one task lane per owned surface",
+      "independentEvidence": "reviewer"
+    }
   }
 ]

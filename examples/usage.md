@@ -75,7 +75,7 @@ After deterministic gates pass, a high-risk change may use specialized agents:
 
 ```
 
-The `task` call starts asynchronous jobs. The parent waits for both auto-delivered results or uses `hub wait`, reads any referenced `agent://`, `history://`, or artifact payloads, and only then performs the fan-in synthesis described above.
+The `task` call starts asynchronous jobs; it is not fan-in. Before dispatch, the parent records `PatchReview` and `BehaviorVerification`, their acceptance predicates, and their expected `agent://`/artifact evidence. Auto-delivery is the normal signal. If the parent is otherwise blocked, `hub wait` wakes on only the first completion, message, or wait window; after every wake-up it reconciles both required lanes. It reads each declared `agent://`, `history://`, or artifact, treats failed, aborted, missing, or truncated output as unresolved, and only then synthesizes or runs the shared gate.
 
 Add `security-reviewer` only when the actual change crosses a security boundary.
 

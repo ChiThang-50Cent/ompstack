@@ -26,6 +26,16 @@ Task jobs may finish asynchronously. Collect every required result through auto-
 
 After fan-in, the parent performs integration review and shared deterministic gates once.
 
+## Parent fan-in protocol
+
+Before dispatch, the parent records the required lane set: each stable task id, its specific acceptance predicate, and the `agent://`, `history://`, or artifact evidence it must produce. A `task` batch response only establishes that jobs were launched; a completed job only establishes that the agent yielded or exited.
+
+Auto-delivered results are the normal completion signal. Use `hub wait` only when the parent has no other actionable work: it returns on the first completion, message, or wait window, so it is not a fan-in barrier. After each delivery or wake-up, reconcile the required lane set. Do not poll blindly or pass every running id as a wait set.
+
+For every required lane, the parent inspects the declared output against its acceptance predicate before synthesis. A failed, aborted, missing, or truncated result is unresolved; read its `history://<id>` or full artifact, then repair, replace, or block the parent workflow. Do not run the shared deterministic gate, mark a shared proof complete, or advance a Todo fan-in item while any required lane is unresolved.
+
+Use `hub list` or `hub jobs` only to observe known work. Use `hub send` only to steer a known agent with a concrete question or next action; do not treat a receipt, status row, or worker self-report as accepted evidence.
+
 ## Isolation
 
 Request `isolated: true` only when the current task schema exposes it and a separate workspace benefits the work. The runtime may also auto-isolate eligible tasks. Inspect task result metadata and the target worktree before integration; do not assume every isolated task only returns a patch or branch, and do not depend on isolation for correctness.

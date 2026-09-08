@@ -101,7 +101,7 @@ Shared contract: data/API/ordering invariants and their owner.
 Independent evidence: none, reviewer, verifier, reviewer + verifier, security-reviewer, or reviewer + verifier + security-reviewer.
 ```
 
-For parallel work, add each lane's writable and read-only surfaces, one owner for every shared type/schema/API, the parent as integration owner, fan-in order, and the single shared deterministic gate. Do not require exact filenames before discovery establishes them.
+For parallel work, add each lane's writable and read-only surfaces, one owner for every shared type/schema/API, the parent as integration owner, a **fan-in record** naming every required lane id, its acceptance predicate, and its output/evidence URI, the fan-in order, and the single shared deterministic gate. Do not require exact filenames before discovery establishes them.
 
 ## Task contract
 
@@ -130,6 +130,8 @@ For large logs or payloads, prefer a file or `local://` reference rather than du
 
 Task jobs may complete asynchronously. Before synthesis or a shared gate, collect every required result through auto-delivery or `hub wait`, then read the relevant `agent://`, `history://`, or artifact payload. A successful `task` call is not itself fan-in.
 
+A task/job `completed` means the agent yielded or exited successfully, not that its claimed artifact is acceptable. A lane joins fan-in only after the parent inspects its declared output or evidence against the recorded predicate. A failed, aborted, missing, or truncated result is unresolved: inspect `history://<id>` or the full artifact, then repair, replace, or block the parent workflow. Never enter parent synthesis or the shared gate from a partial fan-in.
+
 ## Parallelism rules
 
 Parallelize independent investigation, design comparisons, implementation lanes, or verification lanes only when it reduces elapsed work or provides independent evidence.
@@ -143,3 +145,5 @@ A blocking architecture task waits inline, but non-blocking items in the same ba
 ## Human boundary
 
 Do not merge, deploy, publish, or perform irreversible external actions unless the user explicitly requested that action. The workflow may produce a merge-ready verdict without performing the merge.
+
+A headless task child is not a user-authorization boundary. The parent must obtain the user's authorization before any consequential external action; a child's approval mode cannot create that consent.

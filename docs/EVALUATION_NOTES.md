@@ -40,3 +40,6 @@ The runner saves `skill_preflight.stdout.jsonl` and stops before the task rollou
 
 `ompstack-native-todo-policy` is a valid four-case paired evaluation recorded in `docs/BENCHMARK_EVIDENCE.md`. It uses the required bare/treatment split, a successful treatment `read skill://ompstack`, identical Gemini Flash 3.8 low model settings, and a separate blinded judge over anonymized transcripts. Its scope is native Todo policy behavior only; it does not supersede the task-level benchmark records.
 
+## Valid paired Task/Hub evaluation
+
+`ompstack-task-hub-fanin-policy` is a valid three-case paired evaluation recorded in `docs/BENCHMARK_EVIDENCE.md`. It preserves the bare/treatment isolation and Gemini Flash 3.8 low controls, retains treatment skill preflight, and uses a separate blinded judge over complete final answers plus tool calls. It evaluates supplied fan-in states, not a full worker-lifecycle load test.

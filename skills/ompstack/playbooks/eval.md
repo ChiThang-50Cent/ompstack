@@ -14,6 +14,8 @@ Update the golden routing set whenever a route, overlay, phase, or preflight pol
 
 For native Todo policy, include narrow/read-only no-Todo, multi-phase Todo, queue/fan-in Todo, and Doctor-blocked Todo cases. Score correct progress-tracking selection, parent-only transitions, exact blockers, fan-in before completion, stale-proof reruns, and unnecessary Todo creation; do not score raw Todo call count as success.
 
+For Task/Hub fan-in policy, include a partial-fan-in case, a failed or truncated lane case, and a case where a completed job claims an artifact that the parent has not inspected. Score whether the parent distinguishes job completion from acceptance, waits for every recorded lane, reads the required output/history/artifact, and withholds synthesis and the shared gate while any lane remains unresolved.
+
 ## 3. Design a blinded paired behavioral evaluation
 
 Use the same repository revision, user prompt, model, thinking level, tool availability, timeout, and budget for a bare run and an `ompstack` run. The bare arm must run with this plugin/skill disabled so automatic skill selection cannot apply the policy under test. If that control cannot be isolated while preserving the other controls, record the evaluation as invalid. Record unavailable controls such as seed rather than pretending they were fixed.

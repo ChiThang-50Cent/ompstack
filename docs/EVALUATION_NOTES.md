@@ -35,3 +35,8 @@ The runner saves `skill_preflight.stdout.jsonl` and stops before the task rollou
 ## Valid single-task rerun
 
 `psf__requests-2931` was rerun after the plugin lifecycle update with `--skills ompstack` and a fresh candidate source. Its baseline and candidate oracle evidence are recorded in `docs/BENCHMARK_EVIDENCE.md`. This is a verified task replay, not a replacement for the paired treatment-versus-control evaluation required above.
+
+## Valid paired policy evaluation
+
+`ompstack-native-todo-policy` is a valid four-case paired evaluation recorded in `docs/BENCHMARK_EVIDENCE.md`. It uses the required bare/treatment split, a successful treatment `read skill://ompstack`, identical Gemini Flash 3.8 low model settings, and a separate blinded judge over anonymized transcripts. Its scope is native Todo policy behavior only; it does not supersede the task-level benchmark records.
+

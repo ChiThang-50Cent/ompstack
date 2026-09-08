@@ -81,3 +81,46 @@ The agent also added a local regression test during the task session. The benchm
 - This is one benchmark task, one model, and one same-host convenience oracle.
 - The compatibility shim establishes that this task suite can execute under the current image; it is not part of Requests or Ompstack production code.
 - This record does not establish aggregate benchmark quality or a causal Ompstack-versus-bare result. Use the paired-evaluation procedure in `skills/ompstack/playbooks/eval.md` for policy comparison.
+
+## `ompstack-native-todo-policy` — paired behavior evaluation
+
+**Recorded:** 2026-09-08  
+**Verdict:** `PROMOTED`
+
+### Scope
+
+This record evaluates the native Todo policy against a bare OMP arm. It is a four-case behavioral calibration, not an aggregate model-quality claim.
+
+### Method
+
+Both arms used `google-antigravity/gemini-3.8-flash`, `--thinking low`, `--no-session`, `--no-rules`, `--no-extensions`, `--tools read,todo`, the same repository revision, and source writes disabled. The treatment used:
+
+```text
+--skills ompstack --plugin-dir /home/vmn/code/ompstack
+```
+
+The bare arm used:
+
+```text
+--no-skills
+```
+
+All eight task runs exited zero. The treatment transcript successfully read `skill://ompstack`; the bare arm did not load that skill. A separate Gemini Flash 3.8 low judge received anonymized Arm A/B transcripts and scored only the specified behavioral rubric.
+
+### Cases and result
+
+| Case | Required behavior | Blinded result |
+| --- | --- | --- |
+| Read-only cache explanation | Select no progress tracking; do not call Todo. | A |
+| Schema → CLI → documentation feature | `todo.view` before full-list `todo.init`; leave unperformed work incomplete. | A |
+| Independent API and documentation lanes | Preserve shared fan-in and name the proof surface. | A |
+| Missing Doctor credential | Block the exact prerequisite; report `BLOCKED`, not product `FAIL`. | A |
+
+Arm A was the Ompstack treatment. The blinded judge awarded A `4/4`, B `0/4`, and preferred A. It cited direct bare-arm initialization without `todo.view`, unnecessary Todo for the read-only case, premature completion, and invalid extra transitions.
+
+### Limits
+
+- Four synthetic coordination cases validate the policy edges; they do not measure production task throughput or wall-time impact.
+- Todo state was intentionally memory-only because every run used `--no-session`.
+- Raw anonymized transcripts were transient `/tmp` files and were removed after judging; the commands, model configuration, rubric, and scored result above are retained.
+

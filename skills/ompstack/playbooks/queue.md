@@ -2,6 +2,8 @@
 
 Apply this overlay after selecting the primary workflow when there are two or more work items that can make progress independently. Queue is execution topology, not a replacement primary route.
 
+Native Todo is separate from queue topology. When the parent selected `Progress tracking: native todo`, it records parent phases and fan-in only; Task, Hub, `agent://`, and `history://` remain the source of truth for worker liveness and output.
+
 ## Before spawning
 
 Use the canonical preflight contract in `skill://ompstack`. Extend its `# Contract` section with:

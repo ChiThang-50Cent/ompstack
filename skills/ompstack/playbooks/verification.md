@@ -14,6 +14,15 @@ Apply this phase after the primary workflow, or with Investigation for a standal
 8. Rerun affected Doctor, gates, drives, and review evidence after behavior-changing fixes.
 9. For autonomous, multi-phase, high-risk, or handoff work, audit a proportional `skill://ompstack-decision-trail`.
 
+## Native Todo lifecycle
+
+Apply these rules only when the parent selected `Progress tracking: native todo`:
+
+1. Keep the shared proof item pending until every required implementation result has been collected and inspected.
+2. When Doctor or a runtime prerequisite is unavailable, the parent calls `todo.block` with that exact prerequisite. This is blocked evidence, not a product `FAIL`.
+3. When the prerequisite is available, the parent calls `todo.unblock`, then reruns Doctor before driving the surface.
+4. When a behavior-changing patch invalidates a verdict, append a distinct rerun item before rerunning affected proof. Never reuse a completed verification item as fresh evidence.
+
 ## Verification lanes
 
 ### Deterministic gates

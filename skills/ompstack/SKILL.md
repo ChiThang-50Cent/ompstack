@@ -1,6 +1,6 @@
 ---
 name: ompstack
-description: Risk-routed engineering workflow for OhMyPi coding tasks. Use for non-trivial features, bug fixes, refactors, regressions, or rigorous multi-agent verification. Prefer OhMyPi built-in task, scout, reviewer, and security-reviewer agents; add parallelism only when risk or independence justifies the token cost.
+description: Risk-routed engineering workflow for OhMyPi coding tasks. Read this skill before coordination; for native Todo, call todo.view before todo.init.
 ---
 
 # ompstack
@@ -16,6 +16,22 @@ Treat this skill as the control plane for engineering work. Reuse OhMyPi primiti
 - Use bundled `security-reviewer` only when the change has a meaningful security boundary.
 - Use `ompstack-architect` only when a design choice is material or contested.
 - Use `ompstack-verifier` as a trusted independent behavioral verifier. It may run targeted commands or reproductions and is instructed not to edit, but its tools are not a write sandbox.
+
+## Native Todo progress tracking
+
+Native `todo` is an optional, parent-owned execution-state layer. It never selects the primary route, replaces the queue overlay, mirrors worker liveness, or acts as durable audit evidence.
+
+Select `Progress tracking: native todo` only when the parent has at least three discrete unfinished actions, multiple material phases, a queue/fan-in boundary, an expected external/runtime blocker, an explicit progress request, or autonomous/handoff work. Otherwise select `Progress tracking: none`; do not create ceremony for a narrow local edit or short read-only answer.
+
+Only after selecting `Progress tracking: native todo`, the parent checks that native Todo is present and enabled, then calls `todo.view` before any mutation. If Todo is unavailable, disabled, or the current session already has a non-empty list that is not unambiguously this workflow's active parent list, preserve it and use `Progress tracking: none`. Never call `todo.init` over a non-empty list. If `todo.view` is empty, initialize the full phased list in that parent turn before starting work; do not merely describe or defer Todo calls. `todo.init` requires the full `list` of named phases, never `phase`/`task` shorthand. Append only newly discovered material work to the current parent list; never reinitialize it to rephrase phases.
+
+The required initial transition is `Progress tracking: none` → no Todo call, or `Progress tracking: native todo` → `todo.view` → `todo.init({ list })` only when the viewed list is empty. The reverse order is invalid. During active coordination, execute these native transitions rather than reporting hypothetical calls.
+
+Only the parent calls `todo.init`, `todo.append`, `todo.done`, `todo.block`, or `todo.unblock`. Task children return outputs and evidence; the parent fans them in, inspects them, then advances Todo. In a no-session run, Todo is only live working state and cannot support a durable handoff.
+
+When Todo is active, use stable unique 5–10 word task names, non-empty route-selected phases, and exact blocker reasons. Keep shared verification pending through fan-in; `todo.block` records an unavailable evidence prerequisite, not a product failure. A behavior-changing patch after a verdict appends a distinct rerun item and reruns affected proof.
+
+Todo state is deliberately separate from Hub/task lifecycle, feature maps, session artifacts, and the proportional decision trail.
 
 ## Start by routing risk
 
@@ -75,6 +91,7 @@ Observable behavior and exact proof surface.
 Primary route: <playbook>
 Execution overlays/phases: <none|queue|verification|queue + verification>
 Risk: <low|medium|high|critical>
+Progress tracking: <none|native todo>
 Compatibility and repository constraints.
 
 # Contract

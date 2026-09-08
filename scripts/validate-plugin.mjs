@@ -20,6 +20,7 @@ const overlayNames = new Set(["queue"]);
 const phaseNames = new Set(["verification"]);
 const playbooks = [...primaryPlaybooks, ...overlayNames, ...phaseNames];
 const risks = new Set(["low", "medium", "high", "critical"]);
+const progressTrackingNames = new Set(["none", "native todo"]);
 const evidence = new Set([
   "none",
   "reviewer",
@@ -69,6 +70,8 @@ const feature = await read("skills/ompstack/playbooks/feature.md");
 const queue = await read("skills/ompstack/playbooks/queue.md");
 const verification = await read("skills/ompstack/playbooks/verification.md");
 const investigation = await read("skills/ompstack/playbooks/investigation.md");
+const design = await read("docs/DESIGN.md");
+const readme = await read("README.md");
 const evaluation = await read("skills/ompstack/playbooks/eval.md");
 const createVerification = await read("skills/ompstack-create-verification/SKILL.md");
 const maintainVerification = await read("skills/ompstack-maintain-verification/SKILL.md");
@@ -120,6 +123,21 @@ assert.match(skill, /project-native `verify-<surface>` skill/);
 assert.match(skill, /skill:\/\/ompstack-create-verification/);
 assert.match(skill, /skill:\/\/ompstack-maintain-verification/);
 assert.match(skill, /skill:\/\/ompstack-decision-trail/);
+assert.match(skill, /Progress tracking: <none\|native todo>/);
+assert.match(skill, /todo\.view/);
+assert.match(skill, /Never call `todo\.init` over a non-empty list/);
+assert.match(skill, /Only the parent calls `todo\.init`/);
+assert.match(skill, /Only after selecting `Progress tracking: native todo`/);
+assert.match(skill, /do not merely describe or defer Todo calls/);
+assert.match(skill, /full `list` of named phases, never `phase`\/`task` shorthand/);
+assert.match(skill, /`Progress tracking: native todo` → `todo\.view` → `todo\.init\(\{ list \}\)`/);
+assert.match(skill, /The reverse order is invalid/);
+assert.match(skill, /Todo state is deliberately separate from Hub\/task lifecycle/);
+assert.match(verification, /## Native Todo lifecycle/);
+assert.match(verification, /Keep the shared proof item pending until every required implementation result/);
+assert.match(queue, /Native Todo is separate from queue topology/);
+assert.match(design, /Native Todo is a separate conditional parent progress layer/);
+assert.match(readme, /conditional native Todo progress state/);
 assert.match(verification, /DOCTOR: BLOCKED/);
 assert.match(verification, /optional unattended evidence adapters/);
 assert.match(createVerification, /^---\nname: ompstack-create-verification\n/m);
@@ -137,14 +155,16 @@ assert.match(decisionTrailHelper, /export async function appendDecisionTrail/);
 assert.match(maintainVerificationCommand, /Read `skill:\/\/ompstack-maintain-verification`/);
 
 const requiredExampleTerms = [
-  "# Constraints\\nPrimary route: feature\\nExecution overlays/phases: none\\nRisk: high",
+  "# Constraints\\nPrimary route: feature\\nExecution overlays/phases: none\\nRisk: high\\nProgress tracking: native todo",
   "Established repository contract: reserveDelivery(eventKey)",
   "Consume this established contract without changing it: reserveDelivery(eventKey)",
-  "# Constraints\\nPrimary route: feature\\nExecution overlays/phases: verification\\nRisk: high",
+  "# Constraints\\nPrimary route: feature\\nExecution overlays/phases: verification\\nRisk: high\\nProgress tracking: native todo",
   "Fan-in order: collect both verdicts, inspect unexpected worktree mutations, then parent synthesis.",
   "The `task` call starts asynchronous jobs.",
   "`hub wait`",
   "`agent://`, `history://`, or artifact payloads",
+  "todo.view",
+  "Only the parent mutates Todo.",
 ];
 for (const term of requiredExampleTerms) {
   assert.ok(examples.includes(term), `usage examples are missing ${term}`);
@@ -172,10 +192,12 @@ assert.match(evaluation, /neutral identifiers/);
 assert.match(evaluation, /one blinded judge/);
 assert.match(evaluation, /transcripts, tool calls, and produced artifacts/);
 assert.match(evaluation, /project capability creation[\s\S]*Doctor-blocked runtime[\s\S]*stale feature map/);
+assert.match(evaluation, /narrow\/read-only no-Todo[\s\S]*multi-phase Todo[\s\S]*queue\/fan-in Todo[\s\S]*Doctor-blocked Todo/);
 assert.match(
   evaluation,
-  /"type": "object"[\s\S]*"additionalProperties": false[\s\S]*"overlays"[\s\S]*"phases"[\s\S]*"required":/,
+  /"type": "object"[\s\S]*"additionalProperties": false[\s\S]*"overlays"[\s\S]*"phases"[\s\S]*"progressTracking"[\s\S]*"required":/,
 );
+assert.match(evaluation, /"progressTracking"[\s\S]*"none"[\s\S]*"native todo"/);
 assert.match(evaluation, /"reviewer \+ verifier \+ security-reviewer"/);
 
 for (const playbook of playbooks) {
@@ -239,6 +261,13 @@ const coveredRoutes = new Set();
 const coveredOverlays = new Set();
 const coveredPhases = new Set();
 const coveredVerificationCapabilities = new Set();
+const coveredProgressTracking = new Set();
+const requiredTodoProgressCases = new Map([
+  ["read-only-explanation", "none"],
+  ["multi-phase-progress-tracking", "native todo"],
+  ["independent-package-queue", "native todo"],
+  ["doctor-blocked-runtime", "native todo"],
+]);
 for (const testCase of cases) {
   assert.equal(typeof testCase.id, "string");
   assert.ok(testCase.id.trim(), "routing case id must be nonempty");
@@ -273,6 +302,11 @@ for (const testCase of cases) {
     assert.ok(phaseNames.has(phase), `${testCase.id} has unknown phase: ${phase}`);
     coveredPhases.add(phase);
   }
+  assert.ok(
+    progressTrackingNames.has(testCase.expected.progressTracking),
+    `${testCase.id} has unknown progress tracking`,
+  );
+  coveredProgressTracking.add(testCase.expected.progressTracking);
   assert.ok(risks.has(testCase.expected.risk), `unknown risk: ${testCase.expected.risk}`);
   assert.equal(typeof testCase.expected.proofSurface, "string");
   assert.ok(testCase.expected.proofSurface.trim(), `${testCase.id} needs a proof surface`);
@@ -291,11 +325,25 @@ assertExactSet(coveredRoutes, primaryPlaybooks, "covered primary routes");
 assertExactSet(coveredOverlays, overlayNames, "covered execution overlays");
 assertExactSet(coveredPhases, phaseNames, "covered verification phases");
 assertExactSet(
+  coveredProgressTracking,
+  progressTrackingNames,
+  "covered progress tracking modes",
+);
+for (const [id, progressTracking] of requiredTodoProgressCases) {
+  const testCase = cases.find((candidate) => candidate.id === id);
+  assert.ok(testCase, `missing Todo progress case: ${id}`);
+  assert.equal(
+    testCase.expected.progressTracking,
+    progressTracking,
+    `${id} has wrong Todo progress tracking`,
+  );
+}
+assertExactSet(
   coveredVerificationCapabilities,
   verificationCapabilities,
   "covered verification capabilities",
 );
 
 console.log(
-  `Validated ${primaryPlaybooks.length} primary routes, ${overlayNames.size} overlay, ${phaseNames.size} phase, ${verificationCapabilities.size} verification capabilities, ${agents.size} custom agents, and ${cases.length} routing cases.`,
+  `Validated ${primaryPlaybooks.length} primary routes, ${overlayNames.size} overlay, ${phaseNames.size} phase, ${progressTrackingNames.size} progress tracking modes, ${verificationCapabilities.size} verification capabilities, ${agents.size} custom agents, and ${cases.length} routing cases.`,
 );

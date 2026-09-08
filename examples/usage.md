@@ -26,7 +26,7 @@ The idempotency repository contract is a prerequisite for the handler. Keep them
 
 ```json
 {
-  "context": "# Goal\nImplement the agreed webhook idempotency repository. Proof surface: duplicate delivery cannot create a second persistence effect.\n\n# Constraints\nPrimary route: feature\nExecution overlays/phases: none\nRisk: high\nPreserve the public handler API and use the existing event key as the idempotency key.\n\n# Contract\nWrite owner: PersistenceLane.\nPersistenceLane writable: persistence/repository layer.\nHandlerLane is not started in this batch.\nShared idempotency repository contract owner: PersistenceLane.\nIntegration owner: parent.\nFan-in order: persistence contract, then HandlerLane in a separate batch.\nShared gate: parent reruns duplicate-delivery reproduction and the narrow regression suite once after handler fan-in.\nIndependent evidence: reviewer + verifier.",
+  "context": "# Goal\nImplement the agreed webhook idempotency repository. Proof surface: duplicate delivery cannot create a second persistence effect.\n\n# Constraints\nPrimary route: feature\nExecution overlays/phases: none\nRisk: high\nProgress tracking: native todo\nPreserve the public handler API and use the existing event key as the idempotency key.\n\n# Contract\nWrite owner: PersistenceLane.\nPersistenceLane writable: persistence/repository layer.\nHandlerLane is not started in this batch.\nShared idempotency repository contract owner: PersistenceLane.\nIntegration owner: parent.\nFan-in order: persistence contract, then HandlerLane in a separate batch.\nShared gate: parent reruns duplicate-delivery reproduction and the narrow regression suite once after handler fan-in.\nIndependent evidence: reviewer + verifier.",
   "tasks": [
     {
       "name": "PersistenceLane",
@@ -42,7 +42,7 @@ After `PersistenceLane` returns its concrete contract, the parent inserts that e
 
 ```json
 {
-  "context": "# Goal\nConsume the established webhook idempotency repository contract. Proof surface: duplicate delivery returns the original behavior without a second persistence effect.\n\n# Constraints\nPrimary route: feature\nExecution overlays/phases: none\nRisk: high\nPreserve the public handler API.\n\n# Contract\nWrite owner: HandlerLane.\nHandlerLane writable: webhook handler/service path.\nShared idempotency repository contract owner: PersistenceLane.\nEstablished repository contract: reserveDelivery(eventKey) atomically returns { status: \"reserved\" | \"duplicate\", deliveryId: string }; HandlerLane consumes but does not change this shape.\nIntegration owner: parent.\nFan-in order: handler implementation, then parent integration.\nShared gate: parent reruns duplicate-delivery reproduction and the narrow regression suite once after fan-in.\nIndependent evidence: reviewer + verifier.",
+  "context": "# Goal\nConsume the established webhook idempotency repository contract. Proof surface: duplicate delivery returns the original behavior without a second persistence effect.\n\n# Constraints\nPrimary route: feature\nExecution overlays/phases: none\nRisk: high\nProgress tracking: native todo\nPreserve the public handler API.\n\n# Contract\nWrite owner: HandlerLane.\nHandlerLane writable: webhook handler/service path.\nShared idempotency repository contract owner: PersistenceLane.\nEstablished repository contract: reserveDelivery(eventKey) atomically returns { status: \"reserved\" | \"duplicate\", deliveryId: string }; HandlerLane consumes but does not change this shape.\nIntegration owner: parent.\nFan-in order: handler implementation, then parent integration.\nShared gate: parent reruns duplicate-delivery reproduction and the narrow regression suite once after fan-in.\nIndependent evidence: reviewer + verifier.",
   "tasks": [
     {
       "name": "HandlerLane",
@@ -58,7 +58,7 @@ After deterministic gates pass, a high-risk change may use specialized agents:
 
 ```json
 {
-  "context": "# Goal\nVerify webhook idempotency against the combined change. Proof surface: the duplicate-delivery reproduction.\n\n# Constraints\nPrimary route: feature\nExecution overlays/phases: verification\nRisk: high\nDeterministic targeted tests are already green. Verifiers are trusted roles instructed not to edit; their tools are not a write sandbox.\n\n# Contract\nWrite owner: parent. Writable files: none. Review scope: combined persistence and handler diff.\nReview lanes: PatchReview static review; BehaviorVerification duplicate-delivery execution.\nIntegration owner: parent.\nFan-in order: collect both verdicts, inspect unexpected worktree mutations, then parent synthesis.\nShared gate: duplicate-delivery reproduction and targeted tests already passed before this evidence batch.\nIndependent evidence: reviewer + verifier.",
+  "context": "# Goal\nVerify webhook idempotency against the combined change. Proof surface: the duplicate-delivery reproduction.\n\n# Constraints\nPrimary route: feature\nExecution overlays/phases: verification\nRisk: high\nProgress tracking: native todo\nDeterministic targeted tests are already green. Verifiers are trusted roles instructed not to edit; their tools are not a write sandbox.\n\n# Contract\nWrite owner: parent. Writable files: none. Review scope: combined persistence and handler diff.\nReview lanes: PatchReview static review; BehaviorVerification duplicate-delivery execution.\nIntegration owner: parent.\nFan-in order: collect both verdicts, inspect unexpected worktree mutations, then parent synthesis.\nShared gate: duplicate-delivery reproduction and targeted tests already passed before this evidence batch.\nIndependent evidence: reviewer + verifier.",
   "tasks": [
     {
       "name": "PatchReview",
@@ -78,6 +78,27 @@ After deterministic gates pass, a high-risk change may use specialized agents:
 The `task` call starts asynchronous jobs. The parent waits for both auto-delivered results or uses `hub wait`, reads any referenced `agent://`, `history://`, or artifact payloads, and only then performs the fan-in synthesis described above.
 
 Add `security-reviewer` only when the actual change crosses a security boundary.
+
+## Conditional native Todo progress
+
+For a genuinely multi-phase parent workflow, record progress separately from queue topology and child-task status:
+
+```text
+# Constraints
+Primary route: feature
+Execution overlays/phases: queue + verification
+Risk: high
+Progress tracking: native todo
+
+Parent:
+1. todo.view
+2. todo.init only when the list is empty
+3. Keep “Fan in idempotency lanes” pending until every task artifact is inspected
+4. todo.block “Drive duplicate-delivery proof” with the exact unavailable Doctor prerequisite
+5. todo.unblock, rerun Doctor, then append a distinct rerun item after a behavior-changing repair
+```
+
+Only the parent mutates Todo. A task worker reports its output and evidence; it does not own the parent progress list.
 
 ## Project-local verification capability
 

@@ -10,7 +10,9 @@ State the behavior expected to improve and the quality gate that must not regres
 
 Run `bun run check`. It validates skill routing, custom-agent definitions, command wiring, preflight requirements, and the shape of the golden routing set in `tests/fixtures/routing-cases.json`.
 
-Update the golden routing set whenever a route, overlay, phase, or preflight policy changes. Each case must name its primary route, overlays, phases, risk, proof surface, write ownership, and independent evidence.
+Update the golden routing set whenever a route, overlay, phase, or preflight policy changes. Each case must name its primary route, overlays, phases, progress tracking, risk, proof surface, write ownership, and independent evidence.
+
+For native Todo policy, include narrow/read-only no-Todo, multi-phase Todo, queue/fan-in Todo, and Doctor-blocked Todo cases. Score correct progress-tracking selection, parent-only transitions, exact blockers, fan-in before completion, stale-proof reruns, and unnecessary Todo creation; do not score raw Todo call count as success.
 
 ## 3. Design a blinded paired behavioral evaluation
 
@@ -48,6 +50,9 @@ Require structured output for the route decision with this `outputSchema` and `s
       "items": { "enum": ["verification"] },
       "uniqueItems": true
     },
+    "progressTracking": {
+      "enum": ["none", "native todo"]
+    },
     "risk": { "enum": ["low", "medium", "high", "critical"] },
     "proofSurface": { "type": "string", "minLength": 1 },
     "writeOwnership": { "type": "string", "minLength": 1 },
@@ -66,6 +71,7 @@ Require structured output for the route decision with this `outputSchema` and `s
     "route",
     "overlays",
     "phases",
+    "progressTracking",
     "risk",
     "proofSurface",
     "writeOwnership",

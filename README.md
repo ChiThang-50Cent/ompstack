@@ -83,6 +83,8 @@ resolve project verification capability
    ↓
 minimal discovery/design
    ↓
+conditional native Todo progress state (parent-owned)
+   ↓
 one owner per write lane
    ↓
 fan-in
@@ -93,6 +95,8 @@ independent review / behavior verification
    ↓
 fresh affected proof + maintained feature map
 ```
+
+Native Todo is conditional parent progress state for genuinely multi-phase, fan-in, blocked, explicit-progress, or handoff work. It is neither the task scheduler nor an audit log: Task/Hub owns worker lifecycle, while session artifacts and the decision trail retain durable evidence. The parent checks the native list before mutation and never overwrites a non-empty unrelated Todo list.
 
 Avoid copying Cursor-specific cloud-agent, overnight-loop, PR-auto-merge, and Graphite machinery into a local OMP skill without a native equivalent. Reuse OMP-native project skills, task artifacts, transcripts, and Agent Hub instead.
 
@@ -110,7 +114,7 @@ Run the deterministic plugin contract checks before changing routing, custom age
 bun run check
 ```
 
-The check validates primary-route versus overlay/phase wiring, structured custom-agent capabilities (`tools`, `model`, and `blocking`), preflight rules, self-contained task examples, and complete golden routing coverage. It remains a static contract check; the Eval playbook defines the separate blinded paired behavioral evaluation required for a workflow-policy change.
+The check validates primary-route versus overlay/phase/progress-tracking wiring, structured custom-agent capabilities (`tools`, `model`, and `blocking`), preflight rules, self-contained task examples, and complete golden routing coverage. It remains a static contract check; the Eval playbook defines the separate blinded paired behavioral evaluation required for a workflow-policy change.
 
 ## Optional unattended evidence adapter
 

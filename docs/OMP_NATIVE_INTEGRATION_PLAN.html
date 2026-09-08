@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ompstack × Oh My Pi: Native Integration Plan</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#f7f8fa; --panel:#fff; --text:#1b1f24; --muted:#57606a; --line:#d0d7de; --accent:#0969da; --good:#1a7f37; --warn:#9a6700; --code:#f6f8fa; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#0d1117; --panel:#161b22; --text:#e6edf3; --muted:#8b949e; --line:#30363d; --accent:#58a6ff; --good:#3fb950; --warn:#d29922; --code:#0d1117; } }
+    * { box-sizing:border-box; }
+    body { margin:0; font:16px/1.58 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--text); background:var(--bg); }
+    main { max-width:1080px; margin:0 auto; padding:48px 24px 72px; }
+    header, section { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:28px; margin:18px 0; }
+    h1,h2,h3 { line-height:1.2; margin:0 0 14px; }
+    h1 { font-size:2rem; } h2 { font-size:1.35rem; margin-top:4px; } h3 { font-size:1.05rem; margin-top:22px; }
+    p,li { max-width:92ch; } .lede { color:var(--muted); font-size:1.1rem; }
+    .meta { display:flex; flex-wrap:wrap; gap:10px; color:var(--muted); font-size:.9rem; }
+    .pill { border:1px solid var(--line); border-radius:999px; padding:3px 10px; }
+    .decision { border-left:4px solid var(--accent); padding:12px 16px; background:color-mix(in srgb, var(--accent) 8%, transparent); }
+    .warning { border-left:4px solid var(--warn); padding:12px 16px; background:color-mix(in srgb, var(--warn) 9%, transparent); }
+    .good { color:var(--good); font-weight:650; } .muted { color:var(--muted); }
+    table { border-collapse:collapse; width:100%; margin:16px 0; font-size:.94rem; }
+    th,td { text-align:left; vertical-align:top; border:1px solid var(--line); padding:10px; }
+    th { background:color-mix(in srgb, var(--text) 5%, transparent); }
+    pre { overflow:auto; background:var(--code); border:1px solid var(--line); border-radius:8px; padding:14px; }
+    code { font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.92em; }
+    a { color:var(--accent); } ol li, ul li { margin:7px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Ompstack × Oh My Pi: Native Integration Plan</h1>
+    <p class="lede">Nghiên cứu lại OMP như platform, rồi thu hẹp Ompstack thành policy layer mỏng: route công việc, chọn proof surface, và điều phối native primitives thay vì dựng control plane song song.</p>
+    <div class="meta"><span class="pill">Status: native Todo policy implemented and evaluated</span><span class="pill">Recorded: 2026-09-08</span><span class="pill">Scope: plugin policy, docs, fixtures</span></div>
+  </header>
+
+  <section>
+    <h2>1. Kết luận</h2>
+    <div class="decision"><strong>Decision.</strong> Bổ sung native <code>todo</code> làm execution overlay có điều kiện. Đồng thời đưa OMP Task/Hub, session lifecycle, Advisor, Prewalk, Memory, approval và extension boundary vào map chính thức. Không tạo scheduler, task database, agent manager, memory store, hay review runtime riêng.</div>
+    <p>Map hiện tại đã đúng khi tái dùng <code>task</code>, Hub, skills, reviewer và project-native verification. Gap là nó mô tả workflow bằng prose, trong khi OMP đã có state/session/UI primitives để vận hành workflow đó. Todo giải quyết trạng thái live; các primitive khác giải quyết fan-in, handoff, advisory và safety. Không primitive nào một mình thay thế Ompstack.</p>
+  </section>
+
+  <section>
+    <h2>2. Bản đồ mục tiêu</h2>
+    <pre>user request
+  ↓
+ompstack route + risk + proof-surface policy
+  ↓
+conditional native todo (parent-owned execution state)
+  ↓
+OMP task batch / isolation / Agent Hub / hub messaging
+  ↓
+project verify-&lt;surface&gt; Doctor + Drive + deterministic gates
+  ↓
+reviewer / verifier / optional Advisor concern lane
+  ↓
+session handoff/export + optional decision trail + feature map</pre>
+    <table>
+      <thead><tr><th>Need</th><th>OMP primitive</th><th>Ompstack responsibility</th><th>Boundary</th></tr></thead>
+      <tbody>
+        <tr><td>Route and risk</td><td>Skills, commands, context files</td><td>Choose one primary workflow and required proof.</td><td>Do not turn skills into an executor.</td></tr>
+        <tr><td>Live execution state</td><td><code>todo</code></td><td>Initialize/update phases only when work is genuinely multi-step.</td><td>Todo is session state, not audit history.</td></tr>
+        <tr><td>Write lanes and fan-in</td><td><code>task</code>, <code>hub</code>, Agent Hub, <code>agent://</code>, <code>history://</code></td><td>Set ownership/context; wait for all required outputs before gates.</td><td>Do not create a second worker scheduler.</td></tr>
+        <tr><td>Isolation</td><td>Per-task <code>isolated</code></td><td>Use only for conflicting/high-risk write lanes when the task schema exposes it.</td><td>Isolation is not proof or ownership.</td></tr>
+        <tr><td>Real proof</td><td>Project <code>verify-&lt;surface&gt;</code>, browser/Eval, debug, LSP, CLI</td><td>Choose Doctor, deterministic gate, and closest consumer surface.</td><td>Tests alone do not replace real-surface proof.</td></tr>
+        <tr><td>Continuous concern</td><td>Advisor / <code>WATCHDOG.md</code></td><td>Optional long-running High/Critical concern lane.</td><td>Advisor is advisory; it does not approve or verify completion.</td></tr>
+        <tr><td>Handoff and evidence</td><td>Persisted session, <code>/handoff</code>, <code>/export</code>, artifacts</td><td>Use native session material first; add trail only for material decisions.</td><td>No custom session database.</td></tr>
+        <tr><td>Long-lived lessons</td><td>Optional Memory / <code>learn</code></td><td>Recommend explicit sanitized lessons only.</td><td>Memory is heuristic, never current-repo truth.</td></tr>
+        <tr><td>Safety boundary</td><td>OMP approval policy</td><td>Preserve user authorization rules; name consequential action boundaries.</td><td>Do not claim child-agent execution is sandboxed.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>3. Native primitive findings</h2>
+    <h3>Todo: add as conditional execution overlay</h3>
+    <p>OMP Todo maintains phased session state with <code>pending</code>, <code>in_progress</code>, <code>completed</code>, <code>blocked</code>, and <code>abandoned</code>; it normalizes to one active task and records a blocker reason. Its storage is session or memory, and completed/abandoned tasks are stripped from the cached todo state on resume. Therefore it is ideal for visible work-in-progress, but not a durable decision ledger.</p>
+    <pre>Use Todo iff: ≥3 independent steps, multiple phases, parallel fan-in, expected blocker, or explicit progress tracking.
+
+Do not use Todo: one-shot local change, read-only answer, or a task whose phase list would merely restate one action.
+
+Suggested phases: Discovery → Implementation → Verification → Delivery.
+Doctor blocker: todo.block(&lt;verification task&gt;, exact prerequisite).
+Fan-in: verification remains pending until every required task result is collected.</pre>
+
+    <h3>Task + Hub: use their lifecycle instead of modelling workers in prompts</h3>
+    <p>OMP task batches require shared <code>context</code>, support per-item schemas, background jobs, artifact URLs, isolation, and bounded concurrency. Agent Hub exposes status, transcript, steering, revival and abort controls. Ompstack should keep parent ownership and explicit fan-in, but express each write lane through native task metadata rather than inventing a worker state abstraction.</p>
+
+    <h3>Advisor and WATCHDOG: an opt-in concern lane, not a verifier replacement</h3>
+    <p>Advisor models can inspect live transcript deltas and inject <code>nit</code>, <code>concern</code>, or <code>blocker</code> advice. This is valuable for long-running High/Critical work where an early concern avoids wasted writes. It remains unsuitable as the final behavioral proof: it is advisory, may lag, and costs a second model continuously. Existing reviewer/verifier policy stays in place.</p>
+
+    <h3>Prewalk: an optional model-economy handoff</h3>
+    <p>Prewalk starts with a planning model, opens its gate after a successful Todo call, then switches once at the first edit/write. Ompstack should document compatibility, not force it: model roles, credentials, and cost policy are operator configuration. A route that does not create Todo must not accidentally depend on Prewalk.</p>
+
+    <h3>Session, handoff, export, compaction, and memory</h3>
+    <p>OMP persists session trees, subagent artifacts, compaction summaries, branch summaries, handoff documents and HTML exports. For normal handoff, these are the source of truth. Decision trail stays proportional because it is a compact, append-only index of material decisions—not a replacement transcript. Memory is disabled by default and explicitly documented as heuristic context; any use must be opt-in, sanitized, and revalidated against the repository.</p>
+
+    <h3>Extensions: defer</h3>
+    <p>OMP extensions can intercept tools and register commands, but run in-process without isolation. The first implementation should be skills/docs/fixtures only. Build an extension only if policy evaluation shows that prompt-level Todo transitions are repeatedly missed and an event-driven enforcement/UI behavior is demonstrably necessary.</p>
+  </section>
+
+  <section>
+    <h2>4. Current components: retain, change, or avoid</h2>
+    <table>
+      <thead><tr><th>Current component</th><th>Decision</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr><td><code>ompstack</code> router</td><td class="good">Retain; add Todo overlay selection.</td><td>It owns policy/risk/proof choice, not runtime state.</td></tr>
+        <tr><td>Queue overlay</td><td class="good">Retain; connect fan-in to Todo.</td><td>Native task jobs already schedule; Todo displays aggregate phase status.</td></tr>
+        <tr><td><code>ompstack-verifier</code></td><td class="good">Retain.</td><td>Advisor and bundled reviewer do not provide a final executable proof lane.</td></tr>
+        <tr><td><code>verify-&lt;surface&gt;</code> + feature map</td><td class="good">Retain.</td><td>They name product-specific Doctor/Drive/coverage; Todo cannot.</td></tr>
+        <tr><td>Decision trail</td><td class="good">Retain but narrow.</td><td>Use for material choices/evidence only; link native artifacts.</td></tr>
+        <tr><td>External verification controller</td><td class="good">Retain as optional adapter.</td><td>OMP native isolation does not create an independently-owned oracle/artifact boundary.</td></tr>
+        <tr><td>Custom scheduler, session store, memory store, review daemon</td><td class="warning">Do not add.</td><td>OMP already owns the adjacent lifecycle or would require a heavier trust claim.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>5. Implementation plan</h2>
+    <h3>Phase A — define the policy contract</h3>
+    <ol>
+      <li>Add <code>todo</code> to the native-primitives map in <code>skills/ompstack/SKILL.md</code> and <code>docs/DESIGN.md</code>.</li>
+      <li>Define a strict trigger: use Todo for multi-phase/parallel/expected-blocker work; skip trivial and read-only work.</li>
+      <li>Define parent-only ownership, stable unique task text, phase names, and immediate <code>done</code>/<code>block</code>/<code>unblock</code> transitions.</li>
+      <li>State that Todo <code>BLOCKED</code> mirrors a work prerequisite, while Doctor <code>BLOCKED</code> remains evidence—not product failure.</li>
+    </ol>
+    <h3>Phase B — connect task lifecycle and proof lifecycle</h3>
+    <ol>
+      <li>Add a Todo phase after route selection and before spawning write lanes.</li>
+      <li>Represent fan-in as an explicit pending Todo item; complete it only after required task outputs/artifacts are read.</li>
+      <li>Represent Doctor, deterministic gates, drive, review, and reruns as Verification tasks when the overlay is active.</li>
+      <li>Add a proof-surface selection matrix: web → browser/Eval, CLI/TUI → live command interaction, state bug → debugger, symbol refactor → LSP, service behavior → project verification capability.</li>
+    </ol>
+    <h3>Phase C — document opt-in OMP capabilities</h3>
+    <ol>
+      <li>Document Prewalk compatibility as an operator option; do not pin a vendor/model or enable it globally.</li>
+      <li>Document Advisor/<code>WATCHDOG.md</code> as High/Critical, long-running, read-only concern coverage; never a completion gate.</li>
+      <li>Document persistent-session handoff: session artifacts first, <code>/handoff</code> for a compact handoff, <code>/export</code> for shareable review.</li>
+      <li>Document Memory only as optional sanitized lessons; never inject it as a policy source of truth.</li>
+    </ol>
+    <h3>Phase D — validation and promotion</h3>
+    <ol>
+      <li>Extend static routing fixtures with: trivial no-Todo; multi-phase Todo; Doctor-blocked Todo; fan-in pending; handoff trail; no default Advisor/Prewalk.</li>
+      <li>Run <code>bun run check</code> and <code>bun test tests</code>.</li>
+      <li>Run blinded paired behavior cases. Score route correctness, proof-surface execution, stale-verdict rerun, false completion, unnecessary Todo ceremony, and wall time.</li>
+      <li>Promote only if proof quality is non-inferior and Todo improves completion/handoff observability without raising needless task overhead.</li>
+    </ol>
+    <h3>Phase E — extension decision gate</h3>
+    <p>Only consider a runtime extension after Phase D demonstrates a repeated prompt-policy failure. Required evidence: a concrete missed transition class, a minimal event hook, no custom persistence, safe failure behavior, and a paired evaluation against the skill-only policy. Otherwise do not build one.</p>
+  </section>
+
+  <section>
+    <h2>6. Acceptance criteria</h2>
+    <ul>
+      <li>Low-risk/read-only and one-step work does not create Todo ceremony.</li>
+      <li>Multi-phase work has one parent-owned Todo with stable names and exactly one active task.</li>
+      <li>Every required task result is fanned in before the shared gate can be marked complete.</li>
+      <li>A Doctor/runtime prerequisite produces an exact Todo blocker and cannot be reported as product failure.</li>
+      <li>Todo state, feature map, decision trail, and session artifacts have non-overlapping responsibilities.</li>
+      <li>No custom scheduler/database/agent replacement is introduced.</li>
+      <li>Advisor, Prewalk, Memory, and extension use remain opt-in with documented failure/safety boundaries.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>7. Risks and non-goals</h2>
+    <ul>
+      <li><strong>Todo overuse:</strong> ceremony can lower throughput. Countermeasure: explicit trigger and paired evaluation.</li>
+      <li><strong>Todo treated as audit:</strong> session-resume behavior strips closed cached items. Countermeasure: decision trail/session artifacts remain durable evidence.</li>
+      <li><strong>Advisor overreach:</strong> it is not a verifier and can be granted powerful tools. Countermeasure: read-only default, High/Critical opt-in, no completion authority.</li>
+      <li><strong>Prewalk coupling:</strong> it depends on operator model configuration and Todo gate. Countermeasure: document only; never require it for correctness.</li>
+      <li><strong>Extension premature optimization:</strong> in-process extensions widen blast radius. Countermeasure: defer behind a measured policy-failure gate.</li>
+      <li><strong>Non-goal:</strong> reintroducing pstack cloud loops, autonomous release/merge, Graphite, or a persistent control plane.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Sources</h2>
+    <ol>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/tools/todo.md">OMP Todo</a> — session state, transitions, resume semantics, parent/subagent boundary.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/tools/task.md">OMP Task</a> — task batches, artifacts, isolation, concurrency, output schemas, lifecycle.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/agent-hub.md">OMP Agent Hub</a> — live roster, steering, revive, transcript and usage observability.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/prewalk.md">OMP Prewalk</a> — Todo-gated one-shot model handoff.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/advisor-watchdog.md">OMP Advisor and WATCHDOG</a> — advisory severity, tool grants, and safety limits.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/session-operations-export-share-fork-resume.md">OMP Session Operations</a> — persisted session, resume, handoff/export/share behavior.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/compaction.md">OMP Compaction and Handoff</a> — durable summaries, handoff documents, artifact boundaries.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/memory.md">OMP Memory</a> — optional heuristic memory and lesson capture limits.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/extensions.md">OMP Extensions</a> — in-process event/tool/command capabilities and failure boundary.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/skills.md">OMP Skills</a> — native/project/plugin discovery and precedence.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/approval-mode.md">OMP Approval Mode</a> — user/tool authorization and headless subagent caveats.</li>
+      <li><a href="https://github.com/can1357/oh-my-pi/blob/main/docs/task-agent-discovery.md">OMP Task Agent Discovery</a> — role resolution, prewalk/advisor agent options, plan-mode limits.</li>
+    </ol>
+  </section>
+</main>
+</body>
+</html>

@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-08
+
 ### Added
 
 - Added a workflow-evaluation playbook, deterministic plugin validator, and golden routing scenarios.
@@ -25,3 +27,7 @@ All notable changes to this project are documented in this file.
 - Hardened workflow evaluation with neutral arm identifiers, one blinded judge, and transcript/artifact inspection.
 - Routed verification through matching project-native `verify-<surface>` skills or repository proof surfaces, with Doctor blockers distinct from product failures.
 - Added historical-rationale evidence guidance to read-only investigations.
+
+### Fixed
+
+- Restricted the npm artifact to runtime files so plugin upgrades do not package local logs, benchmark candidates, or research artifacts.

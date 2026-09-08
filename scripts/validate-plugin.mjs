@@ -81,6 +81,23 @@ const maintainVerificationCommand = await read(
   "commands/ompstack-maintain-verification.md",
 );
 const cases = JSON.parse(await read("tests/fixtures/routing-cases.json"));
+const manifest = JSON.parse(await read("package.json"));
+
+assert.match(manifest.version, /^\d+\.\d+\.\d+$/, "package version must be a release semver");
+assert.equal(manifest.private, undefined, "published plugin package must not be private");
+assert.deepEqual(manifest.publishConfig, { access: "public" });
+assertExactSet(
+  manifest.files,
+  new Set([
+    "agents",
+    "commands",
+    "scripts",
+    "skills",
+    "NOTICE.md",
+    "third_party/PSTACK_LICENSE",
+  ]),
+  "npm package files",
+);
 
 assert.match(skill, /^---\nname: ompstack\ndescription: .+/m);
 assert.match(command, /Read `skill:\/\/ompstack` and use it as the control plane/);

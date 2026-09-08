@@ -1,11 +1,22 @@
 {
   "name": "ompstack",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Risk-routed engineering workflow for OhMyPi",
-  "private": true,
+  "files": [
+    "agents",
+    "commands",
+    "scripts",
+    "skills",
+    "NOTICE.md",
+    "third_party/PSTACK_LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "check": "bun scripts/validate-plugin.mjs",
-    "test": "bun test tests"
+    "test": "bun test tests",
+    "prepublishOnly": "bun run check && bun test tests && npm pack --dry-run"
   },
   "omp": {}
 }

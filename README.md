@@ -12,15 +12,27 @@ It intentionally does **not** recreate OhMyPi's bundled `task`, `scout`, `review
 - `agents/ompstack-verifier.md` — trusted runtime/behavior verifier instructed not to edit; execution tools are not a write sandbox
 - `commands/ompstack.md` and `commands/ompstack-maintain-verification.md` — convenience entry points
 
-## Install from GitHub
+## Install
 
-This repository is an OhMyPi plugin package. After publishing it to GitHub, install it globally with the documented GitHub plugin source form:
+Install the published plugin on another machine:
 
 ```sh
-omp plugin install github:<owner>/<repository>
+omp plugin install ompstack
 ```
 
+Update an existing installation after a new npm release:
 
+```sh
+omp plugin upgrade ompstack
+```
+
+## Install unreleased source from GitHub
+
+Use a GitHub source install only when testing an unreleased commit:
+
+```sh
+omp plugin install github:ChiThang-50Cent/ompstack
+```
 
 ## Develop locally
 

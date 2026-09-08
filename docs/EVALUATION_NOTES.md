@@ -31,3 +31,7 @@ Never combine `--no-skills` with a plugin treatment. `--skills ompstack` scopes 
 Before scoring, retain a successful treatment `read skill://ompstack` transcript entry; bare must not resolve that skill. Keep all other task, model, tool, timeout, image, and evaluator inputs identical.
 Use an actual agent-session transcript for this gate: `omp read` bypasses `--skills` filtering and is not valid evidence.
 The runner saves `skill_preflight.stdout.jsonl` and stops before the task rollout if that read fails.
+
+## Valid single-task rerun
+
+`psf__requests-2931` was rerun after the plugin lifecycle update with `--skills ompstack` and a fresh candidate source. Its baseline and candidate oracle evidence are recorded in `docs/BENCHMARK_EVIDENCE.md`. This is a verified task replay, not a replacement for the paired treatment-versus-control evaluation required above.

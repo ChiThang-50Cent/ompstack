@@ -167,5 +167,75 @@
       "writeOwnership": "one task lane per owned subsystem",
       "independentEvidence": "reviewer + verifier + security-reviewer"
     }
+  },
+  {
+    "id": "existing-project-verification-skill",
+    "prompt": "Add an order status field. Use the existing verify-api project skill to drive the public endpoint.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": ["verification"],
+      "risk": "medium",
+      "proofSurface": "verify-api public endpoint drive",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer",
+      "verificationCapability": "existing"
+    }
+  },
+  {
+    "id": "repository-proof-without-skill",
+    "prompt": "Fix the CLI export regression using the repository's existing end-to-end command check.",
+    "expected": {
+      "route": "bug-fix",
+      "overlays": [],
+      "phases": ["verification"],
+      "risk": "medium",
+      "proofSurface": "existing CLI end-to-end command",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier",
+      "verificationCapability": "repository"
+    }
+  },
+  {
+    "id": "explicit-verification-capability",
+    "prompt": "Create an OMP verification skill for this service's public API and prove one mapped endpoint.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": ["verification"],
+      "risk": "medium",
+      "proofSurface": "new verify-api endpoint drive",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier",
+      "verificationCapability": "create"
+    }
+  },
+  {
+    "id": "doctor-blocked-runtime",
+    "prompt": "Verify the current billing API behavior. Its project Doctor reports the required sandbox credential is unavailable.",
+    "expected": {
+      "route": "investigation",
+      "overlays": [],
+      "phases": ["verification"],
+      "risk": "medium",
+      "proofSurface": "verify-billing Doctor and API drive",
+      "writeOwnership": "parent",
+      "independentEvidence": "verifier",
+      "verificationCapability": "blocked"
+    }
+  },
+  {
+    "id": "verification-maintenance",
+    "prompt": "Audit verify-api after the endpoint rewrite. Maintain its feature map and harness without editing product code.",
+    "expected": {
+      "route": "investigation",
+      "overlays": [],
+      "phases": ["verification"],
+      "risk": "medium",
+      "proofSurface": "mapped API drives",
+      "writeOwnership": "parent",
+      "independentEvidence": "verifier",
+      "verificationCapability": "maintain"
+    }
   }
 ]

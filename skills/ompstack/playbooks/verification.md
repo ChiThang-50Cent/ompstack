@@ -4,11 +4,15 @@ Apply this phase after the primary workflow, or with Investigation for a standal
 
 ## Order
 
-1. Fan in implementation work.
-2. Run deterministic gates first.
-3. Only after those pass, spend tokens on independent model review.
-4. Triage findings and fix accepted issues.
-5. Rerun affected evidence after behavior-changing fixes.
+1. Resolve a matching project-native `verify-<surface>` capability or an existing repository proof surface.
+2. Fan in implementation work.
+3. Run the capability's Doctor before its first drive and after a surprising drive. `DOCTOR: BLOCKED` is a verification blocker, not a product verdict.
+4. Run deterministic gates.
+5. Drive the closest real proof surface and preserve the named evidence through cleanup.
+6. Only after deterministic evidence is available, spend tokens on independent model review.
+7. Triage findings and fix accepted issues.
+8. Rerun affected Doctor, gates, drives, and review evidence after behavior-changing fixes.
+9. For autonomous, multi-phase, high-risk, or handoff work, audit a proportional `skill://ompstack-decision-trail`.
 
 ## Verification lanes
 
@@ -24,7 +28,7 @@ Examples:
 
 Choose the narrowest commands that prove the relevant property. Do not run expensive project-wide commands without a reason.
 
-For every behavior-affecting change, name the closest available real proof surface before claiming success: a browser UI flow, CLI/TUI interaction, API consumer, migration replay, or equivalent runtime behavior. Tests, typechecks, and builds support the claim but do not replace that surface. If it cannot be exercised, report the gap as unverified.
+For every behavior-affecting change, use the closest available real proof surface: a project-native verification skill when one matches, otherwise a browser UI flow, CLI/TUI interaction, API consumer, migration replay, or equivalent runtime behavior. Tests, typechecks, and builds support the claim but do not replace that surface. If it cannot be exercised, report the exact gap as `BLOCKED` or unverified.
 
 ### Bundled reviewer
 
@@ -32,9 +36,9 @@ Use `reviewer` for patch-introduced correctness problems, edge cases, regression
 
 ### Behavioral verifier
 
-Use `ompstack-verifier` when correctness depends on executing a command, reproduction, service endpoint, integration test, browser flow through Eval, or another real surface. It is a trusted agent instructed not to edit; Bash and Eval are not a write sandbox. If the required surface is unavailable, require `BLOCKED` instead of accepting weaker evidence.
+Use `ompstack-verifier` when correctness depends on executing a command, reproduction, service endpoint, integration test, browser flow through Eval, or another real surface. When a matching project verification skill exists, run its Doctor and Drive instructions rather than inventing a competing harness. It is a trusted agent instructed not to edit; Bash and Eval are not a write sandbox. If the required surface is unavailable, require `BLOCKED` instead of accepting weaker evidence.
 
-After the verifier returns, the parent checks for unexpected worktree mutations before accepting its verdict.
+The verifier's prose remains advisory. The external verification-contract runner and controller are optional unattended evidence adapters; use them only when a separately owned contract and evidence directory are required. A fresh `VERIFIED` oracle result can support that use case, but it does not replace ordinary project verification capability.
 
 ### Security reviewer
 

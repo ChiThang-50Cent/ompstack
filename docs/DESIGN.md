@@ -13,6 +13,11 @@ The first attempt incorrectly rebuilt several roles that OhMyPi already provides
 | static independent code review | bundled `reviewer` |
 | security review | bundled `security-reviewer` |
 | live/real-surface verification | custom trusted `ompstack-verifier`, instructed not to edit, because bundled reviewer does not run the verification workflow |
+| project-local verification capability | native `.omp/skills/verify-<surface>/SKILL.md`, discovered ahead of plugin skills |
+| feature coverage map | `verify-<surface>/features/` user-POV map |
+| readiness/Doctor | capability-owned read-only check before live drive |
+| verification maintenance | `ompstack-maintain-verification` skill and command, constrained to verification artifacts |
+| decision trail | optional append-only `.omp/audit/<task-slug>.tsv` with OMP artifact/transcript pointers |
 | read-only explanation or recommendation | parent direct inspection; bundled `scout` only for broad unknown discovery |
 | behavior-preserving refactor | `ompstack` Refactoring playbook with a pre-edit behavior pin |
 | empirical design/interaction/timing fork | `ompstack` Prototype playbook and matching-surface observation |
@@ -71,6 +76,15 @@ All behavior-affecting routes name the closest available real proof surface. Tes
 
 For a contested design, one or two `ompstack-architect` tasks run in a design-only batch with identical decision criteria. The parent synthesizes their results before opening a separate implementation batch. A blocking item does not prevent non-blocking siblings in the same batch from starting.
 
+## Verification capability lifecycle
+
+Verification is a maintained project capability, not merely a final task instruction. A behavior-affecting route first prefers a matching native `.omp/skills/verify-<surface>/SKILL.md`, then an existing repository proof surface. Creating a capability is explicit scope, not mandatory ceremony for a narrow change.
+
+Each capability names Launch, Doctor, Drive, Evidence, Cleanup, and any executable Helpers. Its feature map records user-POV access, driving recipe, observable end state, and constraints. Doctor is read-only and reports `READY` or `BLOCKED`; a blocked runtime is a verification gap, not a product verdict.
+
+`ompstack-maintain-verification` audits source coverage and live drives without modifying product code. It distinguishes documentation drift, harness gap, product gap, and unavailable prerequisite. Long-running or handoff work may keep an append-only decision trail that points to OMP `history://`, `agent://`, and artifact evidence rather than introducing a second session store.
+
+
 ## Deliberate omissions
 
 Do not port pstack's Cursor-specific cloud loops, persistent session handoff, Graphite stacks, PR babysitting/landing, vendor model panels, or duplicate owner/scout/reviewer agents. OMP's built-in `task`, `scout`, `reviewer`, and `security-reviewer` remain the native roles. `@slow` and `@task` are operator-remappable OMP role aliases, not package model requirements.
@@ -90,8 +104,23 @@ Additional agents are an escalation response, not a default ritual.
 
 This also follows OMP's task guidance: favor one-pass agents that investigate and edit, avoid scout when targets are already known, and avoid repeating full format/lint/test work in every parallel worker.
 
-## State and verdicts
+## Optional unattended evidence adapter
 
-A verdict is scoped to the current diff/worktree it actually inspected. The parent checks for unexpected worktree mutations after trusted verification. After an accepted finding changes behavior-affecting code, rerun the original deterministic evidence and only the independent lanes whose claims may have become stale.
+A model verifier remains an advisory, read-only lane. It cannot make a completion decision: Bash and Eval are not a sandbox, and a prose verdict is not an oracle result.
 
-This preserves pstack's useful 'fresh verdict after fix-forward' principle without requiring a GitHub/PR automation layer.
+The optional external controller owns a separate run directory with append-only JSONL lifecycle records and one evidence file per attempt:
+
+```text
+QUEUED → EXECUTING → ORACLE_RUNNING → VERIFIED
+                                  └→ NOT_VERIFIED → REPAIRING → EXECUTING
+                                  └→ INCONCLUSIVE
+```
+
+`NOT_VERIFIED` means a complete, integrity-valid oracle ran and a declared predicate failed. Timeout, malformed or missing oracle output, zero executed tests, truncated output, worker failure, and candidate/protected-path mutation are `INCONCLUSIVE`; they never trigger automatic retry.
+
+The controller permits one optional repair attempt only. It never automatically retries timeout, integrity, or malformed-oracle failures.
+
+
+Every evidence record binds contract digest, oracle command digest, candidate snapshot digest, runtime identity, and the caller-declared trust level. `VERIFIED` is valid only while the candidate snapshot and contract digest remain current. A later behavior-affecting edit makes the result stale and the controller's freshness check rejects completion.
+
+This is a bounded control plane, not a general agent framework or a security claim. A same-host `convenience` run remains user-writable. `isolated` or `ci-attested` becomes credible only when an executor, oracle, and artifact store outside the candidate boundary own that run.

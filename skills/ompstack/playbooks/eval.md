@@ -76,6 +76,8 @@ Require structured output for the route decision with this `outputSchema` and `s
 
 Do not expose the scoring rubric or competing variants to the evaluated agent. Run a stratified set that includes read-only, bug-fix, feature, refactoring, runtime, and parallel-work requests.
 
+For verification-lifecycle policy changes, include project capability creation, a Doctor-blocked runtime, maintenance of a stale feature map, and a narrow task that must not create infrastructure. Judge these cases for correct scope as well as route selection.
+
 ## 4. Compare evidence
 
 Report quality before cost:

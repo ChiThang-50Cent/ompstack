@@ -78,3 +78,36 @@ After deterministic gates pass, a high-risk change may use specialized agents:
 The `task` call starts asynchronous jobs. The parent waits for both auto-delivered results or uses `hub wait`, reads any referenced `agent://`, `history://`, or artifact payloads, and only then performs the fan-in synthesis described above.
 
 Add `security-reviewer` only when the actual change crosses a security boundary.
+
+## Project-local verification capability
+
+Create verification infrastructure only when the project lacks a reliable real-surface proof and the user asks for that investment:
+
+```text
+/skill:ompstack-create-verification Create a verification skill for this service's public HTTP API. Reuse its existing integration harness and prove one mapped endpoint.
+```
+
+The generated project artifact is native OMP configuration:
+
+```text
+.omp/skills/verify-api/SKILL.md
+.omp/skills/verify-api/features/README.md
+.omp/skills/verify-api/features/create-order.md
+```
+
+For a long-running task, keep the material route, design, and verification checkpoints in a decision trail. The trail points to the actual OMP artifacts rather than copying their contents:
+
+```text
+bun <ompstack-plugin-root>/scripts/append-decision-trail.mjs \
+  .omp/audit/order-idempotency.tsv implementation \
+  "reserved duplicate-delivery key" \
+  "atomic repository contract prevents a second persistence effect" \
+  "agent://PersistenceLane" \
+  "contract established"
+```
+
+Audit a stale verification skill without modifying product code:
+
+```text
+/ompstack-maintain-verification Audit verify-api after the order endpoint rewrite. Drive each mapped endpoint and report CLEAN, CHANGED, or BLOCKED.
+```

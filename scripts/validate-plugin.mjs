@@ -28,6 +28,13 @@ const evidence = new Set([
   "security-reviewer",
   "reviewer + verifier + security-reviewer",
 ]);
+const verificationCapabilities = new Set([
+  "existing",
+  "repository",
+  "create",
+  "blocked",
+  "maintain",
+]);
 
 function parseFrontmatter(content, path) {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
@@ -63,6 +70,16 @@ const queue = await read("skills/ompstack/playbooks/queue.md");
 const verification = await read("skills/ompstack/playbooks/verification.md");
 const investigation = await read("skills/ompstack/playbooks/investigation.md");
 const evaluation = await read("skills/ompstack/playbooks/eval.md");
+const createVerification = await read("skills/ompstack-create-verification/SKILL.md");
+const maintainVerification = await read("skills/ompstack-maintain-verification/SKILL.md");
+const decisionTrail = await read("skills/ompstack-decision-trail/SKILL.md");
+const featureMapTemplate = await read(
+  "skills/ompstack-create-verification/references/feature-map-template.md",
+);
+const decisionTrailHelper = await read("scripts/append-decision-trail.mjs");
+const maintainVerificationCommand = await read(
+  "commands/ompstack-maintain-verification.md",
+);
 const cases = JSON.parse(await read("tests/fixtures/routing-cases.json"));
 
 assert.match(skill, /^---\nname: ompstack\ndescription: .+/m);
@@ -81,6 +98,26 @@ assert.match(queue, /one owner for every shared type, schema, or API/);
 assert.match(verification, /not a permanent badge or a replacement primary route/);
 assert.match(verification, /Bash and Eval are not a write sandbox/);
 assert.match(investigation, /commit history, blame, issues, pull requests/);
+assert.match(skill, /## Verification capability/);
+assert.match(skill, /project-native `verify-<surface>` skill/);
+assert.match(skill, /skill:\/\/ompstack-create-verification/);
+assert.match(skill, /skill:\/\/ompstack-maintain-verification/);
+assert.match(skill, /skill:\/\/ompstack-decision-trail/);
+assert.match(verification, /DOCTOR: BLOCKED/);
+assert.match(verification, /optional unattended evidence adapters/);
+assert.match(createVerification, /^---\nname: ompstack-create-verification\n/m);
+assert.match(createVerification, /\.omp\/skills\/verify-<surface>\/SKILL\.md/);
+assert.match(createVerification, /## Launch[\s\S]*## Doctor[\s\S]*## Drive[\s\S]*## Evidence[\s\S]*## Cleanup[\s\S]*## Helpers/);
+assert.match(createVerification, /DOCTOR: READY \| BLOCKED/);
+assert.match(maintainVerification, /^---\nname: ompstack-maintain-verification\n/m);
+assert.match(maintainVerification, /`CLEAN`[\s\S]*`CHANGED`[\s\S]*`BLOCKED`/);
+assert.match(maintainVerification, /documentation drift[\s\S]*harness gap[\s\S]*product gap/);
+assert.match(decisionTrail, /^---\nname: ompstack-decision-trail\n/m);
+assert.match(decisionTrail, /ts\tphase\tdecision\twhy\tevidence\tresult/);
+assert.match(decisionTrail, /append-decision-trail\.mjs/);
+assert.match(featureMapTemplate, /^## Sub-features[\s\S]*## How to get to it \(user POV\)[\s\S]*## Driving it with <harness>[\s\S]*## Gotchas/m);
+assert.match(decisionTrailHelper, /export async function appendDecisionTrail/);
+assert.match(maintainVerificationCommand, /Read `skill:\/\/ompstack-maintain-verification`/);
 
 const requiredExampleTerms = [
   "# Constraints\\nPrimary route: feature\\nExecution overlays/phases: none\\nRisk: high",
@@ -117,6 +154,7 @@ assert.match(evaluation, /plugin\/skill disabled/);
 assert.match(evaluation, /neutral identifiers/);
 assert.match(evaluation, /one blinded judge/);
 assert.match(evaluation, /transcripts, tool calls, and produced artifacts/);
+assert.match(evaluation, /project capability creation[\s\S]*Doctor-blocked runtime[\s\S]*stale feature map/);
 assert.match(
   evaluation,
   /"type": "object"[\s\S]*"additionalProperties": false[\s\S]*"overlays"[\s\S]*"phases"[\s\S]*"required":/,
@@ -175,14 +213,15 @@ for (const [name, expected] of expectedAgents) {
 const verifier = agents.get("ompstack-verifier");
 assert.ok(verifier.frontmatter.tools.split(",").map((tool) => tool.trim()).includes("eval"));
 assert.ok(!verifier.frontmatter.tools.split(",").map((tool) => tool.trim()).includes("browser"));
-assert.match(verifier.content, /trusted verifier/);
+assert.match(verifier.content, /advisory evidence/);
 assert.match(verifier.content, /return `BLOCKED` rather than substituting weaker evidence/);
 
-assert.ok(Array.isArray(cases) && cases.length >= 13, "need at least thirteen routing cases");
+assert.ok(Array.isArray(cases) && cases.length >= 18, "need at least eighteen routing cases");
 const caseIds = new Set();
 const coveredRoutes = new Set();
 const coveredOverlays = new Set();
 const coveredPhases = new Set();
+const coveredVerificationCapabilities = new Set();
 for (const testCase of cases) {
   assert.equal(typeof testCase.id, "string");
   assert.ok(testCase.id.trim(), "routing case id must be nonempty");
@@ -223,11 +262,23 @@ for (const testCase of cases) {
   assert.equal(typeof testCase.expected.writeOwnership, "string");
   assert.ok(testCase.expected.writeOwnership.trim(), `${testCase.id} needs write ownership`);
   assert.ok(evidence.has(testCase.expected.independentEvidence), "unknown evidence lane");
+  if (testCase.expected.verificationCapability !== undefined) {
+    assert.ok(
+      verificationCapabilities.has(testCase.expected.verificationCapability),
+      `${testCase.id} has unknown verification capability`,
+    );
+    coveredVerificationCapabilities.add(testCase.expected.verificationCapability);
+  }
 }
 assertExactSet(coveredRoutes, primaryPlaybooks, "covered primary routes");
 assertExactSet(coveredOverlays, overlayNames, "covered execution overlays");
 assertExactSet(coveredPhases, phaseNames, "covered verification phases");
+assertExactSet(
+  coveredVerificationCapabilities,
+  verificationCapabilities,
+  "covered verification capabilities",
+);
 
 console.log(
-  `Validated ${primaryPlaybooks.length} primary routes, ${overlayNames.size} overlay, ${phaseNames.size} phase, ${agents.size} custom agents, and ${cases.length} routing cases.`,
+  `Validated ${primaryPlaybooks.length} primary routes, ${overlayNames.size} overlay, ${phaseNames.size} phase, ${verificationCapabilities.size} verification capabilities, ${agents.size} custom agents, and ${cases.length} routing cases.`,
 );

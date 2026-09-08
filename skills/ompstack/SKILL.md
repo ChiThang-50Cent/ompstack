@@ -38,18 +38,30 @@ Then apply execution guidance without replacing the primary workflow:
 - Several independent work items: apply the queue overlay in `skill://ompstack/playbooks/queue.md`.
 - Verification or merge-readiness: apply the verification phase in `skill://ompstack/playbooks/verification.md`.
 
+## Verification capability
+
+For behavior-affecting work, resolve the proof surface after selecting the primary route:
+
+- Prefer a matching project-native `verify-<surface>` skill under `.omp/skills/`; OMP discovers these ahead of plugin skills.
+- Otherwise reuse an existing repository-owned proof surface.
+- Create a verification capability only when the user explicitly asks, or when no real proof surface can be named and the user extends scope for that infrastructure. Read `skill://ompstack-create-verification`.
+- Maintain an existing project verification skill only on an explicit audit/drift request. Read `skill://ompstack-maintain-verification`.
+An unavailable Doctor or runtime surface is `BLOCKED` evidence with its exact prerequisite. `INCONCLUSIVE` belongs only to an optional external evidence adapter that cannot establish its declared predicate. Neither state is a product `FAIL`.
+
+
 ## Default workflow
 
-1. Establish the target, constraints, acceptance criteria, and proof surface.
-2. Inspect the current state. Use `scout` only if discovery is genuinely broad or the affected files are unknown.
+1. Establish the target, constraints, acceptance criteria, and closest real proof surface.
+2. Inspect the current state. Resolve a project verification capability when its trigger applies. Use `scout` only if discovery is genuinely broad or the affected files are unknown.
 3. For Medium, High, or Critical write work, record the preflight contract below before opening a write lane.
 4. Decide whether architecture work is necessary. Skip it for obvious local changes. For a contested design, submit one or two `ompstack-architect` candidates in a design-only `tasks[]` batch against the same brief. Synthesize their output before starting a separate implementation batch.
 5. Implement in the smallest useful number of write lanes. Prefer one-pass workers that investigate and edit in the same task.
-6. After fan-in, run deterministic validation once from the parent: the narrowest relevant tests, typecheck/lint/build, and the original reproduction for bugs.
-7. Route independent review according to risk. Do not fan out reviewers before deterministic gates pass.
+6. After fan-in, run Doctor when the selected capability requires it, then deterministic validation once from the parent: the narrowest relevant tests, typecheck/lint/build, and the original reproduction for bugs.
+7. Drive the closest real proof surface. Route independent review according to risk only after deterministic evidence is available.
 8. Triage findings. Send accepted findings back to the original write lane or fix them in the parent when the parent owns the change.
-9. If behavior-affecting code changes after a verdict, invalidate the relevant verdict and rerun only the gates/review lanes that could be affected.
-10. Finish with evidence: changed scope, tests/reproduction, review findings, and anything not verified.
+9. If behavior-affecting code changes after a verdict, invalidate the relevant verdict and rerun only the Doctor, gates, drives, and review lanes that could be affected.
+10. For autonomous, multi-phase, high-risk, or handoff work, record material forks and evidence through `skill://ompstack-decision-trail`.
+11. Finish with evidence: changed scope, tests/reproduction, real-surface proof, review findings, and anything not verified.
 
 ## Preflight contract
 

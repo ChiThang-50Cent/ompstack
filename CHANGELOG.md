@@ -2,13 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## [Unreleased]
 
 ### Added
 
 - Added a workflow-evaluation playbook, deterministic plugin validator, and golden routing scenarios.
 - Added measurement-first playbooks for performance issues, live runtime forensics, and captured trace analysis.
 - Added route/overlay/phase coverage and custom-agent capability checks to the deterministic validator.
+
+- Added native project verification capabilities: creation and maintenance skills, feature-map template, Doctor/Drive contract, and append-only decision-trail helper.
+- Added a benchmark evidence record for the verified `psf__requests-2931` rerun.
 
 ### Changed
 
@@ -20,4 +23,5 @@ All notable changes to this project are documented in this file.
 - Separated primary workflow routing from the queue overlay and verification phase.
 - Made task examples self-contained across dependent batches and explicit about asynchronous fan-in.
 - Hardened workflow evaluation with neutral arm identifiers, one blinded judge, and transcript/artifact inspection.
+- Routed verification through matching project-native `verify-<surface>` skills or repository proof surfaces, with Doctor blockers distinct from product failures.
 - Added historical-rationale evidence guidance to read-only investigations.

@@ -4,10 +4,13 @@ A small pstack-inspired workflow built around OhMyPi's native skill, task/subage
 
 It intentionally does **not** recreate OhMyPi's bundled `task`, `scout`, `reviewer`, or `security-reviewer` agents. The plugin adds:
 
-- `skills/ompstack/` — risk routing, preflight contract, workflow evaluation, and measurement-first runtime playbooks
+- `skills/ompstack/` — risk routing, preflight contract, workflow evaluation, and real-surface playbooks
+- `skills/ompstack-create-verification/` — creates project-native `verify-<surface>` skills and feature maps
+- `skills/ompstack-maintain-verification/` — maintains a verification capability without changing product code
+- `skills/ompstack-decision-trail/` — proportional append-only evidence trails for long-running work
 - `agents/ompstack-architect.md` — read-only design advisor
 - `agents/ompstack-verifier.md` — trusted runtime/behavior verifier instructed not to edit; execution tools are not a write sandbox
-- `commands/ompstack.md` — `/ompstack ...` convenience entry point
+- `commands/ompstack.md` and `commands/ompstack-maintain-verification.md` — convenience entry points
 
 ## Install from GitHub
 
@@ -64,22 +67,28 @@ Keep the pstack ideas that transfer cleanly to OMP:
 ```text
 risk route
    ↓
+resolve project verification capability
+   ↓
 minimal discovery/design
    ↓
 one owner per write lane
    ↓
 fan-in
    ↓
-deterministic gates
+doctor + deterministic gates + real-surface drive
    ↓
 independent review / behavior verification
    ↓
-fix-forward + fresh affected verdict
+fresh affected proof + maintained feature map
 ```
 
-Avoid copying Cursor-specific cloud-agent, overnight-loop, PR-auto-merge, and Graphite machinery into a local OMP skill without a native equivalent.
+Avoid copying Cursor-specific cloud-agent, overnight-loop, PR-auto-merge, and Graphite machinery into a local OMP skill without a native equivalent. Reuse OMP-native project skills, task artifacts, transcripts, and Agent Hub instead.
 
-See `docs/DESIGN.md` for the mapping and `examples/usage.md` for task-batch examples.
+Project-specific verification belongs at `.omp/skills/verify-<surface>/SKILL.md`. A matching skill names how to launch, Doctor-check, drive, observe, and clean up the real surface; its `features/` directory records user-POV coverage. Create one explicitly with `/skill:ompstack-create-verification`; audit an existing one with `/ompstack-maintain-verification`.
+
+For autonomous, multi-phase, high-risk, or handoff work, `ompstack-decision-trail` keeps material decisions in `.omp/audit/<task-slug>.tsv` while linking to native `history://`, `agent://`, and artifact evidence.
+
+See `docs/DESIGN.md`, `docs/BENCHMARK_EVIDENCE.md`, and `examples/usage.md`.
 
 ## Validate
 
@@ -90,6 +99,25 @@ bun run check
 ```
 
 The check validates primary-route versus overlay/phase wiring, structured custom-agent capabilities (`tools`, `model`, and `blocking`), preflight rules, self-contained task examples, and complete golden routing coverage. It remains a static contract check; the Eval playbook defines the separate blinded paired behavioral evaluation required for a workflow-policy change.
+
+## Optional unattended evidence adapter
+
+`scripts/run-verification-contract.mjs` executes a versioned verification contract and emits one immutable evidence file per attempt. A v2 contract binds command identity, candidate and protected snapshots, timeout, output cap, oracle result schema, minimum executed tests, and a declared trust level.
+
+`scripts/run-orchestrated-task.mjs` is an optional external controller. It runs an initial worker, evaluates the candidate, permits at most one configured repair worker after a valid `NOT_VERIFIED` result, and appends lifecycle events to a JSONL journal. It accepts completion only from a fresh `VERIFIED` candidate snapshot:
+
+```sh
+bun scripts/run-orchestrated-task.mjs --spec /trusted/orchestration.json
+bun scripts/run-orchestrated-task.mjs --check /trusted/state/<run-id>/run.json
+```
+
+The controller is not an OMP extension and does not turn local execution into a security boundary. It records a caller-declared trust level; only a separately owned executor, oracle, and artifact store can make `isolated` or `ci-attested` meaningful.
+
+Run the behavioral tests for the runner and controller with:
+
+```sh
+bun test tests
+```
 
 ## Attribution
 

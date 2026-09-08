@@ -4,7 +4,8 @@
   "description": "Risk-routed engineering workflow for OhMyPi",
   "private": true,
   "scripts": {
-    "check": "bun scripts/validate-plugin.mjs"
+    "check": "bun scripts/validate-plugin.mjs",
+    "test": "bun test tests"
   },
   "omp": {}
 }

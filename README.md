@@ -102,7 +102,11 @@ Avoid copying Cursor-specific cloud-agent, overnight-loop, PR-auto-merge, and Gr
 
 Project-specific verification belongs at `.omp/skills/verify-<surface>/SKILL.md`. A matching skill names how to launch, Doctor-check, drive, observe, and clean up the real surface; its `features/` directory records user-POV coverage. Create one explicitly with `/skill:ompstack-create-verification`; audit an existing one with `/ompstack-maintain-verification`.
 
+When no matching project capability exists, the verification phase selects the closest proof driver: Browser through Eval for web interaction, live command interaction for CLI/TUI, an existing consumer drive for API/service behavior, DAP debugger observations for live-state mechanisms, and LSP plus an existing behavior pin for symbol refactors. Static checks support these surfaces; they do not replace them.
+
 For autonomous, multi-phase, high-risk, or handoff work, `ompstack-decision-trail` keeps material decisions in `.omp/audit/<task-slug>.tsv` while linking to native `history://`, `agent://`, and artifact evidence.
+
+Prewalk, Advisor, session handoff/export, and Memory are opt-in OMP operator facilities. Ompstack never enables or configures them: Prewalk cannot become a route requirement; Advisor remains inspection-only concern coverage rather than a completion gate; persisted session artifacts remain primary handoff evidence; and any `memory://` context must be cited and revalidated against the current repository. Never share an export or capture a lesson without explicit authorization.
 
 See `docs/DESIGN.md`, `docs/BENCHMARK_EVIDENCE.md`, and `examples/usage.md`.
 

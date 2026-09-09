@@ -43,3 +43,19 @@ The runner saves `skill_preflight.stdout.jsonl` and stops before the task rollou
 ## Valid paired Task/Hub evaluation
 
 `ompstack-task-hub-fanin-policy` is a valid three-case paired evaluation recorded in `docs/BENCHMARK_EVIDENCE.md`. It preserves the bare/treatment isolation and Gemini Flash 3.8 low controls, retains treatment skill preflight, and uses a separate blinded judge over complete final answers plus tool calls. It evaluates supplied fan-in states, not a full worker-lifecycle load test.
+
+## Valid paired proof-surface evaluation
+
+`ompstack-proof-surface-selection-policy` is a valid five-case paired evaluation recorded in `docs/BENCHMARK_EVIDENCE.md`. It preserves the same Gemini Flash 3.8 low bare/treatment isolation, confirms treatment reads both the Ompstack skill and its verification playbook, and uses a separate blinded judge over complete final answers and tool names. It calibrates policy choices for web, CLI/TUI, live-state, symbol-refactor, and project-capability service cases; it does not claim that those real surfaces were executed.
+
+## Fresh paired task calibration: protected-path violation
+
+`sympy__sympy-12489` was rerun as a fresh bare/treatment calibration after the proof-surface policy update. The fresh baseline failed. The bare arm timed out and failed the oracle; the Ompstack source patch passed the hidden oracle after normalization, but its initial candidate modified the protected test path and therefore received `INCONCLUSIVE` under the contract. The complete evidence and limits are recorded in `docs/BENCHMARK_EVIDENCE.md`. Do not report this as an unqualified policy gain.
+
+## Valid paired opt-in capabilities evaluation
+
+`ompstack-opt-in-capabilities-policy` is a valid four-case paired evaluation recorded in `docs/BENCHMARK_EVIDENCE.md`. It preserves the Gemini Flash 3.8 low bare/treatment isolation, confirms treatment skill preflight, and uses a separate blinded judge over complete final answers plus tool names and read paths. It calibrates policy boundaries only; it does not assert that Prewalk, Advisor, handoff/export, or Memory was executed.
+
+## Fresh task replay effort
+
+Future fresh task replays default to `--thinking low` unless the user explicitly overrides that setting. Keep thinking level identical across arms; record any exception before comparing time, token use, or outcome.

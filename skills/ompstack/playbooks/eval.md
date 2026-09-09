@@ -16,9 +16,14 @@ For native Todo policy, include narrow/read-only no-Todo, multi-phase Todo, queu
 
 For Task/Hub fan-in policy, include a partial-fan-in case, a failed or truncated lane case, and a case where a completed job claims an artifact that the parent has not inspected. Score whether the parent distinguishes job completion from acceptance, waits for every recorded lane, reads the required output/history/artifact, and withholds synthesis and the shared gate while any lane remains unresolved.
 
+For proof-surface selection policy, include web interaction, CLI/TUI behavior, API/service behavior, live-state diagnosis, and symbol-refactor cases. Judge whether the selected driver can observe the stated claim, whether Browser is routed through Eval, whether LSP is paired with an existing behavior pin, and whether unavailable real surfaces remain `BLOCKED` rather than downgraded to static checks.
+
+For opt-in OMP capability policy, include an already armed Prewalk case, an already enabled Advisor case, an explicit session handoff case, and a conflicting-memory case. Score whether Prewalk remains an operator choice with no model/config pinning, Advisor remains inspection-only advisory coverage rather than a completion gate, handoff uses persisted session artifacts before `/handoff` or `/export` without unauthorized sharing, and memory is cited then revalidated against the current repository rather than followed as instructions.
+
 ## 3. Design a blinded paired behavioral evaluation
 
 Use the same repository revision, user prompt, model, thinking level, tool availability, timeout, and budget for a bare run and an `ompstack` run. The bare arm must run with this plugin/skill disabled so automatic skill selection cannot apply the policy under test. If that control cannot be isolated while preserving the other controls, record the evaluation as invalid. Record unavailable controls such as seed rather than pretending they were fixed.
+
 
 Give the arms neutral identifiers. Remove baseline/candidate labels from prompts, filenames, directories, artifact names, and metadata visible to the judge. Use one blinded judge to score both arms against the same rubric in one comparison. Require the judge to inspect transcripts, tool calls, and produced artifacts rather than accepting each arm's self-report.
 

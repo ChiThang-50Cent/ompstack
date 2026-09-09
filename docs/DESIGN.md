@@ -86,6 +86,16 @@ Each capability names Launch, Doctor, Drive, Evidence, Cleanup, and any executab
 
 `ompstack-maintain-verification` audits source coverage and live drives without modifying product code. It distinguishes documentation drift, harness gap, product gap, and unavailable prerequisite. Long-running or handoff work may keep an append-only decision trail that points to OMP `history://`, `agent://`, and artifact evidence rather than introducing a second session store.
 
+## Proof-surface selection
+
+The verification phase selects the closest consumer-visible driver, not the easiest static command. A matching `verify-<surface>` capability remains first choice. Otherwise: web workflows use Browser through Eval with observation and screenshot evidence; CLI/TUI flows use real arguments, exit status, transcript, and promised effect; API/service claims use an existing capability or repository consumer drive; live-state mechanisms use DAP debugger observations; and symbol refactors use LSP plus their pre-existing behavior pin. Browser is an Eval prelude rather than an agent tool, while LSP migration evidence does not prove runtime behavior. A missing required driver is `BLOCKED`, never a substituted static check.
+
+## Opt-in OMP capabilities
+
+Prewalk, Advisor, session handoff, export, and Memory are operator/session facilities rather than route requirements. Ompstack never enables Prewalk, pins a target model, or configures agent prewalk. An already armed Prewalk may open on a successful Todo call and hand off once after the first workspace edit/write, so every route must also remain correct with no Prewalk and no Todo.
+
+Ompstack never enables Advisor, creates `WATCHDOG.md`/`WATCHDOG.yml`, or grants advisor write tools. An operator may use OMP's default inspection-only advisor for a long-running High/Critical route, but its concern remains advisory and never replaces reviewer/verifier evidence. For a requested handoff, persisted session artifacts, `history://`, and `agent://` remain primary; `/handoff` creates a compact continuation record and `/export` creates a reviewable HTML artifact. Exports may contain sensitive session material and are never shared or uploaded without authorization. Memory stays disabled unless an operator configures it; a `memory://` artifact is heuristic context that must be cited and revalidated against current repository evidence before it affects a decision. Only explicitly requested, sanitized, durable lessons may be captured.
+
 
 ## Deliberate omissions
 

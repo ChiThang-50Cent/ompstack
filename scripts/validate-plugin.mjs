@@ -151,6 +151,23 @@ assert.match(design, /Native Todo is a separate conditional parent progress laye
 assert.match(readme, /conditional native Todo progress state/);
 assert.match(verification, /DOCTOR: BLOCKED/);
 assert.match(verification, /optional unattended evidence adapters/);
+assert.match(skill, /proof-surface matrix/);
+assert.match(verification, /## Proof-surface selection/);
+assert.match(verification, /Browser through Eval/);
+assert.match(verification, /LSP proves symbol migration only/);
+assert.match(verification, /health check alone is not consumer proof/);
+assert.match(verification, /do not silently downgrade to a weaker proof/);
+assert.match(design, /## Proof-surface selection/);
+assert.match(readme, /Browser through Eval for web interaction/);
+assert.match(examples, /web workflow      → Browser through Eval/);
+assert.match(skill, /## Opt-in OMP capabilities/);
+assert.match(skill, /Ompstack never enables Prewalk/);
+assert.match(skill, /never enables Advisor, creates watchdog files, or grants an advisor mutating tools/);
+assert.match(skill, /Persisted session artifacts, `history:\/\/`, and `agent:\/\/` are primary evidence/);
+assert.match(skill, /Memory is optional heuristic context, not current-repository truth/);
+assert.match(design, /## Opt-in OMP capabilities/);
+assert.match(readme, /Prewalk, Advisor, session handoff\/export, and Memory are opt-in/);
+assert.match(examples, /## Opt-in OMP capability boundaries/);
 assert.match(createVerification, /^---\nname: ompstack-create-verification\n/m);
 assert.match(createVerification, /\.omp\/skills\/verify-<surface>\/SKILL\.md/);
 assert.match(createVerification, /## Launch[\s\S]*## Doctor[\s\S]*## Drive[\s\S]*## Evidence[\s\S]*## Cleanup[\s\S]*## Helpers/);
@@ -205,6 +222,8 @@ assert.match(evaluation, /transcripts, tool calls, and produced artifacts/);
 assert.match(evaluation, /project capability creation[\s\S]*Doctor-blocked runtime[\s\S]*stale feature map/);
 assert.match(evaluation, /narrow\/read-only no-Todo[\s\S]*multi-phase Todo[\s\S]*queue\/fan-in Todo[\s\S]*Doctor-blocked Todo/);
 assert.match(evaluation, /partial-fan-in case[\s\S]*failed or truncated lane case[\s\S]*completed job claims an artifact/);
+assert.match(evaluation, /web interaction[\s\S]*CLI\/TUI behavior[\s\S]*API\/service behavior[\s\S]*live-state diagnosis[\s\S]*symbol-refactor cases/);
+assert.match(evaluation, /already armed Prewalk case[\s\S]*already enabled Advisor case[\s\S]*explicit session handoff case[\s\S]*conflicting-memory case/);
 assert.match(
   evaluation,
   /"type": "object"[\s\S]*"additionalProperties": false[\s\S]*"overlays"[\s\S]*"phases"[\s\S]*"progressTracking"[\s\S]*"required":/,
@@ -280,6 +299,19 @@ const requiredTodoProgressCases = new Map([
   ["independent-package-queue", "native todo"],
   ["doctor-blocked-runtime", "native todo"],
 ]);
+const requiredProofSurfaceCases = new Map([
+  ["web-interaction-proof", "Eval Browser checkout flow with observed state and screenshot"],
+  ["cli-interaction-proof", "live CLI export invocation with exit status and terminal transcript"],
+  ["runtime-debugger-proof", "DAP debugger stack and variable observation"],
+  ["symbol-refactor-proof", "LSP references and rename plus existing behavior pin"],
+  ["service-capability-proof", "verify-service Doctor and API consumer drive"],
+]);
+const requiredOptInCapabilityCases = new Map([
+  ["prewalk-operator-option", "feature proof independent of the operator Prewalk handoff"],
+  ["advisor-concern-boundary", "real billing behavior proof with Advisor as inspection-only concern coverage"],
+  ["session-handoff-artifacts", "persisted session artifacts with an explicit compact handoff record"],
+  ["memory-revalidation-boundary", "current repository evidence with cited and revalidated memory context"],
+]);
 for (const testCase of cases) {
   assert.equal(typeof testCase.id, "string");
   assert.ok(testCase.id.trim(), "routing case id must be nonempty");
@@ -349,6 +381,16 @@ for (const [id, progressTracking] of requiredTodoProgressCases) {
     progressTracking,
     `${id} has wrong Todo progress tracking`,
   );
+}
+for (const [id, proofSurface] of requiredProofSurfaceCases) {
+  const testCase = cases.find((candidate) => candidate.id === id);
+  assert.ok(testCase, `missing proof-surface case: ${id}`);
+  assert.equal(testCase.expected.proofSurface, proofSurface, `${id} has wrong proof surface`);
+}
+for (const [id, proofSurface] of requiredOptInCapabilityCases) {
+  const testCase = cases.find((candidate) => candidate.id === id);
+  assert.ok(testCase, `missing opt-in capability case: ${id}`);
+  assert.equal(testCase.expected.proofSurface, proofSurface, `${id} has wrong proof surface`);
 }
 assertExactSet(
   coveredVerificationCapabilities,

@@ -283,5 +283,132 @@
       "writeOwnership": "one task lane per owned surface",
       "independentEvidence": "reviewer"
     }
+  },
+  {
+    "id": "web-interaction-proof",
+    "prompt": "Add a checkout confirmation workflow and prove the user-visible interaction in the web UI.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "Eval Browser checkout flow with observed state and screenshot",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier"
+    }
+  },
+  {
+    "id": "cli-interaction-proof",
+    "prompt": "Fix the export command and prove its user-visible CLI output.",
+    "expected": {
+      "route": "bug-fix",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "live CLI export invocation with exit status and terminal transcript",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier"
+    }
+  },
+  {
+    "id": "runtime-debugger-proof",
+    "prompt": "Diagnose the live session-state race and capture its runtime mechanism. Do not edit source.",
+    "expected": {
+      "route": "runtime-forensics",
+      "overlays": [],
+      "phases": [],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "DAP debugger stack and variable observation",
+      "writeOwnership": "parent",
+      "independentEvidence": "none"
+    }
+  },
+  {
+    "id": "symbol-refactor-proof",
+    "prompt": "Rename the order status symbol without changing behavior, then prove callers still work.",
+    "expected": {
+      "route": "refactoring",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "LSP references and rename plus existing behavior pin",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer"
+    }
+  },
+  {
+    "id": "service-capability-proof",
+    "prompt": "Add billing API behavior and use the existing verify-service skill to drive its consumer path.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "verify-service Doctor and API consumer drive",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer",
+      "verificationCapability": "existing"
+    }
+  },
+  {
+    "id": "prewalk-operator-option",
+    "prompt": "Implement an order feature while an operator has already armed OMP Prewalk. Do not change session configuration.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "feature proof independent of the operator Prewalk handoff",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier"
+    }
+  },
+  {
+    "id": "advisor-concern-boundary",
+    "prompt": "Complete a long-running high-risk billing change while an operator has enabled an Advisor. Do not replace independent verification.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "none",
+      "risk": "high",
+      "proofSurface": "real billing behavior proof with Advisor as inspection-only concern coverage",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer + verifier"
+    }
+  },
+  {
+    "id": "session-handoff-artifacts",
+    "prompt": "Prepare an explicit handoff for the completed investigation without creating another session store.",
+    "expected": {
+      "route": "investigation",
+      "overlays": [],
+      "phases": [],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "persisted session artifacts with an explicit compact handoff record",
+      "writeOwnership": "parent",
+      "independentEvidence": "none"
+    }
+  },
+  {
+    "id": "memory-revalidation-boundary",
+    "prompt": "Investigate a remembered API decision that conflicts with the current repository implementation. Do not modify memory.",
+    "expected": {
+      "route": "investigation",
+      "overlays": [],
+      "phases": [],
+      "progressTracking": "none",
+      "risk": "low",
+      "proofSurface": "current repository evidence with cited and revalidated memory context",
+      "writeOwnership": "parent",
+      "independentEvidence": "none"
+    }
   }
 ]

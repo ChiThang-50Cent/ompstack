@@ -100,6 +100,29 @@ Parent:
 
 Only the parent mutates Todo. A task worker reports its output and evidence; it does not own the parent progress list.
 
+## Proof-surface selection
+
+```text
+web workflow      → Browser through Eval → observed state + screenshot
+CLI/TUI behavior  → live command interaction → exit status + transcript + promised effect
+API/service       → existing verify-<surface> or repository consumer → response + side effect
+live state/race   → DAP debugger → observed stack/scope/variable mechanism
+symbol refactor   → LSP references/rename/diagnostics + existing behavior pin
+```
+
+Use the project verification capability first when it matches. Browser is only available through Eval, and LSP proves symbol migration rather than behavior. If the required driver is unavailable, report its exact `BLOCKED` prerequisite instead of replacing it with a static check.
+
+## Opt-in OMP capability boundaries
+
+```text
+Prewalk already armed   → preserve operator setting; route remains correct without it or Todo
+Advisor already enabled → inspection-only concern coverage; reviewer/verifier still prove completion
+Explicit handoff        → persisted session artifacts first; /handoff for compact continuation; /export for review
+Memory influences plan  → cite memory:// path; revalidate against current repository; capture no automatic lesson
+```
+
+Ompstack does not enable Prewalk or Advisor, create `WATCHDOG.md`/`WATCHDOG.yml`, pin a model, share exports, or configure/capture Memory. An authorized operator can opt in to those OMP facilities; their settings do not replace user authorization or a real proof surface.
+
 ## Project-local verification capability
 
 Create verification infrastructure only when the project lacks a reliable real-surface proof and the user asks for that investment:

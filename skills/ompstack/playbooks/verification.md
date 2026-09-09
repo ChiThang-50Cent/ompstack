@@ -23,6 +23,20 @@ Apply these rules only when the parent selected `Progress tracking: native todo`
 3. When the prerequisite is available, the parent calls `todo.unblock`, then reruns Doctor before driving the surface.
 4. When a behavior-changing patch invalidates a verdict, append a distinct rerun item before rerunning affected proof. Never reuse a completed verification item as fresh evidence.
 
+## Proof-surface selection
+
+Prefer a matching project-native `verify-<surface>` capability. Its Launch, Doctor, Drive, Evidence, and Cleanup instructions own the real-surface procedure. Without one, choose one closest driver:
+
+| Change or claim | Drive | Evidence boundary |
+| --- | --- | --- |
+| Web user workflow | Use Browser through Eval; open an OMP-owned named tab, observe before interaction, then preserve a screenshot and observed state. Use `read` for static URLs. | Browser is an Eval prelude, not an independent agent tool. Relay/CDP acts on a user's session only with explicit authorization and a named target. |
+| CLI or TUI behavior | Exercise the actual command or terminal path with its real arguments and environment. | Capture the exit status plus terminal output and the promised observable effect. |
+| API or service behavior | Use the existing project verification capability or repository-owned consumer/client drive. | Capture the response and every promised side effect; a health check alone is not consumer proof. Do not create verification infrastructure unless the user extends scope. |
+| Live state, race, or runtime mechanism | Use the native DAP debugger to launch/attach, then inspect a breakpoint, stack, scope, variable, or controlled state transition. | Preserve the observed runtime mechanism; source-only reasoning remains a hypothesis. |
+| Symbol-preserving refactor | Use LSP references, rename, diagnostics, or code actions as appropriate. | LSP proves symbol migration only. Preserve and run the existing behavior pin or consumer drive separately. |
+
+Record the selected driver, observable predicate, evidence location, and exact unavailable prerequisite before driving. If a required driver or runtime is unavailable, report `BLOCKED`; do not silently downgrade to a weaker proof.
+
 ## Verification lanes
 
 ### Deterministic gates

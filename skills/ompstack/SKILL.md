@@ -64,6 +64,17 @@ For behavior-affecting work, resolve the proof surface after selecting the prima
 - Maintain an existing project verification skill only on an explicit audit/drift request. Read `skill://ompstack-maintain-verification`.
 An unavailable Doctor or runtime surface is `BLOCKED` evidence with its exact prerequisite. `INCONCLUSIVE` belongs only to an optional external evidence adapter that cannot establish its declared predicate. Neither state is a product `FAIL`.
 
+When no matching project capability exists, select the closest driver and name its observation and evidence using `skill://ompstack/playbooks/verification.md`'s proof-surface matrix. Do not substitute a static check for an available real surface; an unavailable required surface is `BLOCKED`.
+
+## Opt-in OMP capabilities
+
+These are operator/session facilities, never prerequisites for an Ompstack route or proof:
+
+- **Prewalk:** Ompstack never enables Prewalk, selects its target model, or sets agent prewalk configuration. If an operator already armed it, preserve that setting and name the consequence: a successful Todo call can open its gate and the first workspace `edit` or `write` performs its one-shot handoff. A route must remain correct with no Todo and no Prewalk.
+- **Advisor and `WATCHDOG.md`:** Ompstack never enables Advisor, creates watchdog files, or grants an advisor mutating tools. An operator may opt into the default inspection-only advisor for a long-running High/Critical route. Its notes are concerns, not a completion gate or behavioral evidence; keep the normal reviewer/verifier path.
+- **Session handoff:** Persisted session artifacts, `history://`, and `agent://` are primary evidence. On an explicit handoff request, `/handoff` creates a compact continuation record and `/export` produces a reviewable HTML artifact. Treat exports as potentially sensitive; never share or upload them without authorization. Do not add a session store or duplicate transcript.
+- **Memory:** Memory is optional heuristic context, not current-repository truth. Ompstack never enables a memory backend or captures a lesson automatically. When memory affects a decision, cite its `memory://` path and revalidate it against user instruction and current repository evidence; capture only user-approved, sanitized, durable lessons.
+
 
 ## Default workflow
 

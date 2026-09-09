@@ -1,6 +1,6 @@
 {
   "name": "ompstack",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Risk-routed engineering workflow for OhMyPi",
   "files": [
     "agents",

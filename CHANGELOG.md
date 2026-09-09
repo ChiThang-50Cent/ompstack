@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-09
+
 ### Changed
 
 - Finalize non-Low write-task risk from a direct mutation-target scan; unresolved material uncertainty now escalates to High and requires reviewer plus verifier evidence.

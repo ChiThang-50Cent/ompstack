@@ -78,7 +78,7 @@ Or invoke the skill directly:
 /skill:ompstack Add idempotent webhook handling and verify duplicate delivery behavior.
 ```
 
-The skill may also be selected automatically from its description when the task matches.
+Ompstack is intended for explicit invocation through `/ompstack` or `/skill:ompstack`; it is not the default workflow for every coding task.
 
 ## Design goal
 

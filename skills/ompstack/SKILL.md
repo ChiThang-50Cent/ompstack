@@ -1,6 +1,6 @@
 ---
 name: ompstack
-description: Risk-routed engineering workflow for OhMyPi coding tasks. Read this skill before coordination; for native Todo, call todo.view before todo.init.
+description: Explicitly invoked Ompstack risk-routed engineering workflow. Use only when the user invokes /ompstack or /skill:ompstack, or another skill explicitly requires it.
 ---
 
 # ompstack

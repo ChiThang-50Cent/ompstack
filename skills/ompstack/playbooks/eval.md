@@ -100,6 +100,8 @@ Report quality before cost:
 - delegations or reviews that produced no distinct evidence
 - token usage, request count, and wall time
 
+For a cost-policy change, retain per-run model turns; input, output, cache-read, and cache-write tokens; tool invocation counts and captured output bytes; normalized test-command reinvocations; and compaction or pruning events. Aggregate token totals alone cannot identify the dominant cost.
+
 A single task is calibration, not a conclusion. Attribute differences to the policy only when repeated paired results support them.
 
 ## 5. Promote or reject

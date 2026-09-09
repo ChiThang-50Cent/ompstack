@@ -410,5 +410,19 @@
       "writeOwnership": "parent",
       "independentEvidence": "none"
     }
+  },
+  {
+    "id": "localized-bug-economy-stop",
+    "prompt": "A localized bug's original reproduction passed after the last source edit, and the smallest distinct regression suite is green. No repository completion gate is required, and no relevant source, dependency, test configuration, or environment changed. Finish without rerunning a passing command.",
+    "expected": {
+      "route": "bug-fix",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "original reproduction followed by one distinct smallest regression suite",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier"
+    }
   }
 ]

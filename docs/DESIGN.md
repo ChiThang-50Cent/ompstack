@@ -116,6 +116,8 @@ Additional agents are an escalation response, not a default ritual.
 
 This also follows OMP's task guidance: favor one-pass agents that investigate and edit, avoid scout when targets are already known, and avoid repeating full format/lint/test work in every parallel worker.
 
+For a localized bug with a known proof surface, rerun the original reproduction after each material relevant change. Once it passes, run the one distinct smallest regression suite next; do not insert a static or broad gate unless the repository requires it. Do not rerun either command without another relevant change. After both pass, do not add a broad gate solely for confidence; repository-required gates and risk-selected independent evidence remain required.
+
 ## Optional unattended evidence adapter
 
 A model verifier remains an advisory, read-only lane. It cannot make a completion decision: Bash and Eval are not a sandbox, and a prose verdict is not an oracle result.
@@ -131,6 +133,7 @@ QUEUED → EXECUTING → ORACLE_RUNNING → VERIFIED
 `NOT_VERIFIED` means a complete, integrity-valid oracle ran and a declared predicate failed. Timeout, malformed or missing oracle output, zero executed tests, truncated output, worker failure, and candidate/protected-path mutation are `INCONCLUSIVE`; they never trigger automatic retry.
 
 The controller permits one optional repair attempt only. It never automatically retries timeout, integrity, or malformed-oracle failures.
+
 
 
 Every evidence record binds contract digest, oracle command digest, candidate snapshot digest, runtime identity, and the caller-declared trust level. `VERIFIED` is valid only while the candidate snapshot and contract digest remain current. A later behavior-affecting edit makes the result stale and the controller's freshness check rejects completion.

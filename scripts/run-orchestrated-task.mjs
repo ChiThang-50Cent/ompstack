@@ -146,6 +146,7 @@ export async function runOrchestratedTask({ specification, specificationPath, ru
     schemaVersion: 1,
     specificationDigest: sha256(stableJson(specification)),
   };
+
   await appendJournal(journalPath, { state: "QUEUED", type: "state" });
   await writeJsonAtomically(runPath, { ...baseRun, final: null, status: "RUNNING" });
 

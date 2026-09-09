@@ -75,6 +75,7 @@ test("controller records a bounded repair attempt and only completes on a fresh 
     assert.ok(journal.some((event) => event.state === "REPAIRING"));
     assert.ok(journal.some((event) => event.state === "VERIFIED"));
 
+
     await Bun.write(join(candidate, "candidate.txt"), "regressed");
     assert.deepEqual(await checkFreshness(run), { fresh: false, reason: "candidate_changed" });
     await Bun.write(join(candidate, "candidate.txt"), "fixed");

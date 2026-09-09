@@ -67,6 +67,7 @@ const skill = await read("skills/ompstack/SKILL.md");
 const command = await read("commands/ompstack.md");
 const examples = await read("examples/usage.md");
 const feature = await read("skills/ompstack/playbooks/feature.md");
+const bugFix = await read("skills/ompstack/playbooks/bug-fix.md");
 const queue = await read("skills/ompstack/playbooks/queue.md");
 const verification = await read("skills/ompstack/playbooks/verification.md");
 const investigation = await read("skills/ompstack/playbooks/investigation.md");
@@ -230,6 +231,15 @@ assert.match(
 );
 assert.match(evaluation, /"progressTracking"[\s\S]*"none"[\s\S]*"native todo"/);
 assert.match(evaluation, /"reviewer \+ verifier \+ security-reviewer"/);
+assert.match(bugFix, /## 5\. Avoid redundant verification/);
+assert.match(bugFix, /Once that reproduction passes, do not rerun the same command/);
+assert.match(bugFix, /distinct smallest relevant regression suite/);
+assert.match(bugFix, /Do not add a project-wide lint, typecheck, build, or another broad suite solely for confidence/);
+assert.match(bugFix, /If the distinct smallest relevant regression suite is still pending, run it next/);
+assert.match(
+  evaluation,
+  /model turns; input, output, cache-read, and cache-write tokens[\s\S]*normalized test-command reinvocations/,
+);
 
 for (const playbook of playbooks) {
   const path = `skills/ompstack/playbooks/${playbook}.md`;
@@ -312,6 +322,10 @@ const requiredOptInCapabilityCases = new Map([
   ["session-handoff-artifacts", "persisted session artifacts with an explicit compact handoff record"],
   ["memory-revalidation-boundary", "current repository evidence with cited and revalidated memory context"],
 ]);
+const requiredEfficiencyCase = {
+  id: "localized-bug-economy-stop",
+  proofSurface: "original reproduction followed by one distinct smallest regression suite",
+};
 for (const testCase of cases) {
   assert.equal(typeof testCase.id, "string");
   assert.ok(testCase.id.trim(), "routing case id must be nonempty");
@@ -392,6 +406,13 @@ for (const [id, proofSurface] of requiredOptInCapabilityCases) {
   assert.ok(testCase, `missing opt-in capability case: ${id}`);
   assert.equal(testCase.expected.proofSurface, proofSurface, `${id} has wrong proof surface`);
 }
+const efficiencyCase = cases.find((candidate) => candidate.id === requiredEfficiencyCase.id);
+assert.ok(efficiencyCase, `missing efficiency case: ${requiredEfficiencyCase.id}`);
+assert.equal(
+  efficiencyCase.expected.proofSurface,
+  requiredEfficiencyCase.proofSurface,
+  `${requiredEfficiencyCase.id} has wrong proof surface`,
+);
 assertExactSet(
   coveredVerificationCapabilities,
   verificationCapabilities,

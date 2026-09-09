@@ -1,0 +1,29 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ompstack",
+  "owner": {
+    "name": "ChiThang-50Cent"
+  },
+  "metadata": {
+    "description": "Risk-routed engineering workflows for Oh My Pi",
+    "version": "0.2.1"
+  },
+  "plugins": [
+    {
+      "name": "ompstack",
+      "description": "Risk-routed engineering workflow for Oh My Pi",
+      "version": "0.2.1",
+      "source": {
+        "source": "github",
+        "repo": "ChiThang-50Cent/ompstack",
+        "ref": "v0.2.1",
+        "sha": "f03265ba23008059e665e5bfdfea941b1fa96a1f"
+      },
+      "category": "development",
+      "homepage": "https://github.com/ChiThang-50Cent/ompstack",
+      "repository": "https://github.com/ChiThang-50Cent/ompstack",
+      "keywords": ["oh-my-pi", "workflow", "verification", "subagents"],
+      "tags": ["omp", "development", "engineering"]
+    }
+  ]
+}

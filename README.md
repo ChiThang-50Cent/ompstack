@@ -12,18 +12,26 @@ It intentionally does **not** recreate OhMyPi's bundled `task`, `scout`, `review
 - `agents/ompstack-verifier.md` — trusted runtime/behavior verifier instructed not to edit; execution tools are not a write sandbox
 - `commands/ompstack.md` and `commands/ompstack-maintain-verification.md` — convenience entry points
 
-## Install
-
-Install the published plugin on another machine:
+## Install from the marketplace
 
 ```sh
-omp plugin install ompstack
+omp plugin marketplace add ChiThang-50Cent/ompstack
+omp plugin install ompstack@ompstack
 ```
 
-Update an existing installation after a new npm release:
+Upgrade after a marketplace release:
 
 ```sh
-omp plugin upgrade ompstack
+omp plugin marketplace update ompstack
+omp plugin upgrade ompstack@ompstack
+```
+
+## Install from npm
+
+The npm package remains available as an alternative distribution channel:
+
+```sh
+omp plugin install npm:ompstack
 ```
 
 ## Install unreleased source from GitHub

@@ -16,20 +16,25 @@ Separate:
 - hypotheses
 - evidence that distinguishes those hypotheses
 
-## 3. Implement narrowly
+## 3. Finalize risk from the mutation target
+
+Before opening a write lane or selecting independent evidence, inspect the confirmed mutation target and record its semantic boundary, consumer families, execution modes, invariants, graph/reference behavior, and material unknowns. Do not classify a bug from its symptom or expected diff size.
+
+Medium requires source evidence that the target is local and bounded. Shared normalization/parser/serializer/compiler/cache/fallback behavior, multiple execution modes, graph traversal, compatibility/concurrency behavior, or material uncertainty require High.
+
+## 4. Implement narrowly
 
 Use the parent for a small local fix. Delegate to the default `task` worker when the change is substantial, naturally separable, or the parent should remain a coordinator.
 
 Give the worker the reproduction, target path, known root-cause evidence, constraints, and acceptance criteria.
 
-
-## 4. Prove with the same surface
+## 5. Prove with the same surface
 
 After the fix, rerun the original failing reproduction when feasible. Passing unrelated tests is not a substitute for the original surface.
 
 Then run the smallest relevant regression suite.
 
-## 5. Avoid redundant verification
+## 6. Avoid redundant verification
 
 For a localized bug with a known proof surface:
 - Rerun the original reproduction after each material change to the relevant source, dependency, test configuration, or environment.
@@ -40,9 +45,9 @@ For a localized bug with a known proof surface:
 
 This preserves the original proof surface; it does not justify skipping a repository-required completion gate or required independent evidence.
 
-## 6. Independent verification
+## 7. Independent verification
 
 - Medium risk: use either `ompstack-verifier` or `reviewer`, whichever supplies evidence not already covered.
 - High/Critical: use `reviewer` plus `ompstack-verifier`; add `security-reviewer` only when security-relevant.
 
-If a finding causes a code change, rerun the original reproduction and any independent verdict whose assumptions could have changed.
+If discovery or implementation changes the risk scan, reclassify before closeout. A Medium-to-High change requires both reviewer and verifier. If a finding causes a code change, rerun the original reproduction and any independent verdict whose assumptions could have changed.

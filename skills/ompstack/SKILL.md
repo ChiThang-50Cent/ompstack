@@ -33,9 +33,11 @@ When Todo is active, use stable unique 5–10 word task names, non-empty route-s
 
 Todo state is deliberately separate from Hub/task lifecycle, feature maps, session artifacts, and the proportional decision trail.
 
-## Start by routing risk
+## Route intent, then finalize risk
 
-Classify the change before spawning agents. Read `skill://ompstack/playbooks/risk-routing.md`.
+Select the primary workflow from task intent before spawning agents. Read `skill://ompstack/playbooks/risk-routing.md`.
+
+For every non-Low write task, inspect the mutation target directly before selecting final risk, write ownership, or independent evidence. Record the target, semantic boundary, consumer families, execution modes, invariants, graph/reference behavior, and material unknowns. A final Medium route requires source evidence that this surface is bounded and local; unresolved material uncertainty escalates to High. Use `scout` only when direct mapping is genuinely broad or the target remains unknown.
 
 Select one primary workflow by task intent:
 
@@ -80,15 +82,17 @@ These are operator/session facilities, never prerequisites for an Ompstack route
 
 1. Establish the target, constraints, acceptance criteria, and closest real proof surface.
 2. Inspect the current state. Resolve a project verification capability when its trigger applies. Use `scout` only if discovery is genuinely broad or the affected files are unknown.
-3. For Medium, High, or Critical write work, record the preflight contract below before opening a write lane.
-4. Decide whether architecture work is necessary. Skip it for obvious local changes. For a contested design, submit one or two `ompstack-architect` candidates in a design-only `tasks[]` batch against the same brief. Synthesize their output before starting a separate implementation batch.
-5. Implement in the smallest useful number of write lanes. Prefer one-pass workers that investigate and edit in the same task.
-6. After fan-in, run Doctor when the selected capability requires it, then deterministic validation once from the parent: the narrowest relevant tests, typecheck/lint/build, and the original reproduction for bugs.
-7. Drive the closest real proof surface. Route independent review according to risk only after deterministic evidence is available.
-8. Triage findings. Send accepted findings back to the original write lane or fix them in the parent when the parent owns the change.
-9. If behavior-affecting code changes after a verdict, invalidate the relevant verdict and rerun only the Doctor, gates, drives, and review lanes that could be affected.
-10. For autonomous, multi-phase, high-risk, or handoff work, record material forks and evidence through `skill://ompstack-decision-trail`.
-11. Finish with evidence: changed scope, tests/reproduction, real-surface proof, review findings, and anything not verified.
+3. For every non-Low write task, complete the direct risk scan and select final risk from its source evidence.
+4. For Medium, High, or Critical write work, record the preflight contract below before opening a write lane.
+5. Decide whether architecture work is necessary. Skip it for obvious local changes. For a contested design, submit one or two `ompstack-architect` candidates in a design-only `tasks[]` batch against the same brief. Synthesize their output before starting a separate implementation batch.
+6. Implement in the smallest useful number of write lanes. Prefer one-pass workers that investigate and edit in the same task.
+7. After fan-in, run Doctor when the selected capability requires it, then deterministic validation once from the parent: the narrowest relevant tests, typecheck/lint/build, and the original reproduction for bugs.
+8. Drive the closest real proof surface. Route independent review according to risk only after deterministic evidence is available.
+9. Reclassify when discovery, implementation, or a finding changes the risk scan. A Medium-to-High reclassification requires both reviewer and verifier before closeout.
+10. Triage findings. Send accepted findings back to the original write lane or fix them in the parent when the parent owns the change.
+11. If behavior-affecting code changes after a verdict, invalidate the relevant verdict and rerun only the Doctor, gates, drives, and review lanes that could be affected.
+12. For autonomous, multi-phase, high-risk, or handoff work, record material forks and evidence through `skill://ompstack-decision-trail`.
+13. Finish with evidence: changed scope, tests/reproduction, real-surface proof, review findings, and anything not verified.
 
 ## Preflight contract
 
@@ -102,6 +106,12 @@ Observable behavior and exact proof surface.
 Primary route: <playbook>
 Execution overlays/phases: <none|queue|verification|queue + verification>
 Risk: <low|medium|high|critical>
+Risk basis:
+- Mutation target: <file:symbol or equivalent source evidence>
+- Semantic boundary: <local|shared|public|security>
+- Consumers and modes: <bounded list>
+- Invariants and graph/reference behavior: <none or stated behavior>
+- Material unknowns: <none or stated uncertainty>
 Progress tracking: <none|native todo>
 Compatibility and repository constraints.
 

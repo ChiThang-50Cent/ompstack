@@ -20,6 +20,8 @@ For proof-surface selection policy, include web interaction, CLI/TUI behavior, A
 
 For opt-in OMP capability policy, include an already armed Prewalk case, an already enabled Advisor case, an explicit session handoff case, and a conflicting-memory case. Score whether Prewalk remains an operator choice with no model/config pinning, Advisor remains inspection-only advisory coverage rather than a completion gate, handoff uses persisted session artifacts before `/handoff` or `/export` without unauthorized sharing, and memory is cited then revalidated against the current repository rather than followed as instructions.
 
+For risk-routing policy changes, use a causal fixture family rather than one incident-shaped prompt. Include a shared semantic-boundary case, a renamed/domain-shifted twin with the same risk facts, a local bounded control, and a material-uncertainty control. The fixture identifiers, expected verdicts, and scoring rubric remain hidden from the evaluated agent. Score whether the agent inspected the mutation target before final risk, named source evidence for the risk basis, selected High for hard triggers, and preserved Medium for the local control.
+
 ## 3. Design a blinded paired behavioral evaluation
 
 Use the same repository revision, user prompt, model, thinking level, tool availability, timeout, and budget for a bare run and an `ompstack` run. The bare arm must run with this plugin/skill disabled so automatic skill selection cannot apply the policy under test. If that control cannot be isolated while preserving the other controls, record the evaluation as invalid. Record unavailable controls such as seed rather than pretending they were fixed.
@@ -27,7 +29,7 @@ Use the same repository revision, user prompt, model, thinking level, tool avail
 
 Give the arms neutral identifiers. Remove baseline/candidate labels from prompts, filenames, directories, artifact names, and metadata visible to the judge. Use one blinded judge to score both arms against the same rubric in one comparison. Require the judge to inspect transcripts, tool calls, and produced artifacts rather than accepting each arm's self-report.
 
-Require structured output for the route decision with this `outputSchema` and `schemaMode: "strict"`:
+Require this structured output with `outputSchema` and `schemaMode: "strict"` for a non-Low write-task route decision:
 
 ```json
 {
@@ -61,6 +63,56 @@ Require structured output for the route decision with this `outputSchema` and `s
       "enum": ["none", "native todo"]
     },
     "risk": { "enum": ["low", "medium", "high", "critical"] },
+    "riskBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mutationTarget": { "type": "string", "minLength": 1 },
+        "semanticBoundary": {
+          "enum": ["local", "shared", "public", "security", "unknown"]
+        },
+        "consumerFamilies": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "executionModes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "hardTriggers": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "shared-semantic-boundary",
+              "multiple-execution-modes",
+              "graph-traversal",
+              "public-compatibility",
+              "persistence",
+              "concurrency",
+              "material-uncertainty"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "remainingUncertainty": { "type": "string", "minLength": 1 },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "mutationTarget",
+        "semanticBoundary",
+        "consumerFamilies",
+        "executionModes",
+        "hardTriggers",
+        "remainingUncertainty",
+        "evidence"
+      ]
+    },
     "proofSurface": { "type": "string", "minLength": 1 },
     "writeOwnership": { "type": "string", "minLength": 1 },
     "independentEvidence": {
@@ -80,6 +132,7 @@ Require structured output for the route decision with this `outputSchema` and `s
     "phases",
     "progressTracking",
     "risk",
+    "riskBasis",
     "proofSurface",
     "writeOwnership",
     "independentEvidence"

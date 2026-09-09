@@ -424,5 +424,89 @@
       "writeOwnership": "parent or one task lane",
       "independentEvidence": "verifier"
     }
+  },
+  {
+    "id": "shared-normalization-boundary",
+    "prompt": "Fix a repeated cleaning warning. Direct inspection shows the mutation target is a shared schema normalizer used by body, headers, params, query, and response validation. It selects dynamic, compiled, and standard-schema paths and walks references, combinations, and cycles. Reproduce the request before changing code.",
+    "riskFacts": {
+      "sharedSemanticBoundary": true,
+      "consumerFamilies": 5,
+      "executionModes": 3,
+      "graphTraversal": true,
+      "materialUnknown": false
+    },
+    "expected": {
+      "route": "bug-fix",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "native todo",
+      "risk": "high",
+      "proofSurface": "reported request plus validator-path regressions",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer + verifier"
+    }
+  },
+  {
+    "id": "shared-normalization-domain-twin",
+    "prompt": "Fix a repeated metadata-cleaning warning. Direct inspection shows the mutation target is a shared manifest normalizer used by ingest, export, preview, publish, and audit processing. It selects interpreted, generated, and adapter paths and walks references, combinations, and cycles. Reproduce the failing artifact before changing code.",
+    "riskFacts": {
+      "sharedSemanticBoundary": true,
+      "consumerFamilies": 5,
+      "executionModes": 3,
+      "graphTraversal": true,
+      "materialUnknown": false
+    },
+    "expected": {
+      "route": "bug-fix",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "native todo",
+      "risk": "high",
+      "proofSurface": "failing artifact plus manifest-path regressions",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer + verifier"
+    }
+  },
+  {
+    "id": "bounded-local-normalization-control",
+    "prompt": "Fix a cleaning warning in one internal report-filter endpoint. Direct inspection shows its normalizer has one caller and one execution mode, no public type change, no fallback policy, and no reference or graph traversal. Reproduce the request before changing code.",
+    "riskFacts": {
+      "sharedSemanticBoundary": false,
+      "consumerFamilies": 1,
+      "executionModes": 1,
+      "graphTraversal": false,
+      "materialUnknown": false
+    },
+    "expected": {
+      "route": "bug-fix",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "report-filter request reproduction",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier"
+    }
+  },
+  {
+    "id": "unresolved-mutation-target",
+    "prompt": "Fix a validation warning. Direct inspection cannot identify the mutation target or enumerate the affected consumer paths. Reproduce the request and resolve the scope before changing code.",
+    "riskFacts": {
+      "sharedSemanticBoundary": false,
+      "consumerFamilies": 0,
+      "executionModes": 0,
+      "graphTraversal": false,
+      "materialUnknown": true
+    },
+    "expected": {
+      "route": "bug-fix",
+      "overlays": [],
+      "phases": ["verification"],
+      "progressTracking": "native todo",
+      "risk": "high",
+      "proofSurface": "reported request and target-discovery evidence",
+      "writeOwnership": "parent",
+      "independentEvidence": "reviewer + verifier"
+    }
   }
 ]

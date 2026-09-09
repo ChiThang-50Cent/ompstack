@@ -68,6 +68,7 @@ const command = await read("commands/ompstack.md");
 const examples = await read("examples/usage.md");
 const feature = await read("skills/ompstack/playbooks/feature.md");
 const bugFix = await read("skills/ompstack/playbooks/bug-fix.md");
+const riskRouting = await read("skills/ompstack/playbooks/risk-routing.md");
 const queue = await read("skills/ompstack/playbooks/queue.md");
 const verification = await read("skills/ompstack/playbooks/verification.md");
 const investigation = await read("skills/ompstack/playbooks/investigation.md");
@@ -110,6 +111,17 @@ assert.match(skill, /Primary route:/);
 assert.match(skill, /Execution overlays\/phases:/);
 assert.match(skill, /Independent evidence:/);
 assert.match(skill, /reviewer \+ verifier \+ security-reviewer/);
+assert.match(skill, /## Route intent, then finalize risk/);
+assert.match(skill, /For every non-Low write task, inspect the mutation target directly/);
+assert.match(skill, /Risk basis:/);
+assert.match(riskRouting, /## Risk scan before final classification/);
+assert.match(riskRouting, /Final Medium requires source evidence/);
+assert.match(riskRouting, /Unresolved material uncertainty after direct inspection escalates to High/);
+assert.match(riskRouting, /A Medium-to-High reclassification adds both `reviewer` and `ompstack-verifier`/);
+assert.match(bugFix, /## 3\. Finalize risk from the mutation target/);
+assert.match(bugFix, /Do not classify a bug from its symptom or expected diff size/);
+assert.match(evaluation, /causal fixture family/);
+assert.match(evaluation, /"riskBasis"/);
 assert.match(skill, /Never mix design and implementation lanes in one batch\./);
 assert.match(skill, /A successful `task` call is not itself fan-in\./);
 assert.match(feature, /design-only `tasks\[\]` batch/);
@@ -231,7 +243,7 @@ assert.match(
 );
 assert.match(evaluation, /"progressTracking"[\s\S]*"none"[\s\S]*"native todo"/);
 assert.match(evaluation, /"reviewer \+ verifier \+ security-reviewer"/);
-assert.match(bugFix, /## 5\. Avoid redundant verification/);
+assert.match(bugFix, /## 6\. Avoid redundant verification/);
 assert.match(bugFix, /Once that reproduction passes, do not rerun the same command/);
 assert.match(bugFix, /distinct smallest relevant regression suite/);
 assert.match(bugFix, /Do not add a project-wide lint, typecheck, build, or another broad suite solely for confidence/);
@@ -326,6 +338,25 @@ const requiredEfficiencyCase = {
   id: "localized-bug-economy-stop",
   proofSurface: "original reproduction followed by one distinct smallest regression suite",
 };
+const riskFactKeys = new Set([
+  "sharedSemanticBoundary",
+  "consumerFamilies",
+  "executionModes",
+  "graphTraversal",
+  "materialUnknown",
+]);
+const requiredRiskRoutingCases = new Map([
+  ["shared-normalization-boundary", { risk: "high", evidence: "reviewer + verifier" }],
+  ["shared-normalization-domain-twin", { risk: "high", evidence: "reviewer + verifier" }],
+  ["bounded-local-normalization-control", { risk: "medium", evidence: "verifier" }],
+  ["unresolved-mutation-target", { risk: "high", evidence: "reviewer + verifier" }],
+]);
+const requiresHighFromRiskFacts = (facts) =>
+  facts.sharedSemanticBoundary ||
+  facts.executionModes > 1 ||
+  facts.graphTraversal ||
+  facts.materialUnknown;
+
 for (const testCase of cases) {
   assert.equal(typeof testCase.id, "string");
   assert.ok(testCase.id.trim(), "routing case id must be nonempty");
@@ -366,6 +397,25 @@ for (const testCase of cases) {
   );
   coveredProgressTracking.add(testCase.expected.progressTracking);
   assert.ok(risks.has(testCase.expected.risk), `unknown risk: ${testCase.expected.risk}`);
+  if (testCase.riskFacts !== undefined) {
+    const facts = testCase.riskFacts;
+    assert.equal(typeof facts, "object", `${testCase.id} risk facts must be an object`);
+    assert.ok(facts, `${testCase.id} risk facts must be present`);
+    assertExactSet(Object.keys(facts), riskFactKeys, `${testCase.id} risk fact keys`);
+    assert.equal(typeof facts.sharedSemanticBoundary, "boolean");
+    assert.equal(typeof facts.graphTraversal, "boolean");
+    assert.equal(typeof facts.materialUnknown, "boolean");
+    assert.ok(Number.isInteger(facts.consumerFamilies) && facts.consumerFamilies >= 0);
+    assert.ok(Number.isInteger(facts.executionModes) && facts.executionModes >= 0);
+    if (requiresHighFromRiskFacts(facts)) {
+      assert.equal(testCase.expected.risk, "high", `${testCase.id} risk facts require High`);
+      assert.equal(
+        testCase.expected.independentEvidence,
+        "reviewer + verifier",
+        `${testCase.id} High risk facts require reviewer and verifier`,
+      );
+    }
+  }
   assert.equal(typeof testCase.expected.proofSurface, "string");
   assert.ok(testCase.expected.proofSurface.trim(), `${testCase.id} needs a proof surface`);
   assert.equal(typeof testCase.expected.writeOwnership, "string");
@@ -406,6 +456,28 @@ for (const [id, proofSurface] of requiredOptInCapabilityCases) {
   assert.ok(testCase, `missing opt-in capability case: ${id}`);
   assert.equal(testCase.expected.proofSurface, proofSurface, `${id} has wrong proof surface`);
 }
+for (const [id, expected] of requiredRiskRoutingCases) {
+  const testCase = cases.find((candidate) => candidate.id === id);
+  assert.ok(testCase, `missing risk-routing case: ${id}`);
+  assert.equal(testCase.expected.risk, expected.risk, `${id} has wrong risk`);
+  assert.equal(
+    testCase.expected.independentEvidence,
+    expected.evidence,
+    `${id} has wrong independent evidence`,
+  );
+  assert.ok(testCase.riskFacts, `${id} needs risk facts`);
+}
+const sharedNormalization = cases.find(
+  (candidate) => candidate.id === "shared-normalization-boundary",
+);
+const domainTwin = cases.find(
+  (candidate) => candidate.id === "shared-normalization-domain-twin",
+);
+assert.deepEqual(
+  sharedNormalization.riskFacts,
+  domainTwin.riskFacts,
+  "shared-normalization cases must differ in domain wording, not risk facts",
+);
 const efficiencyCase = cases.find((candidate) => candidate.id === requiredEfficiencyCase.id);
 assert.ok(efficiencyCase, `missing efficiency case: ${requiredEfficiencyCase.id}`);
 assert.equal(

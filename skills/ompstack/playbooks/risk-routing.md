@@ -1,6 +1,22 @@
 # Risk routing
 
-Use the lowest level that still gives enough confidence.
+Select the lowest level that gives enough confidence, based on the confirmed mutation target and its semantics—not the reported symptom, expected diff size, or first plausible file.
+
+## Risk scan before final classification
+
+Select the primary workflow from task intent first. Before selecting final risk, write ownership, or independent evidence for any non-Low write task, inspect the target directly. Use `scout` only when this mapping is genuinely broad or the target remains unknown.
+
+Record:
+- mutation target and source evidence
+- semantic boundary: local implementation, shared normalization/parser/serializer/compiler/cache/fallback, public API, or security
+- consumer families and execution modes
+- invariants that must remain true
+- graph/reference traversal or code generation behavior
+- material unknowns after direct inspection
+
+Final Medium requires source evidence that the target is local, has one bounded consumer family and execution mode, has no shared semantic boundary or graph traversal, and has no material unknown.
+
+Unresolved material uncertainty after direct inspection escalates to High. It never justifies retaining Medium.
 
 ## Low
 
@@ -17,6 +33,8 @@ Default:
 
 ## Medium
 
+Use only after the risk scan establishes a bounded local target.
+
 Typical examples:
 - normal business-logic feature
 - localized bug fix
@@ -32,13 +50,14 @@ Use both only when the change has enough surface area to justify it.
 
 ## High
 
-Typical examples:
-- shared domain/core logic
-- persistence or schema behavior
-- concurrency/async ordering
-- public API compatibility
+High predicates:
+- shared validation normalization, parser, serializer, compiler, code generator, cache policy, or fallback policy
+- multiple execution modes for the changed behavior
+- schema, AST, reference, or recursive graph traversal
+- persistence, public API compatibility, concurrency, or async ordering
 - cross-module refactor
 - difficult regression with uncertain root cause
+- material uncertainty after direct inspection
 
 Default:
 - `scout` only if discovery is broad
@@ -64,12 +83,8 @@ Default:
 - require concrete runtime/reproduction evidence where feasible
 - use an additional architecture comparison only when design uncertainty remains; do not duplicate reviewers merely for ceremony
 
-## Escalation triggers
+## Reclassification
 
-Escalate one level when any of these occur:
-- affected files/runtime path remain unclear after direct inspection
-- the first implementation attempt changes substantially more code than expected
-- deterministic tests disagree with the expected behavior
-- a reviewer identifies a plausible cross-boundary effect
-- the fix requires migration, compatibility behavior, or concurrency reasoning
-- the user explicitly asks for rigorous or multi-agent verification
+Reclassify immediately when discovery, implementation, or a finding reveals a new consumer family or execution mode, graph traversal, fallback semantics, compatibility behavior, concurrency, or material uncertainty.
+
+A Medium-to-High reclassification adds both `reviewer` and `ompstack-verifier` before closeout. Existing verdicts remain valid only for the code and assumptions they actually inspected.

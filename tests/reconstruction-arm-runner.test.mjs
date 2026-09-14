@@ -107,5 +107,7 @@ test("runner rejects escaped paths and a mismatched plugin revision", async () =
   await withWorkspace(async ({ root, executable, evaluationCommit }) => {
     await assert.rejects(runReconstructionArm({ specification: { ...specification(executable, evaluationCommit), cwd: ".." }, root }), /relative path/);
     await assert.rejects(runReconstructionArm({ specification: specification(executable, "f".repeat(40)), root }), /does not match/);
+    await writeFile(join(root, "corpus.json"), `${corpusFixture}\n`);
+    await assert.rejects(runReconstructionArm({ specification: specification(executable, evaluationCommit), root }), /has tracked changes/);
   });
 });

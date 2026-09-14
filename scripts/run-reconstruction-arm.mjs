@@ -73,11 +73,21 @@ async function runCommand(executable, argumentsList, cwd) {
 }
 
 async function gitCommit(directory) {
-  const result = await runCommand("git", ["-C", directory, "rev-parse", "HEAD"], directory);
-  if (result.exit_code !== 0 || !commitHash.test(result.stdout.trim())) {
+  const [revision, unstaged, staged] = await Promise.all([
+    runCommand("git", ["-C", directory, "rev-parse", "HEAD"], directory),
+    runCommand("git", ["-C", directory, "diff", "--quiet"], directory),
+    runCommand("git", ["-C", directory, "diff", "--cached", "--quiet"], directory),
+  ]);
+  if (revision.exit_code !== 0 || !commitHash.test(revision.stdout.trim())) {
     fail(`cannot resolve Git commit for evaluation plugin directory ${directory}`);
   }
-  return result.stdout.trim();
+  if (unstaged.exit_code === 1 || staged.exit_code === 1) {
+    fail(`evaluation plugin directory ${directory} has tracked changes`);
+  }
+  if (unstaged.exit_code !== 0 || staged.exit_code !== 0) {
+    fail(`cannot inspect Git status for evaluation plugin directory ${directory}`);
+  }
+  return revision.stdout.trim();
 }
 async function onlySession(sessionDirectory) {
   const entries = (await readdir(sessionDirectory, { withFileTypes: true })).filter((entry) => entry.isFile() && entry.name.endsWith(".jsonl"));

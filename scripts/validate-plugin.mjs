@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateReconstructionRoutingCorpus } from "./routing-validation.mjs";
+
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const read = (path) => readFile(resolve(root, path), "utf8");
@@ -86,6 +88,11 @@ const maintainVerificationCommand = await read(
   "commands/ompstack-maintain-verification.md",
 );
 const cases = JSON.parse(await read("tests/fixtures/routing-cases.json"));
+assert.deepEqual(
+  validateReconstructionRoutingCorpus(cases),
+  [],
+  "reconstruction routing cases must satisfy the policy",
+);
 const manifest = JSON.parse(await read("package.json"));
 
 assert.match(manifest.version, /^\d+\.\d+\.\d+$/, "package version must be a release semver");

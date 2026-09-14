@@ -83,7 +83,7 @@ These are operator/session facilities, never prerequisites for an Ompstack route
 1. Establish the target, constraints, acceptance criteria, and closest real proof surface.
 2. Inspect the current state. Resolve a project verification capability when its trigger applies. Use `scout` only if discovery is genuinely broad or the affected files are unknown.
 3. For every non-Low write task, complete the direct risk scan and select final risk from its source evidence.
-4. For Medium, High, or Critical write work, record the preflight contract below before opening a write lane.
+4. For Medium, High, or Critical write work, record the preflight contract below before opening a write lane, including the requirement-reconstruction decision when it is eligible.
 5. Decide whether architecture work is necessary. Skip it for obvious local changes. For a contested design, submit one or two `ompstack-architect` candidates in a design-only `tasks[]` batch against the same brief. Synthesize their output before starting a separate implementation batch.
 6. Implement in the smallest useful number of write lanes. Prefer one-pass workers that investigate and edit in the same task.
 7. After fan-in, run Doctor when the selected capability requires it, then deterministic validation once from the parent: the narrowest relevant tests, typecheck/lint/build, and the original reproduction for bugs.
@@ -113,6 +113,9 @@ Risk basis:
 - Invariants and graph/reference behavior: <none or stated behavior>
 - Material unknowns: <none or stated uncertainty>
 Progress tracking: <none|native todo>
+requirement_reconstruction: <enabled|disabled>
+requirement_evolution: <true|false>
+evolution_evidence: <exact turn/specification/artifact references when true; otherwise none>
 Compatibility and repository constraints.
 
 # Contract
@@ -121,6 +124,64 @@ Writable files/symbols: known targets, or "discover before edit".
 Shared contract: data/API/ordering invariants and their owner.
 Independent evidence: none, reviewer, verifier, reviewer + verifier, security-reviewer, or reviewer + verifier + security-reviewer.
 ```
+
+## Requirement-reconstruction preflight
+
+Requirement reconstruction is a preflight policy, not a primary route, execution overlay, phase, agent role, or external-controller loop. It checks whether the current review can lose requirements through an inherited interpretation; it does not replace the existing risk, review, verification, or parent-triage policies.
+
+The parent records `requirement_reconstruction: enabled | disabled` in every Medium, High, or Critical preflight:
+
+- Enable it by default for High and Critical work, using the existing risk classification. Do not create a second classifier.
+- Enable it for Medium work only when the parent records `requirement_evolution: true` and an `evolution_evidence` list containing exact turn, specification, or artifact references that added or removed a requirement, changed observable behavior, an acceptance condition, or a compatibility constraint. Multiple turns without one of those changes are not evolution.
+- Record `requirement_evolution: false` for non-evolved Medium work. Keep reconstruction disabled for Low and bounded-local work, and for non-evolved Medium work.
+
+When enabled, give reconstruction the raw original evidence: verbatim user turns, exact issue or specification text, requirement-changing clarification turns, referenced artifacts/files, and repository contracts or invariants. A parent-written summary may orient the task but MUST NOT replace available original evidence. If a payload is truncated, record exactly what was omitted. A reconstruction MUST NOT infer a product requirement merely because the candidate or repository appears to support it; return `INSUFFICIENT_EVIDENCE` when the available sources do not establish the requirement.
+
+Use `skills/ompstack/schemas/requirement-reconstruction-output-schemas.json` with `outputSchema` and `schemaMode: "strict"`. The v1 map permits only `schema_version`, `status` (`COMPLETE` or `INSUFFICIENT_EVIDENCE`), `requirements`, `derived_requirements`, `repo_invariants`, `affected_surfaces`, `unknowns`, and `evidence`. Every derived requirement carries its requirement text, `source_evidence`, and a checkable `derivation`; derived requirements may join several source fragments but may not add a new product assumption.
+
+For B, use the strict `requirementReconstructionBReviewerEnvelopeV1`: it contains the strict v1 map in `reconstruction` and ordinary reviewer `findings`. Every finding has `finding_id`, semantic `finding` text, boolean `blocking` status, and non-empty `source_evidence`; it may add a `derivation`. Each `source_evidence` value MUST be an evidence `id` declared by `reconstruction.evidence`. Before accepting or scoring B output, the parent validates the strict envelope and confirms every finding's source-evidence IDs bind to that map. B′ R1 remains map-only and uses `requirementReconstructionV1`, not this envelope.
+
+### Candidate-visible arms
+
+**B is deliberately candidate-visible.** Use one invocation of the existing bundled `reviewer`, with raw original evidence and the current candidate/diff/repository context. It reconstructs the strict v1 map, then performs its ordinary static review against that map. B is a low-cost prompt/process control, not framing isolation and not a custom Auditor.
+
+```text
+task({
+  context: "<recorded preflight and raw-evidence locators>",
+  tasks: [{
+    agent: "reviewer",
+    task: "Candidate context is intentionally visible. Reconstruct only from the raw original evidence using the v1 schema; return INSUFFICIENT_EVIDENCE rather than inventing requirements. Then review the candidate against that reconstruction and return its ordinary actionable findings in the strict B envelope, with every finding bound to reconstruction evidence IDs.",
+    outputSchema: requirementReconstructionBReviewerEnvelopeV1,
+    schemaMode: "strict"
+  }]
+})
+```
+
+**B′ is also candidate-visible and has two existing-reviewer invocations.** R1 receives raw original evidence plus repository/candidate state and emits the canonical v1 requirement map. Canonicalize and freeze that map before R2, recording `artifact_path`, `artifact_digest`, and `state_identity`. R2 receives the frozen map, expected digest, candidate, relevant feature map, and available proof capabilities; it MUST verify the digest before auditing the candidate and MUST NOT revise the requirement map.
+
+```text
+task({
+  context: "<recorded preflight and raw-evidence locators>",
+  tasks: [{
+    agent: "reviewer",
+    task: "R1: candidate context is intentionally visible. Emit the canonical strict v1 requirement map for freezing.",
+    outputSchema: requirementReconstructionV1,
+    schemaMode: "strict"
+  }]
+})
+
+// After the parent inspects R1, canonicalize and freeze its map with
+// artifact_path, artifact_digest, and state_identity before issuing R2.
+task({
+  context: "<freeze record, frozen map, expected digest, candidate, relevant feature map, and available proof capabilities>",
+  tasks: [{
+    agent: "reviewer",
+    task: "R2: verify the frozen map's expected digest, then audit the candidate against that immutable map. Do not rewrite or extend the map."
+  }]
+})
+```
+
+Do not add an Auditor, repurpose `ompstack-architect`, implement C/candidate isolation, add a dispute protocol, or change `scripts/run-orchestrated-task.mjs` or `maxAttempts`. The bundled `reviewer` remains the static correctness reviewer, `ompstack-verifier` remains responsible for behavioral real-surface proof, and current parent triage handles disputed findings.
 
 For parallel work, add each lane's writable and read-only surfaces, one owner for every shared type/schema/API, the parent as integration owner, a **fan-in record** naming every required lane id, its acceptance predicate, and its output/evidence URI, the fan-in order, and the single shared deterministic gate. Do not require exact filenames before discovery establishes them.
 

@@ -19,12 +19,20 @@
     "expected": {
       "route": "bug-fix",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "exact failing request",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "verifier"
+      "independentEvidence": "verifier",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -33,12 +41,20 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "API request",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "reviewer"
+      "independentEvidence": "reviewer",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -46,13 +62,23 @@
     "prompt": "Make webhook delivery idempotent across concurrent duplicate requests.",
     "expected": {
       "route": "feature",
-      "overlays": ["queue"],
-      "phases": ["verification"],
+      "overlays": [
+        "queue"
+      ],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "high",
       "proofSurface": "duplicate delivery reproduction",
       "writeOwnership": "one task lane per owned subsystem",
-      "independentEvidence": "reviewer + verifier"
+      "independentEvidence": "reviewer + verifier",
+      "reconstruction": {
+        "enabled": true,
+        "trigger": "high-critical-default",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -61,12 +87,20 @@
     "expected": {
       "route": "refactoring",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "existing behavior test",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "reviewer"
+      "independentEvidence": "reviewer",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -80,7 +114,13 @@
       "risk": "medium",
       "proofSurface": "CLI or browser interaction",
       "writeOwnership": "parent or disposable task lane",
-      "independentEvidence": "none"
+      "independentEvidence": "none",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -89,12 +129,20 @@
     "expected": {
       "route": "perf-issue",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "medium",
       "proofSurface": "baseline and post-change measurement",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "verifier"
+      "independentEvidence": "verifier",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -108,7 +156,13 @@
       "risk": "medium",
       "proofSurface": "live CPU profile",
       "writeOwnership": "parent",
-      "independentEvidence": "none"
+      "independentEvidence": "none",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -122,7 +176,13 @@
       "risk": "medium",
       "proofSurface": "provided heap artifact",
       "writeOwnership": "parent",
-      "independentEvidence": "none"
+      "independentEvidence": "none",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -130,13 +190,23 @@
     "prompt": "Add API-client support and update its documentation in independent work lanes.",
     "expected": {
       "route": "feature",
-      "overlays": ["queue"],
-      "phases": ["verification"],
+      "overlays": [
+        "queue"
+      ],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "medium",
       "proofSurface": "combined consumer check",
       "writeOwnership": "one task lane per owned surface",
-      "independentEvidence": "reviewer"
+      "independentEvidence": "reviewer",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -145,12 +215,20 @@
     "expected": {
       "route": "eval",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "medium",
       "proofSurface": "routing suite and paired evaluation",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "reviewer"
+      "independentEvidence": "reviewer",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -159,12 +237,20 @@
     "expected": {
       "route": "investigation",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "CLI invocation",
       "writeOwnership": "parent",
-      "independentEvidence": "verifier"
+      "independentEvidence": "verifier",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -173,12 +259,20 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "critical",
       "proofSurface": "authorized and unauthorized delivery reproduction",
       "writeOwnership": "one task lane per owned subsystem",
-      "independentEvidence": "reviewer + verifier + security-reviewer"
+      "independentEvidence": "reviewer + verifier + security-reviewer",
+      "reconstruction": {
+        "enabled": true,
+        "trigger": "high-critical-default",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -187,13 +281,21 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "verify-api public endpoint drive",
       "writeOwnership": "parent or one task lane",
       "independentEvidence": "reviewer",
-      "verificationCapability": "existing"
+      "verificationCapability": "existing",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -202,13 +304,21 @@
     "expected": {
       "route": "bug-fix",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "existing CLI end-to-end command",
       "writeOwnership": "parent or one task lane",
       "independentEvidence": "verifier",
-      "verificationCapability": "repository"
+      "verificationCapability": "repository",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -217,13 +327,21 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "medium",
       "proofSurface": "new verify-api endpoint drive",
       "writeOwnership": "parent or one task lane",
       "independentEvidence": "verifier",
-      "verificationCapability": "create"
+      "verificationCapability": "create",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -232,13 +350,21 @@
     "expected": {
       "route": "investigation",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "medium",
       "proofSurface": "verify-billing Doctor and API drive",
       "writeOwnership": "parent",
       "independentEvidence": "verifier",
-      "verificationCapability": "blocked"
+      "verificationCapability": "blocked",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -247,13 +373,21 @@
     "expected": {
       "route": "investigation",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "medium",
       "proofSurface": "mapped API drives",
       "writeOwnership": "parent",
       "independentEvidence": "verifier",
-      "verificationCapability": "maintain"
+      "verificationCapability": "maintain",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -262,12 +396,20 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "medium",
       "proofSurface": "exported archive CLI drive",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "reviewer"
+      "independentEvidence": "reviewer",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -275,13 +417,23 @@
     "prompt": "Coordinate independent API-client and documentation lanes. Do not run the shared consumer check until every lane outcome and artifact has been inspected.",
     "expected": {
       "route": "feature",
-      "overlays": ["queue"],
-      "phases": ["verification"],
+      "overlays": [
+        "queue"
+      ],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "medium",
       "proofSurface": "inspected API-client and documentation artifacts before combined consumer check",
       "writeOwnership": "one task lane per owned surface",
-      "independentEvidence": "reviewer"
+      "independentEvidence": "reviewer",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -290,12 +442,20 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "Eval Browser checkout flow with observed state and screenshot",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "verifier"
+      "independentEvidence": "verifier",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -304,12 +464,20 @@
     "expected": {
       "route": "bug-fix",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "live CLI export invocation with exit status and terminal transcript",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "verifier"
+      "independentEvidence": "verifier",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -323,7 +491,13 @@
       "risk": "medium",
       "proofSurface": "DAP debugger stack and variable observation",
       "writeOwnership": "parent",
-      "independentEvidence": "none"
+      "independentEvidence": "none",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -332,12 +506,20 @@
     "expected": {
       "route": "refactoring",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "LSP references and rename plus existing behavior pin",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "reviewer"
+      "independentEvidence": "reviewer",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -346,13 +528,21 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "verify-service Doctor and API consumer drive",
       "writeOwnership": "parent or one task lane",
       "independentEvidence": "reviewer",
-      "verificationCapability": "existing"
+      "verificationCapability": "existing",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -361,12 +551,20 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "feature proof independent of the operator Prewalk handoff",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "verifier"
+      "independentEvidence": "verifier",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -375,12 +573,20 @@
     "expected": {
       "route": "feature",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "high",
       "proofSurface": "real billing behavior proof with Advisor as inspection-only concern coverage",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "reviewer + verifier"
+      "independentEvidence": "reviewer + verifier",
+      "reconstruction": {
+        "enabled": true,
+        "trigger": "high-critical-default",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -394,7 +600,13 @@
       "risk": "medium",
       "proofSurface": "persisted session artifacts with an explicit compact handoff record",
       "writeOwnership": "parent",
-      "independentEvidence": "none"
+      "independentEvidence": "none",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -417,12 +629,20 @@
     "expected": {
       "route": "bug-fix",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "original reproduction followed by one distinct smallest regression suite",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "verifier"
+      "independentEvidence": "verifier",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -438,12 +658,20 @@
     "expected": {
       "route": "bug-fix",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "high",
       "proofSurface": "reported request plus validator-path regressions",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "reviewer + verifier"
+      "independentEvidence": "reviewer + verifier",
+      "reconstruction": {
+        "enabled": true,
+        "trigger": "high-critical-default",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -459,12 +687,20 @@
     "expected": {
       "route": "bug-fix",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "high",
       "proofSurface": "failing artifact plus manifest-path regressions",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "reviewer + verifier"
+      "independentEvidence": "reviewer + verifier",
+      "reconstruction": {
+        "enabled": true,
+        "trigger": "high-critical-default",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -480,12 +716,20 @@
     "expected": {
       "route": "bug-fix",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "none",
       "risk": "medium",
       "proofSurface": "report-filter request reproduction",
       "writeOwnership": "parent or one task lane",
-      "independentEvidence": "verifier"
+      "independentEvidence": "verifier",
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
     }
   },
   {
@@ -501,12 +745,44 @@
     "expected": {
       "route": "bug-fix",
       "overlays": [],
-      "phases": ["verification"],
+      "phases": [
+        "verification"
+      ],
       "progressTracking": "native todo",
       "risk": "high",
       "proofSurface": "reported request and target-discovery evidence",
       "writeOwnership": "parent",
-      "independentEvidence": "reviewer + verifier"
+      "independentEvidence": "reviewer + verifier",
+      "reconstruction": {
+        "enabled": true,
+        "trigger": "high-critical-default",
+        "requirementEvolution": false,
+        "evidence": []
+      }
+    }
+  },
+  {
+    "id": "medium-evolved-reconstruction",
+    "prompt": "Add an internal export field. A later clarification changes the observable archive compatibility contract.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": [
+        "verification"
+      ],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "export archive consumer drive",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer",
+      "reconstruction": {
+        "enabled": true,
+        "trigger": "medium-requirement-evolution",
+        "requirementEvolution": true,
+        "evidence": [
+          "user turn 2: preserve archive reader compatibility"
+        ]
+      }
     }
   }
 ]

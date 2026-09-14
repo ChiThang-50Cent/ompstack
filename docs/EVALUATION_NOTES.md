@@ -59,3 +59,12 @@ The runner saves `skill_preflight.stdout.jsonl` and stops before the task rollou
 ## Fresh task replay effort
 
 Future fresh task replays default to `--thinking low` unless the user explicitly overrides that setting. Keep thinking level identical across arms; record any exception before comparing time, token use, or outcome.
+
+## Requirement-reconstruction infrastructure
+
+**Recorded:** 2026-09-14  
+**Experiment revision:** `ae2393137a26ee473677f453680813a18055c4cd`
+
+The repository now contains a strict reconstruction artifact contract, candidate-visible B and B′ policy, deterministic eligible-slot SORR scaffolding, blinded anchor-packet handling, and a synthetic evaluator fixture. The fixture exercises evaluator mechanics only; it is explicitly not a model rollout, a Phase-0 sample, or an empirical A/B/B′ result.
+
+No quality or cost metrics are recorded for this policy: no real arm artifacts, blinded anchor decisions, model-token telemetry, tool counts, or wall-time records have been collected. The Phase-0 materiality gate is **BLOCKED** pending a curated observed-failure corpus and 48 controlled A runs. B/B′, promotion, and the Stage-2 gate remain unexecuted. Do not infer an experiment outcome or framing-independence claim from the synthetic fixture.

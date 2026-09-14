@@ -53,6 +53,14 @@ Choose the narrowest commands that prove the relevant property. Do not run expen
 
 For every behavior-affecting change, use the closest available real proof surface: a project-native verification skill when one matches, otherwise a browser UI flow, CLI/TUI interaction, API consumer, migration replay, or equivalent runtime behavior. Tests, typechecks, and builds support the claim but do not replace that surface. If it cannot be exercised, report the exact gap as `BLOCKED` or unverified.
 
+### Requirement-reconstruction evidence
+
+For a reconstruction-policy evaluation, preserve the raw-evidence locators, strict reconstruction/freeze artifacts, strict B reviewer envelopes, deterministic-gate output, and real proof-surface evidence for each run. Before accepting or scoring B findings, the parent validates `requirementReconstructionBReviewerEnvelopeV1` and confirms every finding `source_evidence` ID is declared by `reconstruction.evidence`; unbound findings are not evidence. A reconstruction map or reviewer opinion is not execution proof and MUST NOT override a failed deterministic gate, an unavailable required surface, or observed real execution evidence.
+
+Score seeded omission recovery with deterministic SORR-strict from the corpus-declared eligible slots only. Do not scan raw evidence, transcripts, tool output, source snippets, or incidental mentions to claim recovery. Send neutral, arm-blind packets to the separate anchor-validity judge; its `VALID_EXPLICIT`, `VALID_DERIVED`, `REPO_INVARIANT`, or `UNSUPPORTED` labels assess finding support, not whether a requirement was recovered. `VALID_DERIVED` requires cited source evidence and a checkable derivation without a new product assumption.
+
+Apply materiality and promotion decisions to paired family aggregates, not pooled reruns. Preserve family, domain-shifted twins, and all reruns together for paired uncertainty. Use the preregistered 3-to-5 rerun ladder only: a threshold-spanning interval at three reruns permits completing five reruns for every affected paired arm; at five, report `BORDERLINE` rather than continuing or promoting on that threshold. Report per-family SORR, unsupported blocking-finding rate, proof-surface execution, model/token/tool/test-reinvocation/wall-time cost, and uncertainty intervals alongside the underlying artifacts.
+
 ### Bundled reviewer
 
 Use `reviewer` for patch-introduced correctness problems, edge cases, regressions, and diff-grounded reasoning. It is independent and read-only.

@@ -144,6 +144,30 @@ Do not expose the scoring rubric or competing variants to the evaluated agent. R
 
 For verification-lifecycle policy changes, include project capability creation, a Doctor-blocked runtime, maintenance of a stale feature map, and a narrow task that must not create infrastructure. Judge these cases for correct scope as well as route selection.
 
+## Requirement-reconstruction evaluation
+
+Evaluate reconstruction as a preflight policy over the pinned repository revision `ae2393137a26ee473677f453680813a18055c4cd`, not as a new execution overlay or a claim about hidden reasoning. Preserve raw original-evidence locators, the recorded High/Critical or evolved-Medium eligibility decision, and the candidate-visibility declaration in each arm artifact.
+
+Use a corpus of fixture families with provenance/difficulty classes. Every positive omission needs a machine-addressable `target_id`, canonical target representation, deterministic aliases where needed, and arm-specific eligible recovery slots. Include an underspecified-request control, whose correct result is `INSUFFICIENT_EVIDENCE` rather than an invented requirement, and a bounded-local/material-uncertainty control. Do not report an empirical outcome for an arm without verified rollout artifacts.
+
+### Deterministic recovery and anchor validity
+
+Compute **SORR-strict** deterministically: a seeded target is recovered only if it appears in a corpus-declared eligible slot, never by scanning raw evidence, transcripts, tool output, source snippets, search results, or incidental mentions. For A, eligible slots are reviewer/verifier findings, existing structured findings, and an explicitly eligible closeout statement. For B and B′, they additionally include `requirements`, `derived_requirements`, `affected_surfaces`, semantic review findings, and an eligible closeout section; raw-evidence and provenance fields that merely copy source text are ineligible. A baseline with no equivalent structured slot must record that limitation as observable recovery under the current workflow.
+
+For B, score a semantic reviewer finding only from `requirementReconstructionBReviewerEnvelopeV1` after the parent validates the strict envelope and binds every finding `source_evidence` ID to `reconstruction.evidence`. An unbound, malformed, or unaccepted B finding is not an eligible recovery slot or anchor-judge input.
+
+SORR establishes recovery, not correctness. A separate blinded anchor judge receives neutral packets with no arm identity and labels blocking findings `VALID_EXPLICIT`, `VALID_DERIVED`, `REPO_INVARIANT`, or `UNSUPPORTED`. A `VALID_DERIVED` finding must cite source evidence, provide a checkable derivation, and add no product assumption. Report the **UNSUPPORTED blocking-finding rate** as unsupported blocking findings divided by all blocking findings; do not substitute a differently defined “non-anchored” metric. Deterministic gates and real execution evidence retain authority over model judgments and over any judge result.
+
+### Paired materiality and promotion gates
+
+Run A first. The initial A-only materiality sample is 8 families × 2 domain-shifted twins × 3 reruns (48 runs), with the six positive families determining SORR. If the A seeded-omission miss rate is below 15%, report `OMISSION_MATERIALITY_NOT_ESTABLISHED` and do not run B or B′. The 15% threshold applies only to this pinned corpus.
+
+If materiality is established, compare arms by paired family: calculate each twin's rerun success rate, average twins within a family, give every family equal weight, and compare arms by family. Promote B only when all of these gates pass: SORR(B) − SORR(A) ≥ 10 percentage points, improvement in at least 3 of 6 positive families, no more than a 5-point regression in unsupported blocking-finding rate, median tokens no more than 1.20× A, and residual miss rate below 10%. Promote B′ over B only when all of these gates pass: SORR(B′) − SORR(A) ≥ 10 points, SORR(B′) − SORR(B) ≥ 10 points, incremental improvement in at least 3 of 6 positive families, no more than a 5-point unsupported-rate regression, median tokens no more than 1.50× B, and residual miss rate below 10%. Do not implement or evaluate C, candidate isolation, a custom Auditor, or a dispute protocol under these gates.
+
+Report paired uncertainty for every threshold, including the A-only 15% gate. Bootstrap by preserving family, both twins, and all their reruns as clusters. The only preregistered escalation is 3 reruns, then 5 for every arm in the relevant paired comparison if a 3-rerun interval covers a threshold; stop at five. If the interval still covers the threshold, report `BORDERLINE`, do not promote new machinery or open a later stage solely from it, and do not continue to 7, 9, or outcome-selected rerun counts.
+
+Report quality before cost: per-family SORR and recovery limitations, anchor-validity distribution and unsupported blocking-finding rate, required proof-surface execution, scope-creep and false-complete rates, and distinct-evidence yield. Then report model turns; input, output, cache-read, and cache-write tokens; tool invocation counts and captured-output bytes; normalized test-command reinvocations; compaction/pruning events; and wall time. Retain paired artifacts, neutral judge packets, and uncertainty intervals with the experiment status; never replace this evidence with a self-report.
+
 ## 4. Compare evidence
 
 Report quality before cost:

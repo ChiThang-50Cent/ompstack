@@ -71,6 +71,14 @@ async function runCommand(executable, argumentsList, cwd) {
   const [stdout, stderr, exitCode] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited]);
   return { stdout, stderr, exit_code: exitCode };
 }
+
+async function gitCommit(directory) {
+  const result = await runCommand("git", ["-C", directory, "rev-parse", "HEAD"], directory);
+  if (result.exit_code !== 0 || !commitHash.test(result.stdout.trim())) {
+    fail(`cannot resolve Git commit for evaluation plugin directory ${directory}`);
+  }
+  return result.stdout.trim();
+}
 async function onlySession(sessionDirectory) {
   const entries = (await readdir(sessionDirectory, { withFileTypes: true })).filter((entry) => entry.isFile() && entry.name.endsWith(".jsonl"));
   if (entries.length !== 1) fail(`expected exactly one session JSONL in ${sessionDirectory}`);
@@ -148,6 +156,9 @@ export async function runReconstructionArm({ specification, root = process.cwd()
   const r1Path = spec.r1_path && resolve(cwd, spec.r1_path);
   const r1FreezePath = spec.r1_freeze_path && resolve(cwd, spec.r1_freeze_path);
   const corpus = JSON.parse(await readFile(resolve(root, spec.corpus_path), "utf8"));
+  if (await gitCommit(pluginDirectory) !== spec.evaluation_repository_commit) {
+    fail("specification.evaluation_repository_commit does not match the evaluation plugin checkout");
+  }
   await Promise.all([rm(outputPath, { force: true }), rm(sessionDirectory, { force: true, recursive: true }), ...(r1Path ? [rm(r1Path, { force: true }), rm(r1FreezePath, { force: true })] : [])]);
   await Promise.all([mkdir(sessionDirectory, { recursive: true }), mkdir(dirname(artifactPath), { recursive: true })]);
   const started = performance.now();
@@ -193,7 +204,7 @@ export async function runReconstructionArm({ specification, root = process.cwd()
   }
 
   const run = { family_id: spec.family_id, twin_id: spec.twin_id, rerun: spec.rerun, arm: spec.arm, evaluation_repository_commit: spec.evaluation_repository_commit, output: JSON.parse(await readFile(outputPath, "utf8")), ...(r2 ? { r2 } : {}) };
-  validateEvaluationRuns(corpus, [run]);
+  validateEvaluationRuns(corpus, [run], { expectedStateIdentity: spec.state_identity });
   invocation.arm_arguments = armArguments(spec, { cwd, pluginDirectory, sessionDirectory: "<per-session directory>", prompt: "<redacted task prompt>" });
   const artifact = { schema_version: 1, run, telemetry: mergeTelemetry(telemetryRecords, performance.now() - started), invocation };
   await writeJsonAtomically(artifactPath, artifact);

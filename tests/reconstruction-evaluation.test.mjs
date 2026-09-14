@@ -134,9 +134,11 @@ test("binds every comparison run to one post-policy evaluation revision", () => 
   );
 });
 
-test("SORR never recovers a target from forbidden raw evidence, but accepts a declared alias in an eligible slot", () => {
-  const forbidden = extractSorr(corpus, run({ output: { findings: [{ raw_evidence: ["cli:export --format"] }] } }));
-  assert.equal(forbidden.recovered, false);
+test("SORR accepts a declared alias only through an eligible arm slot", () => {
+  assert.throws(
+    () => extractSorr(corpus, run({ output: { findings: [{ raw_evidence: ["cli:export --format"] }] } })),
+    /A output\.findings\[0\] has unexpected or missing properties/,
+  );
   const map = completeMap();
   map.requirements = [{ requirement: "export --format", source_evidence: ["request"] }];
   const recovered = extractSorr(corpus, run({
@@ -151,7 +153,7 @@ test("SORR never recovers a target from forbidden raw evidence, but accepts a de
   assert.throws(() => extractSorr(corpus, {
     ...run({ arm: "B-prime", output: { reconstruction: { requirements: ["export --format"] } } }),
     r2: { frozen_map: { ...frozenMap, requirements: [] }, freeze_record: freezeRecord, expected_digest: freezeRecord.artifact_digest, state_identity: "candidate:abc" },
-  }), /COMPLETE maps require/);
+  }, { expectedStateIdentity: "candidate:abc" }), /COMPLETE maps require/);
 
   const frozenSource = completeMap();
   frozenSource.requirements = [{ requirement: "export --format", source_evidence: ["request"] }];
@@ -159,7 +161,7 @@ test("SORR never recovers a target from forbidden raw evidence, but accepts a de
   const frozenRecovery = extractSorr(corpus, {
     ...run({ arm: "B-prime", output: { findings: [] } }),
     r2: { frozen_map: frozenSource, freeze_record: frozenSourceRecord, expected_digest: frozenSourceRecord.artifact_digest, state_identity: "candidate:abc" },
-  });
+  }, { expectedStateIdentity: "candidate:abc" });
   assert.equal(frozenRecovery.recovered, true);
 
   const frozenMiss = completeMap();
@@ -168,7 +170,7 @@ test("SORR never recovers a target from forbidden raw evidence, but accepts a de
   assert.equal(extractSorr(corpus, {
     ...run({ arm: "B-prime", output: { findings: [] } }),
     r2: { frozen_map: frozenMiss, freeze_record: frozenMissRecord, expected_digest: frozenMissRecord.artifact_digest, state_identity: "candidate:abc" },
-  }).recovered, false);
+  }, { expectedStateIdentity: "candidate:abc" }).recovered, false);
 
   assert.equal(extractSorr(corpus, run({ output: { findings: [{ title: "cli:export --format", body: "Required export format is absent." }] } })).recovered, true);
   assert.throws(
@@ -200,6 +202,17 @@ test("B-prime rejects R2 fields and evidence not declared by frozen R1", () => {
     () => validateBPrimeOutput({ findings: [{ finding_id: "f1", finding: "format missing", blocking: true, source_evidence: ["other"] }] }, map),
     /references unknown evidence other/,
   );
+});
+
+test("B-prime scoring requires the externally supplied candidate state", () => {
+  const map = completeMap();
+  const frozen = freezeReconstruction(map, { artifact_path: "r1.json", state_identity: "candidate:stale" });
+  const bPrime = {
+    ...run({ arm: "B-prime", output: { findings: [] } }),
+    r2: { frozen_map: map, freeze_record: frozen, expected_digest: frozen.artifact_digest, state_identity: "candidate:stale" },
+  };
+  assert.throws(() => extractSorr(corpus, bPrime), /expected B-prime state identity/);
+  assert.throws(() => extractSorr(corpus, bPrime, { expectedStateIdentity: "candidate:current" }), /state identity/);
 });
 
 

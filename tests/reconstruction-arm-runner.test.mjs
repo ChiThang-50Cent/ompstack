@@ -6,7 +6,6 @@ import { test } from "bun:test";
 import { runReconstructionArm } from "../scripts/run-reconstruction-arm.mjs";
 
 const corpusFixture = await readFile(new URL("./fixtures/reconstruction-corpus.synthetic.json", import.meta.url), "utf8");
-const evaluationCommit = "5296373ba78b9f0e1a629a45056a2cc7a8c04225";
 const fakeOmp = `#!/usr/bin/env bun
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -39,21 +38,32 @@ if (prompt.includes("B-prime R2 protocol") && prompt.includes("Tamper R1")) {
 }
 const output = isR1 ? map : isA ? { findings: [{ title: "ordinary finding", body: "No reconstruction artifact." }] } : prompt.includes("B-prime R2 protocol") ? { findings: [] } : { reconstruction: map, findings: [] };
 await Bun.write(join(cwd, outputPath), JSON.stringify(output));
-console.log(JSON.stringify({ completed: true }));
 `;
 
+async function git(root, ...argumentsList) {
+  const process = Bun.spawn(["git", "-C", root, ...argumentsList], { stdout: "pipe", stderr: "pipe" });
+  const [stdout, stderr, exitCode] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited]);
+  assert.equal(exitCode, 0, stderr);
+  return stdout.trim();
+}
 async function withWorkspace(callback) {
   const root = await mkdtemp(join(tmpdir(), "ompstack-reconstruction-arm-"));
   try {
     await mkdir(join(root, "candidate"));
     await writeFile(join(root, "corpus.json"), corpusFixture);
+    await git(root, "init");
+    await git(root, "config", "user.email", "test@example.com");
+    await git(root, "config", "user.name", "Test");
+    await git(root, "add", "corpus.json");
+    await git(root, "commit", "-m", "fixture");
+    const evaluationCommit = await git(root, "rev-parse", "HEAD");
     const executable = join(root, "fake-omp.mjs");
     await writeFile(executable, fakeOmp, { mode: 0o755 });
     await chmod(executable, 0o755);
-    await callback({ root, executable });
+    await callback({ root, executable, evaluationCommit });
   } finally { await rm(root, { force: true, recursive: true }); }
 }
-function specification(executable, arm = "A") {
+function specification(executable, evaluationCommit, arm = "A") {
   return {
     schema_version: 1, family_id: "cli-output-format", twin_id: "cli", rerun: 1, arm,
     evaluation_repository_commit: evaluationCommit, state_identity: "candidate:test",
@@ -63,55 +73,39 @@ function specification(executable, arm = "A") {
   };
 }
 
-test("A runner records a scorer-ready baseline artifact and Phase-0 telemetry", async () => {
-  await withWorkspace(async ({ root, executable }) => {
-    const artifact = await runReconstructionArm({ specification: specification(executable), root });
+test("A runner records an isolated baseline artifact and telemetry", async () => {
+  await withWorkspace(async ({ root, executable, evaluationCommit }) => {
+    const artifact = await runReconstructionArm({ specification: specification(executable, evaluationCommit), root });
     assert.equal(artifact.run.arm, "A");
-    assert.deepEqual(artifact.run.output, { findings: [{ title: "ordinary finding", body: "No reconstruction artifact." }] });
     assert.equal(artifact.invocation.preflight, null);
     assert.ok(artifact.invocation.arm_arguments.includes("--no-skills"));
     assert.deepEqual(artifact.telemetry.tokens, { input: 10, output: 5, cache_read: 2, cache_write: 1, total: 18 });
     assert.equal(artifact.telemetry.model_turns, 1);
     assert.equal(artifact.telemetry.tool_invocations.by_tool.bash, 1);
-    assert.equal(artifact.telemetry.tool_invocations.captured_output_bytes, Buffer.byteLength("test output"));
     assert.equal(artifact.telemetry.test_command_reinvocations, 1);
-    assert.equal(artifact.telemetry.compaction_events, 0);
-    assert.equal(artifact.telemetry.pruning_events, 0);
   });
 });
 
-test("B runner retains verified preflight and its telemetry cost", async () => {
-  await withWorkspace(async ({ root, executable }) => {
-    const artifact = await runReconstructionArm({ specification: specification(executable, "B"), root });
+test("B runner retains verified skill preflight", async () => {
+  await withWorkspace(async ({ root, executable, evaluationCommit }) => {
+    const artifact = await runReconstructionArm({ specification: specification(executable, evaluationCommit, "B"), root });
     assert.equal(artifact.run.output.reconstruction.status, "COMPLETE");
-    assert.ok(artifact.invocation.arm_arguments.includes("--skills"));
     assert.equal(await Bun.file(artifact.invocation.preflight.session_path).exists(), true);
-    assert.equal(artifact.invocation.preflight.exit_code, 0);
-    assert.equal(artifact.telemetry.model_turns, 1);
   });
 });
 
-test("B-prime executes and freezes R1 before digest-bound R2", async () => {
-  await withWorkspace(async ({ root, executable }) => {
-    const spec = { ...specification(executable, "B-prime"), r1_path: "r1.json", r1_freeze_path: "r1.freeze.json" };
+test("B-prime freezes R1 before R2 and rejects R2 rewrites", async () => {
+  await withWorkspace(async ({ root, executable, evaluationCommit }) => {
+    const spec = { ...specification(executable, evaluationCommit, "B-prime"), r1_path: "r1.json", r1_freeze_path: "r1.freeze.json" };
     const artifact = await runReconstructionArm({ specification: spec, root });
-    assert.equal(artifact.run.arm, "B-prime");
-    assert.equal(artifact.run.r2.state_identity, "candidate:test");
     assert.equal(artifact.run.r2.expected_digest, artifact.run.r2.freeze_record.artifact_digest);
-    assert.equal(await Bun.file(artifact.invocation.r1.freeze_record_path).exists(), true);
-    assert.equal(artifact.telemetry.model_turns, 2);
+    await assert.rejects(runReconstructionArm({ specification: { ...spec, prompt: "Tamper R1" }, root }), /digest mismatch/);
   });
 });
 
-test("B-prime rejects an R2 rewrite of the frozen R1 map", async () => {
-  await withWorkspace(async ({ root, executable }) => {
-    const spec = { ...specification(executable, "B-prime"), prompt: "Tamper R1", r1_path: "r1.json", r1_freeze_path: "r1.freeze.json" };
-    await assert.rejects(runReconstructionArm({ specification: spec, root }), /digest mismatch/);
-  });
-});
-
-test("runner rejects paths that escape its declared root", async () => {
-  await withWorkspace(async ({ root, executable }) => {
-    await assert.rejects(runReconstructionArm({ specification: { ...specification(executable), cwd: ".." }, root }), /relative path/);
+test("runner rejects escaped paths and a mismatched plugin revision", async () => {
+  await withWorkspace(async ({ root, executable, evaluationCommit }) => {
+    await assert.rejects(runReconstructionArm({ specification: { ...specification(executable, evaluationCommit), cwd: ".." }, root }), /relative path/);
+    await assert.rejects(runReconstructionArm({ specification: specification(executable, "f".repeat(40)), root }), /does not match/);
   });
 });

@@ -148,6 +148,20 @@ export function validateBundledReviewerOutput(envelope) {
   return envelope;
 }
 
+function validateAOutput(output) {
+  exactOptionalKeys(output, ["findings"], ["closeout"], "A output");
+  const validateRecord = (record, label) => {
+    exactKeys(record, ["title", "body"], label);
+    string(record.title, `${label}.title`);
+    string(record.body, `${label}.body`);
+  };
+  for (const [index, finding] of array(output.findings, "A output.findings").entries()) {
+    validateRecord(finding, `A output.findings[${index}]`);
+  }
+  if (Object.hasOwn(output, "closeout")) validateRecord(output.closeout, "A output.closeout");
+  return output;
+}
+
 /** Validates B-prime R2 findings against the frozen R1 evidence map. */
 export function validateBPrimeOutput(output, frozenMap) {
   exactOptionalKeys(output, ["findings"], ["closeout"], "B-prime output");
@@ -314,7 +328,7 @@ function validateEvaluationRepositoryCommit(value, label) {
   }
 }
 
-function validateRunIdentity(corpus, run) {
+function validateRunIdentity(corpus, run, { expectedStateIdentity = null } = {}) {
   exactKeys(run, ["family_id", "twin_id", "rerun", "arm", "evaluation_repository_commit", "output", ...(run.arm === "B-prime" ? ["r2"] : [])], "run");
   const family = locateFamily(corpus, run.family_id);
   const twin = family.twins.find((entry) => entry.twin_id === run.twin_id);
@@ -323,15 +337,14 @@ function validateRunIdentity(corpus, run) {
   if (!ARMS.includes(run.arm)) fail(`unknown arm ${run.arm}`);
   validateEvaluationRepositoryCommit(run.evaluation_repository_commit, "run.evaluation_repository_commit");
   object(run.output, "run.output");
-  if (run.arm === "A") {
-    exactOptionalKeys(run.output, ["findings"], ["closeout"], "A output");
-  }
+  if (run.arm === "A") validateAOutput(run.output);
   if (run.arm === "B") validateBundledReviewerOutput(run.output);
   if (run.arm === "B-prime") {
+    string(expectedStateIdentity, "expected B-prime state identity");
     exactKeys(run.r2, ["frozen_map", "freeze_record", "expected_digest", "state_identity"], "B-prime run.r2");
     verifyFrozenReconstruction(run.r2.frozen_map, run.r2.freeze_record, {
       expected_digest: run.r2.expected_digest,
-      state_identity: run.r2.state_identity,
+      state_identity: expectedStateIdentity,
     });
     validateBPrimeOutput(run.output, run.r2.frozen_map);
   }
@@ -339,10 +352,10 @@ function validateRunIdentity(corpus, run) {
 }
 
 /** Binds a scored comparison to one post-policy repository revision across all arms. */
-export function validateEvaluationRuns(corpus, runs) {
+export function validateEvaluationRuns(corpus, runs, { expectedStateIdentity = null } = {}) {
   const revisions = array(runs, "runs", { min: 1 })
     .map((run) => {
-      validateRunIdentity(corpus, run);
+      validateRunIdentity(corpus, run, { expectedStateIdentity });
       return run.evaluation_repository_commit;
     });
   if (new Set(revisions).size !== 1) {
@@ -352,9 +365,9 @@ export function validateEvaluationRuns(corpus, runs) {
 }
 
 /** Scores only corpus-declared semantic slots; raw evidence and transcripts are never scanned. */
-export function extractSorr(corpus, run) {
+export function extractSorr(corpus, run, { expectedStateIdentity = null } = {}) {
   validateCorpus(corpus);
-  const family = validateRunIdentity(corpus, run);
+  const family = validateRunIdentity(corpus, run, { expectedStateIdentity });
   if (family.classification === "control") return { ...runIdentity(run), recovered: false, target_id: null, matches: [] };
   const manifest = family.target_manifest;
   const acceptable = new Set([manifest.canonical_target, ...manifest.aliases].map(normalizeTarget));

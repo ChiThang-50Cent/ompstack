@@ -1,129 +1,425 @@
 {
   "schema_version": 1,
   "experiment_id": "reconstruction-v1-synthetic-fixture",
-  "repository_commit": "ae2393137a26ee473677f453680813a18055c4cd",
   "provenance": {
     "kind": "synthetic_test_data",
-    "note": "Synthetic/test data only: it models evaluator behavior and is not a live rollout or empirical A/B/B-prime result."
+    "note": "Synthetic/test data only: it models evaluator behavior and is not a live rollout or empirical A/B/B-prime result. Real runs must bind every arm to one post-policy evaluation revision."
   },
   "families": [
     {
       "family_id": "cli-output-format",
       "classification": "seeded_positive",
-      "provenance": { "class": "synthetic-domain-shift", "note": "Synthetic analogue of a required CLI option omission." },
+      "provenance": {
+        "class": "synthetic-domain-shift",
+        "note": "Synthetic analogue of a required CLI option omission."
+      },
       "difficulty": "cross-surface",
       "target_manifest": {
         "target_id": "cli-output-format",
         "canonical_target": "cli:export --format",
-        "aliases": ["export --format"],
-        "eligible_slots": { "A": ["findings"], "B": ["reconstruction.requirements", "findings", "closeout"], "B-prime": ["requirements", "findings", "closeout"] }
+        "aliases": [
+          "export --format"
+        ],
+        "eligible_slots": {
+          "A": [
+            "findings",
+            "closeout"
+          ],
+          "B": [
+            "reconstruction.requirements",
+            "findings",
+            "closeout"
+          ],
+          "B-prime": [
+            "requirements",
+            "findings",
+            "closeout"
+          ]
+        }
       },
       "twins": [
-        { "twin_id": "cli", "domain": "command-line export", "reruns": [1, 2, 3, 4, 5] },
-        { "twin_id": "http", "domain": "HTTP representation", "reruns": [1, 2, 3, 4, 5] }
+        {
+          "twin_id": "cli",
+          "domain": "command-line export",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "twin_id": "http",
+          "domain": "HTTP representation",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
       ]
     },
     {
       "family_id": "api-pagination-contract",
       "classification": "seeded_positive",
-      "provenance": { "class": "synthetic-domain-shift", "note": "Synthetic analogue of an API contract omission." },
+      "provenance": {
+        "class": "synthetic-domain-shift",
+        "note": "Synthetic analogue of an API contract omission."
+      },
       "difficulty": "public-contract",
       "target_manifest": {
         "target_id": "api-pagination-contract",
         "canonical_target": "api:GET /v1/items cursor",
-        "aliases": ["GET /v1/items cursor"],
-        "eligible_slots": { "A": ["finding_records"], "B": ["reconstruction.requirements", "affected_surfaces", "finding_records"], "B-prime": ["requirements", "affected_surfaces", "finding_records"] }
+        "aliases": [
+          "GET /v1/items cursor"
+        ],
+        "eligible_slots": {
+          "A": [
+            "findings",
+            "closeout"
+          ],
+          "B": [
+            "reconstruction.requirements",
+            "reconstruction.affected_surfaces",
+            "findings",
+            "closeout"
+          ],
+          "B-prime": [
+            "requirements",
+            "affected_surfaces",
+            "findings",
+            "closeout"
+          ]
+        }
       },
       "twins": [
-        { "twin_id": "rest", "domain": "REST collection", "reruns": [1, 2, 3, 4, 5] },
-        { "twin_id": "graphql", "domain": "GraphQL connection", "reruns": [1, 2, 3, 4, 5] }
+        {
+          "twin_id": "rest",
+          "domain": "REST collection",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "twin_id": "graphql",
+          "domain": "GraphQL connection",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
       ]
     },
     {
       "family_id": "schema-required-field",
       "classification": "seeded_positive",
-      "provenance": { "class": "synthetic-domain-shift", "note": "Synthetic analogue of a schema field omission." },
+      "provenance": {
+        "class": "synthetic-domain-shift",
+        "note": "Synthetic analogue of a schema field omission."
+      },
       "difficulty": "schema-boundary",
       "target_manifest": {
         "target_id": "schema-required-field",
         "canonical_target": "schema:account.email required",
-        "aliases": ["account.email required"],
-        "eligible_slots": { "A": ["findings"], "B": ["reconstruction.derived_requirements", "affected_surfaces", "findings"], "B-prime": ["derived_requirements", "affected_surfaces", "findings"] }
+        "aliases": [
+          "account.email required"
+        ],
+        "eligible_slots": {
+          "A": [
+            "findings",
+            "closeout"
+          ],
+          "B": [
+            "reconstruction.derived_requirements",
+            "reconstruction.affected_surfaces",
+            "findings",
+            "closeout"
+          ],
+          "B-prime": [
+            "derived_requirements",
+            "affected_surfaces",
+            "findings",
+            "closeout"
+          ]
+        }
       },
       "twins": [
-        { "twin_id": "json-schema", "domain": "JSON schema", "reruns": [1, 2, 3, 4, 5] },
-        { "twin_id": "database", "domain": "database migration", "reruns": [1, 2, 3, 4, 5] }
+        {
+          "twin_id": "json-schema",
+          "domain": "JSON schema",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "twin_id": "database",
+          "domain": "database migration",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
       ]
     },
     {
       "family_id": "consumer-migration",
       "classification": "seeded_positive",
-      "provenance": { "class": "synthetic-domain-shift", "note": "Synthetic analogue of a downstream consumer omission." },
+      "provenance": {
+        "class": "synthetic-domain-shift",
+        "note": "Synthetic analogue of a downstream consumer omission."
+      },
       "difficulty": "consumer-graph",
       "target_manifest": {
         "target_id": "consumer-migration",
         "canonical_target": "consumer:billing webhook v2",
-        "aliases": ["billing webhook v2"],
-        "eligible_slots": { "A": ["findings"], "B": ["reconstruction.requirements", "affected_surfaces", "closeout"], "B-prime": ["requirements", "affected_surfaces", "closeout"] }
+        "aliases": [
+          "billing webhook v2"
+        ],
+        "eligible_slots": {
+          "A": [
+            "findings",
+            "closeout"
+          ],
+          "B": [
+            "reconstruction.requirements",
+            "reconstruction.affected_surfaces",
+            "closeout",
+            "findings"
+          ],
+          "B-prime": [
+            "requirements",
+            "affected_surfaces",
+            "closeout",
+            "findings"
+          ]
+        }
       },
       "twins": [
-        { "twin_id": "webhook", "domain": "webhook consumer", "reruns": [1, 2, 3, 4, 5] },
-        { "twin_id": "queue", "domain": "queue consumer", "reruns": [1, 2, 3, 4, 5] }
+        {
+          "twin_id": "webhook",
+          "domain": "webhook consumer",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "twin_id": "queue",
+          "domain": "queue consumer",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
       ]
     },
     {
       "family_id": "execution-mode-preservation",
       "classification": "seeded_positive",
-      "provenance": { "class": "synthetic-domain-shift", "note": "Synthetic analogue of an execution mode omission." },
+      "provenance": {
+        "class": "synthetic-domain-shift",
+        "note": "Synthetic analogue of an execution mode omission."
+      },
       "difficulty": "mode-specific",
       "target_manifest": {
         "target_id": "execution-mode-preservation",
         "canonical_target": "mode:offline sync",
-        "aliases": ["offline sync"],
-        "eligible_slots": { "A": ["findings"], "B": ["reconstruction.requirements", "reconstruction.derived_requirements", "findings"], "B-prime": ["requirements", "derived_requirements", "findings"] }
+        "aliases": [
+          "offline sync"
+        ],
+        "eligible_slots": {
+          "A": [
+            "findings",
+            "closeout"
+          ],
+          "B": [
+            "reconstruction.requirements",
+            "reconstruction.derived_requirements",
+            "findings",
+            "closeout"
+          ],
+          "B-prime": [
+            "requirements",
+            "derived_requirements",
+            "findings",
+            "closeout"
+          ]
+        }
       },
       "twins": [
-        { "twin_id": "mobile", "domain": "mobile offline mode", "reruns": [1, 2, 3, 4, 5] },
-        { "twin_id": "desktop", "domain": "desktop disconnected mode", "reruns": [1, 2, 3, 4, 5] }
+        {
+          "twin_id": "mobile",
+          "domain": "mobile offline mode",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "twin_id": "desktop",
+          "domain": "desktop disconnected mode",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
       ]
     },
     {
       "family_id": "proof-surface-required",
       "classification": "seeded_positive",
-      "provenance": { "class": "synthetic-domain-shift", "note": "Synthetic analogue of a required proof-surface omission." },
+      "provenance": {
+        "class": "synthetic-domain-shift",
+        "note": "Synthetic analogue of a required proof-surface omission."
+      },
       "difficulty": "verification-boundary",
       "target_manifest": {
         "target_id": "proof-surface-required",
         "canonical_target": "proof:checkout decline path",
-        "aliases": ["checkout decline path"],
-        "eligible_slots": { "A": ["finding_records", "closeout"], "B": ["reconstruction.requirements", "affected_surfaces", "finding_records", "closeout"], "B-prime": ["requirements", "affected_surfaces", "finding_records", "closeout"] }
+        "aliases": [
+          "checkout decline path"
+        ],
+        "eligible_slots": {
+          "A": [
+            "findings",
+            "closeout"
+          ],
+          "B": [
+            "reconstruction.requirements",
+            "reconstruction.affected_surfaces",
+            "findings",
+            "closeout"
+          ],
+          "B-prime": [
+            "requirements",
+            "affected_surfaces",
+            "findings",
+            "closeout"
+          ]
+        }
       },
       "twins": [
-        { "twin_id": "card", "domain": "card decline", "reruns": [1, 2, 3, 4, 5] },
-        { "twin_id": "bank", "domain": "bank transfer decline", "reruns": [1, 2, 3, 4, 5] }
+        {
+          "twin_id": "card",
+          "domain": "card decline",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "twin_id": "bank",
+          "domain": "bank transfer decline",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
       ]
     },
     {
       "family_id": "underspecified-request-control",
       "classification": "control",
-      "provenance": { "class": "synthetic-control", "note": "Underspecified-request control: correct behavior is INSUFFICIENT_EVIDENCE, never an invented requirement." },
+      "provenance": {
+        "class": "synthetic-control",
+        "note": "Underspecified-request control: correct behavior is INSUFFICIENT_EVIDENCE, never an invented requirement."
+      },
       "difficulty": "underspecified",
       "target_manifest": null,
       "twins": [
-        { "twin_id": "cli", "domain": "ambiguous CLI request", "reruns": [1, 2, 3, 4, 5] },
-        { "twin_id": "api", "domain": "ambiguous API request", "reruns": [1, 2, 3, 4, 5] }
+        {
+          "twin_id": "cli",
+          "domain": "ambiguous CLI request",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "twin_id": "api",
+          "domain": "ambiguous API request",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
       ]
     },
     {
       "family_id": "local-materiality-control",
       "classification": "control",
-      "provenance": { "class": "synthetic-control", "note": "Local/material-uncertainty control with no seeded omission target." },
+      "provenance": {
+        "class": "synthetic-control",
+        "note": "Local/material-uncertainty control with no seeded omission target."
+      },
       "difficulty": "local-uncertainty",
       "target_manifest": null,
       "twins": [
-        { "twin_id": "library", "domain": "local library change", "reruns": [1, 2, 3, 4, 5] },
-        { "twin_id": "script", "domain": "local script change", "reruns": [1, 2, 3, 4, 5] }
+        {
+          "twin_id": "library",
+          "domain": "local library change",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "twin_id": "script",
+          "domain": "local script change",
+          "reruns": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
       ]
     }
-  ]
+  ],
+  "base_repository_commit": "ae2393137a26ee473677f453680813a18055c4cd"
 }

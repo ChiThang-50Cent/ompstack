@@ -139,6 +139,9 @@
           },
           "required": ["finding_id", "finding", "blocking", "source_evidence"]
         }
+      },
+      "closeout": {
+        "$ref": "#/requirementReconstructionV1/$defs/evidenceBoundStatement"
       }
     },
     "required": ["reconstruction", "findings"]

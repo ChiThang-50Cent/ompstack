@@ -63,7 +63,8 @@ Future fresh task replays default to `--thinking low` unless the user explicitly
 ## Requirement-reconstruction infrastructure
 
 **Recorded:** 2026-09-14  
-**Experiment revision:** `ae2393137a26ee473677f453680813a18055c4cd`
+**Pre-policy base revision:** `ae2393137a26ee473677f453680813a18055c4cd`
+**Evaluation revision:** unpinned — no live run exists. Before Phase 0, pin one post-policy commit in every A/B/B′ run artifact; execute A on that same commit with the reconstruction overlay disabled.
 
 The repository now contains a strict reconstruction artifact contract, candidate-visible B and B′ policy, deterministic eligible-slot SORR scaffolding, blinded anchor-packet handling, and a synthetic evaluator fixture. The fixture exercises evaluator mechanics only; it is explicitly not a model rollout, a Phase-0 sample, or an empirical A/B/B′ result.
 

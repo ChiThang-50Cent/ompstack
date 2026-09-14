@@ -4,7 +4,7 @@ import { sha256, stableJson, writeJsonAtomically } from "./run-verification-cont
 
 export const RECONSTRUCTION_SCHEMA_VERSION = 1;
 export const CORPUS_SCHEMA_VERSION = 1;
-export const PINNED_EXPERIMENT_COMMIT = "ae2393137a26ee473677f453680813a18055c4cd";
+export const PINNED_BASE_REPOSITORY_COMMIT = "ae2393137a26ee473677f453680813a18055c4cd";
 export const ARMS = ["A", "B", "B-prime"];
 export const TERMINAL_STATUSES = new Set([
   "OMISSION_MATERIALITY_NOT_ESTABLISHED",
@@ -21,7 +21,13 @@ const reconstructionKeys = [
 const evidenceKinds = new Set(["user_turn", "issue", "spec", "artifact", "repository_contract"]);
 const anchorLabels = new Set(["VALID_EXPLICIT", "VALID_DERIVED", "REPO_INVARIANT", "UNSUPPORTED"]);
 const forbiddenSlotPart = /(^|\.)(raw_evidence|evidence|tool_output|transcript|source|provenance)(\.|$)/i;
-const semanticSlotPart = /(^|\.)(requirements|derived_requirements|affected_surfaces|findings|finding_records|closeout)(\.|$)/;
+const canonicalSlots = {
+  A: new Set(["findings", "closeout"]),
+  B: new Set(["reconstruction.requirements", "reconstruction.derived_requirements", "reconstruction.affected_surfaces", "findings", "closeout"]),
+  "B-prime": new Set(["requirements", "derived_requirements", "affected_surfaces", "findings", "closeout"]),
+};
+const sharedSlots = ["findings", "closeout"];
+const commitHash = /^[0-9a-f]{40}$/;
 
 function fail(message) {
   throw new Error(`reconstruction evaluation: ${message}`);
@@ -132,13 +138,13 @@ function validateReviewerFindings(findings, evidenceIds, label) {
 
 /** Validates B's strict reconstruction-plus-ordinary-review envelope. */
 export function validateBundledReviewerOutput(envelope) {
-  exactKeys(envelope, ["reconstruction", "findings"], "B reviewer output");
+  exactOptionalKeys(envelope, ["reconstruction", "findings"], ["closeout"], "B reviewer output");
   validateReconstruction(envelope.reconstruction);
-  validateReviewerFindings(
-    envelope.findings,
-    new Set(envelope.reconstruction.evidence.map((entry) => entry.id)),
-    "B reviewer output.findings",
-  );
+  const evidenceIds = new Set(envelope.reconstruction.evidence.map((entry) => entry.id));
+  validateReviewerFindings(envelope.findings, evidenceIds, "B reviewer output.findings");
+  if (Object.hasOwn(envelope, "closeout")) {
+    evidenceBoundStatements([envelope.closeout], "B reviewer output.closeout", evidenceIds);
+  }
   return envelope;
 }
 
@@ -186,12 +192,14 @@ export function verifyFrozenReconstruction(map, record, { expected_digest, state
   return true;
 }
 
-function validateSlots(slots, label) {
+function validateSlots(slots, label, arm) {
   const values = array(slots, label, { min: 1 });
   unique(values, label);
   for (const slot of values) {
     string(slot, `${label} entry`);
-    if (forbiddenSlotPart.test(slot) || !semanticSlotPart.test(slot)) fail(`${label} contains an ineligible recovery slot ${slot}`);
+    if (forbiddenSlotPart.test(slot) || !canonicalSlots[arm].has(slot)) {
+      fail(`${label} contains an ineligible recovery slot ${slot}`);
+    }
   }
 }
 
@@ -203,15 +211,21 @@ function validateTargetManifest(manifest, label) {
   for (const alias of aliases) string(alias, `${label}.aliases entry`);
   unique([manifest.canonical_target, ...aliases].map(normalizeTarget), `${label}.canonical target aliases`);
   exactKeys(manifest.eligible_slots, ARMS, `${label}.eligible_slots`);
-  for (const arm of ARMS) validateSlots(manifest.eligible_slots[arm], `${label}.eligible_slots.${arm}`);
+  for (const arm of ARMS) validateSlots(manifest.eligible_slots[arm], `${label}.eligible_slots.${arm}`, arm);
+  for (const slot of sharedSlots) {
+    const eligibility = ARMS.map((arm) => manifest.eligible_slots[arm].includes(slot));
+    if (eligibility.some(Boolean) && !eligibility.every(Boolean)) {
+      fail(`${label}.eligible_slots must expose shared ${slot} slots to every arm`);
+    }
+  }
 }
 
 /** Validates the pinned eight-family, two-twin, three-rerun pilot corpus. */
 export function validateCorpus(corpus) {
-  exactKeys(corpus, ["schema_version", "experiment_id", "repository_commit", "provenance", "families"], "corpus");
+  exactKeys(corpus, ["schema_version", "experiment_id", "base_repository_commit", "provenance", "families"], "corpus");
   if (corpus.schema_version !== CORPUS_SCHEMA_VERSION) fail("corpus schema_version must be 1");
   string(corpus.experiment_id, "corpus.experiment_id");
-  if (corpus.repository_commit !== PINNED_EXPERIMENT_COMMIT) fail("corpus must use the pinned experiment commit");
+  if (corpus.base_repository_commit !== PINNED_BASE_REPOSITORY_COMMIT) fail("corpus must use the pinned base repository commit");
   exactKeys(corpus.provenance, ["kind", "note"], "corpus.provenance");
   if (!new Set(["synthetic_test_data", "observed_failure"]).has(corpus.provenance.kind)) fail("corpus provenance.kind is invalid");
   string(corpus.provenance.note, "corpus.provenance.note");
@@ -279,13 +293,23 @@ function locateFamily(corpus, familyId) {
   return family;
 }
 
+function validateEvaluationRepositoryCommit(value, label) {
+  if (!commitHash.test(string(value, label))) {
+    fail(`${label} must be a 40-character commit SHA`);
+  }
+  if (value === PINNED_BASE_REPOSITORY_COMMIT) {
+    fail(`${label} must not use the pre-policy base commit`);
+  }
+}
+
 function validateRunIdentity(corpus, run) {
-  exactKeys(run, ["family_id", "twin_id", "rerun", "arm", "output", ...(run.arm === "B-prime" ? ["r2"] : [])], "run");
+  exactKeys(run, ["family_id", "twin_id", "rerun", "arm", "evaluation_repository_commit", "output", ...(run.arm === "B-prime" ? ["r2"] : [])], "run");
   const family = locateFamily(corpus, run.family_id);
   const twin = family.twins.find((entry) => entry.twin_id === run.twin_id);
   if (!twin) fail(`unknown twin ${run.twin_id} for ${run.family_id}`);
   if (!twin.reruns.includes(run.rerun)) fail(`undeclared rerun ${run.rerun} for ${run.twin_id}`);
   if (!ARMS.includes(run.arm)) fail(`unknown arm ${run.arm}`);
+  validateEvaluationRepositoryCommit(run.evaluation_repository_commit, "run.evaluation_repository_commit");
   object(run.output, "run.output");
   if (run.arm === "B") validateBundledReviewerOutput(run.output);
   if (run.arm === "B-prime") {
@@ -296,6 +320,19 @@ function validateRunIdentity(corpus, run) {
     });
   }
   return family;
+}
+
+/** Binds a scored comparison to one post-policy repository revision across all arms. */
+export function validateEvaluationRuns(corpus, runs) {
+  const revisions = array(runs, "runs", { min: 1 })
+    .map((run) => {
+      validateRunIdentity(corpus, run);
+      return run.evaluation_repository_commit;
+    });
+  if (new Set(revisions).size !== 1) {
+    fail("runs must share exactly one evaluation_repository_commit");
+  }
+  return revisions[0];
 }
 
 /** Scores only corpus-declared semantic slots; raw evidence and transcripts are never scanned. */
@@ -318,7 +355,13 @@ export function extractSorr(corpus, run) {
 }
 
 function runIdentity(run) {
-  return { family_id: run.family_id, twin_id: run.twin_id, rerun: run.rerun, arm: run.arm };
+  return {
+    family_id: run.family_id,
+    twin_id: run.twin_id,
+    rerun: run.rerun,
+    arm: run.arm,
+    evaluation_repository_commit: run.evaluation_repository_commit,
+  };
 }
 
 /** Produces arm-neutral packets; arm, family, target and source provenance never leave this boundary. */
@@ -398,6 +441,12 @@ export function aggregateRecoveries(corpus, recoveries, { arms = ARMS, positiveO
   if (reruns !== 3 && reruns !== 5) fail("aggregation accepts only the preregistered 3 or 5 rerun selections");
   validateCorpus(corpus);
   array(recoveries, "recoveries");
+  const selectedRecoveries = recoveries.filter((entry) => arms.includes(entry.arm));
+  const revisions = selectedRecoveries.map((entry, index) => {
+    validateEvaluationRepositoryCommit(entry.evaluation_repository_commit, `recoveries[${index}].evaluation_repository_commit`);
+    return entry.evaluation_repository_commit;
+  });
+  if (new Set(revisions).size !== 1) fail("recoveries must share exactly one evaluation_repository_commit");
   const output = {};
   for (const arm of arms) {
     if (!ARMS.includes(arm)) fail(`unknown requested arm ${arm}`);
@@ -405,7 +454,6 @@ export function aggregateRecoveries(corpus, recoveries, { arms = ARMS, positiveO
   }
   return output;
 }
-
 function seededRandom(seed) {
   let state = Number.parseInt(sha256(String(seed)).slice(0, 8), 16) || 1;
   return () => {

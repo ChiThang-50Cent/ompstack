@@ -16,6 +16,7 @@ import {
   validateBundledReviewerOutput,
   validateCorpus,
   validateReconstruction,
+  validateEvaluationRuns,
   verifyFrozenReconstruction,
 } from "../scripts/reconstruction-evaluation.mjs";
 
@@ -34,15 +35,27 @@ function completeMap() {
   };
 }
 
-function run({ arm = "A", output, family_id = "cli-output-format", twin_id = "cli", rerun = 1 } = {}) {
-  return { family_id, twin_id, rerun, arm, output };
+function run({
+  arm = "A",
+  output,
+  family_id = "cli-output-format",
+  twin_id = "cli",
+  rerun = 1,
+  evaluation_repository_commit = "274fb8358038d7d102650e46d9a3a5a41cb931cb",
+} = {}) {
+  return { family_id, twin_id, rerun, arm, evaluation_repository_commit, output };
 }
 
 function recoverySet(arm, recovered) {
   return corpus.families
     .filter((family) => family.classification === "seeded_positive")
     .flatMap((family) => family.twins.flatMap((twin) => twin.reruns.map((rerun) => ({
-      family_id: family.family_id, twin_id: twin.twin_id, rerun, arm, recovered,
+      family_id: family.family_id,
+      twin_id: twin.twin_id,
+      rerun,
+      arm,
+      recovered,
+      evaluation_repository_commit: "274fb8358038d7d102650e46d9a3a5a41cb931cb",
     }))));
 }
 
@@ -91,6 +104,35 @@ test("validates the pinned, explicitly synthetic eight-family corpus", () => {
   assert.match(corpus.provenance.note, /not a live rollout/i);
 });
 
+test("requires canonical slots and symmetric shared recovery slots", () => {
+  const asymmetric = structuredClone(corpus);
+  asymmetric.families[0].target_manifest.eligible_slots.A = ["findings"];
+  assert.throws(() => validateCorpus(asymmetric), /shared closeout slots/);
+
+  const legacySlot = structuredClone(corpus);
+  legacySlot.families[0].target_manifest.eligible_slots.A = ["finding_records", "closeout"];
+  assert.throws(() => validateCorpus(legacySlot), /ineligible recovery slot finding_records/);
+});
+
+test("binds every comparison run to one post-policy evaluation revision", () => {
+  const first = run({ output: { findings: [] } });
+  const second = {
+    ...first,
+    evaluation_repository_commit: "174fb8358038d7d102650e46d9a3a5a41cb931cb",
+  };
+  assert.throws(() => validateEvaluationRuns(corpus, [first, second]), /share exactly one/);
+  assert.equal(
+    validateEvaluationRuns(corpus, [first, { ...second, evaluation_repository_commit: first.evaluation_repository_commit }]),
+    first.evaluation_repository_commit,
+  );
+  assert.throws(
+    () => validateEvaluationRuns(corpus, [
+      { ...first, evaluation_repository_commit: "ae2393137a26ee473677f453680813a18055c4cd" },
+    ]),
+    /must not use the pre-policy base commit/,
+  );
+});
+
 test("SORR never recovers a target from forbidden raw evidence, but accepts a declared alias in an eligible slot", () => {
   const forbidden = extractSorr(corpus, run({ output: { raw_evidence: ["cli:export --format"] } }));
   assert.equal(forbidden.recovered, false);
@@ -128,7 +170,12 @@ test("SORR never recovers a target from forbidden raw evidence, but accepts a de
   }).recovered, false);
 
   assert.equal(extractSorr(corpus, run({ output: { findings: [{ title: "cli:export --format", body: "Required export format is absent." }] } })).recovered, true);
+  assert.throws(
+    () => extractSorr(corpus, run({ evaluation_repository_commit: "not-a-commit", output: { findings: [] } })),
+    /40-character commit SHA/,
+  );
 });
+
 
 test("strict maps preserve underspecification and B-prime freezes reject altered maps, state, or digest", () => {
   const insufficient = {
@@ -151,10 +198,15 @@ test("strict maps preserve underspecification and B-prime freezes reject altered
   assert.throws(() => verifyFrozenReconstruction(map, frozen, { expected_digest: frozen.artifact_digest, state_identity: "candidate:def" }), /state identity/);
 });
 
-test("B's strict envelope binds every ordinary finding to map evidence", () => {
-  const envelope = { reconstruction: completeMap(), findings: [{ finding_id: "f1", finding: "Missing format option.", blocking: true, source_evidence: ["request"] }] };
+test("B's strict envelope binds ordinary findings and closeout to map evidence", () => {
+  const envelope = {
+    reconstruction: completeMap(),
+    findings: [{ finding_id: "f1", finding: "Missing format option.", blocking: true, source_evidence: ["request"] }],
+    closeout: { statement: "The required format behavior remains unverified.", source_evidence: ["request"] },
+  };
   assert.equal(validateBundledReviewerOutput(envelope), envelope);
   assert.throws(() => validateBundledReviewerOutput({ ...envelope, findings: [{ ...envelope.findings[0], source_evidence: ["unknown"] }] }), /unknown evidence/);
+  assert.throws(() => validateBundledReviewerOutput({ ...envelope, closeout: { ...envelope.closeout, source_evidence: ["unknown"] } }), /unknown evidence/);
 });
 
 test("persists a canonical B-prime map and freeze record", async () => {
@@ -216,6 +268,13 @@ test("aggregates reruns into twins and families with equal family weights", () =
   assert.equal(aggregate.B.families.length, 6);
   assert.equal(aggregate.B.families[0].twins.length, 2);
   assert.equal(aggregateRecoveries(corpus, recoveries, { arms: ["A", "B"], reruns: 5 }).B.score, 1);
+  assert.throws(
+    () => aggregateRecoveries(corpus, [
+      ...recoveries,
+      { ...recoveries[0], evaluation_repository_commit: "174fb8358038d7d102650e46d9a3a5a41cb931cb" },
+    ], { arms: ["A", "B"] }),
+    /share exactly one/,
+  );
 });
 
 test("clustered bootstrap is deterministic and retains the paired family estimate", () => {

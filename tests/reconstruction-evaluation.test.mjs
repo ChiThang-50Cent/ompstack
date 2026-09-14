@@ -176,6 +176,15 @@ test("SORR never recovers a target from forbidden raw evidence, but accepts a de
   );
 });
 
+test("A artifacts cannot contain reconstruction output", () => {
+  for (const key of ["reconstruction", "requirements", "derived_requirements", "affected_surfaces"]) {
+    assert.throws(
+      () => extractSorr(corpus, run({ output: { findings: [], [key]: [] } })),
+      new RegExp(`A run\\.output must not contain reconstruction artifact ${key}`),
+    );
+  }
+});
+
 
 test("strict maps preserve underspecification and B-prime freezes reject altered maps, state, or digest", () => {
   const insufficient = {

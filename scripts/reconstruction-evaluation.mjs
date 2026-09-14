@@ -28,6 +28,12 @@ const canonicalSlots = {
 };
 const sharedSlots = ["findings", "closeout"];
 const commitHash = /^[0-9a-f]{40}$/;
+const aForbiddenReconstructionKeys = new Set([
+  "reconstruction",
+  "requirements",
+  "derived_requirements",
+  "affected_surfaces",
+]);
 
 function fail(message) {
   throw new Error(`reconstruction evaluation: ${message}`);
@@ -311,6 +317,13 @@ function validateRunIdentity(corpus, run) {
   if (!ARMS.includes(run.arm)) fail(`unknown arm ${run.arm}`);
   validateEvaluationRepositoryCommit(run.evaluation_repository_commit, "run.evaluation_repository_commit");
   object(run.output, "run.output");
+  if (run.arm === "A") {
+    for (const key of aForbiddenReconstructionKeys) {
+      if (Object.hasOwn(run.output, key)) {
+        fail(`A run.output must not contain reconstruction artifact ${key}`);
+      }
+    }
+  }
   if (run.arm === "B") validateBundledReviewerOutput(run.output);
   if (run.arm === "B-prime") {
     exactKeys(run.r2, ["frozen_map", "freeze_record", "expected_digest", "state_identity"], "B-prime run.r2");

@@ -17,6 +17,7 @@ import {
   validateCorpus,
   validateReconstruction,
   validateEvaluationRuns,
+  validateBPrimeOutput,
   verifyFrozenReconstruction,
 } from "../scripts/reconstruction-evaluation.mjs";
 
@@ -134,7 +135,7 @@ test("binds every comparison run to one post-policy evaluation revision", () => 
 });
 
 test("SORR never recovers a target from forbidden raw evidence, but accepts a declared alias in an eligible slot", () => {
-  const forbidden = extractSorr(corpus, run({ output: { raw_evidence: ["cli:export --format"] } }));
+  const forbidden = extractSorr(corpus, run({ output: { findings: [{ raw_evidence: ["cli:export --format"] }] } }));
   assert.equal(forbidden.recovered, false);
   const map = completeMap();
   map.requirements = [{ requirement: "export --format", source_evidence: ["request"] }];
@@ -156,7 +157,7 @@ test("SORR never recovers a target from forbidden raw evidence, but accepts a de
   frozenSource.requirements = [{ requirement: "export --format", source_evidence: ["request"] }];
   const frozenSourceRecord = freezeReconstruction(frozenSource, { artifact_path: "evidence/r1.json", state_identity: "candidate:abc" });
   const frozenRecovery = extractSorr(corpus, {
-    ...run({ arm: "B-prime", output: { requirements: ["not the frozen map"] } }),
+    ...run({ arm: "B-prime", output: { findings: [] } }),
     r2: { frozen_map: frozenSource, freeze_record: frozenSourceRecord, expected_digest: frozenSourceRecord.artifact_digest, state_identity: "candidate:abc" },
   });
   assert.equal(frozenRecovery.recovered, true);
@@ -165,7 +166,7 @@ test("SORR never recovers a target from forbidden raw evidence, but accepts a de
   frozenMiss.requirements = [{ requirement: "unrelated requirement", source_evidence: ["request"] }];
   const frozenMissRecord = freezeReconstruction(frozenMiss, { artifact_path: "evidence/r1.json", state_identity: "candidate:abc" });
   assert.equal(extractSorr(corpus, {
-    ...run({ arm: "B-prime", output: { requirements: ["cli:export --format"] } }),
+    ...run({ arm: "B-prime", output: { findings: [] } }),
     r2: { frozen_map: frozenMiss, freeze_record: frozenMissRecord, expected_digest: frozenMissRecord.artifact_digest, state_identity: "candidate:abc" },
   }).recovered, false);
 
@@ -176,13 +177,29 @@ test("SORR never recovers a target from forbidden raw evidence, but accepts a de
   );
 });
 
-test("A artifacts cannot contain reconstruction output", () => {
+test("A artifacts are limited to declared shared scoring slots", () => {
+  assert.throws(
+    () => extractSorr(corpus, run({ output: { findings: [], audit: { reconstruction: completeMap() } } })),
+    /A output has unexpected or missing properties/,
+  );
   for (const key of ["reconstruction", "requirements", "derived_requirements", "affected_surfaces"]) {
     assert.throws(
       () => extractSorr(corpus, run({ output: { findings: [], [key]: [] } })),
-      new RegExp(`A run\\.output must not contain reconstruction artifact ${key}`),
+      /A output has unexpected or missing properties/,
     );
   }
+});
+
+test("B-prime rejects R2 fields and evidence not declared by frozen R1", () => {
+  const map = completeMap();
+  assert.throws(
+    () => validateBPrimeOutput({ findings: [], reconstruction: map }, map),
+    /B-prime output has unexpected or missing properties/,
+  );
+  assert.throws(
+    () => validateBPrimeOutput({ findings: [{ finding_id: "f1", finding: "format missing", blocking: true, source_evidence: ["other"] }] }, map),
+    /references unknown evidence other/,
+  );
 });
 
 

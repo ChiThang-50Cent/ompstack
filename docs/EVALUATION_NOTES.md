@@ -69,3 +69,16 @@ Future fresh task replays default to `--thinking low` unless the user explicitly
 The repository now contains a strict reconstruction artifact contract, candidate-visible B and B′ policy, deterministic eligible-slot SORR scaffolding, blinded anchor-packet handling, and a synthetic evaluator fixture. The fixture exercises evaluator mechanics only; it is explicitly not a model rollout, a Phase-0 sample, or an empirical A/B/B′ result.
 
 No quality or cost metrics are recorded for this policy: no real arm artifacts, blinded anchor decisions, model-token telemetry, tool counts, or wall-time records have been collected. The Phase-0 materiality gate is **BLOCKED** pending a curated observed-failure corpus and 48 controlled A runs. B/B′, promotion, and the Stage-2 gate remain unexecuted. Do not infer an experiment outcome or framing-independence claim from the synthetic fixture.
+
+## Observed omission inventory
+
+**Recorded:** 2026-09-14
+**Qualified original families:** 0
+
+The retained Ompstack task history contains four complete session records: Flask `pallets__flask-5014`, Requests `psf__requests-2931`, scikit-learn `scikit-learn__scikit-learn-25102`, and SymPy `sympy__sympy-12489`. Flask, scikit-learn, and SymPy have `VERIFIED` oracle outcomes. The Requests attempt is `NOT_VERIFIED`, but its oracle stream fails broad network/fixture tests after the session's explicit binary-body checks pass; it does not identify a raw-request requirement the agent omitted. The SymPy protected-path violation is an evaluation-contract failure, not an omission stated in its raw request.
+
+No retained session supplies all three required facts—verbatim request, an Ompstack-shipped omitted requirement, and causal evidence explaining the omission. The six synthetic families remain evaluator-only data and must not be relabeled as observed failures or used for difficulty calibration.
+
+## Phase-0 calibration record
+
+The pre-Phase-0 probe is **BLOCKED**. It requires two qualified observed-failure families; none are currently retained. When those families exist, run exactly 2 families × 1 twin × 3 A reruns with the telemetry runner. Label every resulting artifact `probe_only`; it must not enter the 48-run Phase-0 sample or any promotion statistic.

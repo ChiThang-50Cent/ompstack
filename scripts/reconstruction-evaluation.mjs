@@ -28,12 +28,6 @@ const canonicalSlots = {
 };
 const sharedSlots = ["findings", "closeout"];
 const commitHash = /^[0-9a-f]{40}$/;
-const aForbiddenReconstructionKeys = new Set([
-  "reconstruction",
-  "requirements",
-  "derived_requirements",
-  "affected_surfaces",
-]);
 
 function fail(message) {
   throw new Error(`reconstruction evaluation: ${message}`);
@@ -152,6 +146,18 @@ export function validateBundledReviewerOutput(envelope) {
     evidenceBoundStatements([envelope.closeout], "B reviewer output.closeout", evidenceIds);
   }
   return envelope;
+}
+
+/** Validates B-prime R2 findings against the frozen R1 evidence map. */
+export function validateBPrimeOutput(output, frozenMap) {
+  exactOptionalKeys(output, ["findings"], ["closeout"], "B-prime output");
+  validateReconstruction(frozenMap);
+  const evidenceIds = new Set(frozenMap.evidence.map((entry) => entry.id));
+  validateReviewerFindings(output.findings, evidenceIds, "B-prime output.findings");
+  if (Object.hasOwn(output, "closeout")) {
+    evidenceBoundStatements([output.closeout], "B-prime output.closeout", evidenceIds);
+  }
+  return output;
 }
 
 function validateFreezeRecord(record) {
@@ -318,11 +324,7 @@ function validateRunIdentity(corpus, run) {
   validateEvaluationRepositoryCommit(run.evaluation_repository_commit, "run.evaluation_repository_commit");
   object(run.output, "run.output");
   if (run.arm === "A") {
-    for (const key of aForbiddenReconstructionKeys) {
-      if (Object.hasOwn(run.output, key)) {
-        fail(`A run.output must not contain reconstruction artifact ${key}`);
-      }
-    }
+    exactOptionalKeys(run.output, ["findings"], ["closeout"], "A output");
   }
   if (run.arm === "B") validateBundledReviewerOutput(run.output);
   if (run.arm === "B-prime") {
@@ -331,6 +333,7 @@ function validateRunIdentity(corpus, run) {
       expected_digest: run.r2.expected_digest,
       state_identity: run.r2.state_identity,
     });
+    validateBPrimeOutput(run.output, run.r2.frozen_map);
   }
   return family;
 }

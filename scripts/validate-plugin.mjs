@@ -128,6 +128,7 @@ assertExactSet(
     "agents",
     "commands",
     "docs",
+    "extensions",
     "examples",
     "scripts",
     "policy",

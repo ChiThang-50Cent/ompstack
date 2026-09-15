@@ -6,6 +6,7 @@
     "agents",
     "commands",
     "docs",
+    "extensions",
     "examples",
     "scripts",
     "policy",
@@ -21,5 +22,9 @@
     "test": "bun test tests",
     "prepublishOnly": "bun run check && bun test tests && npm pack --dry-run"
   },
-  "omp": {}
+  "omp": {
+    "extensions": [
+      "./extensions/ompstack-runtime.ts"
+    ]
+  }
 }

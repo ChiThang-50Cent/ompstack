@@ -26,11 +26,11 @@ omp plugin marketplace update ompstack
 omp plugin upgrade ompstack@ompstack
 ```
 
-## Release 0.3
+## Release 0.3.1
 
-Version 0.3 adds requirement-reconstruction evaluation tooling: strict A/B/B′ artifacts, session telemetry, and a deterministic scorer. It is for evaluating that policy; it does **not** gate ordinary Ompstack use and no Phase-0 empirical result is claimed by the synthetic evaluator fixture.
+Version 0.3.1 adds requirement-reconstruction evaluation tooling: strict A/B/B′ artifacts, session telemetry, and a deterministic scorer. It is for evaluating that policy; it does **not** gate ordinary Ompstack use and no Phase-0 empirical result is claimed by the synthetic evaluator fixture.
 
-`scripts/run-reconstruction-arm.mjs` requires a clean Git checkout matching the declared evaluation SHA. B/B′ runs also retain session-level proof that `skill://ompstack` resolved. B′ freezes its R1 map before a separate R2 review.
+`scripts/run-reconstruction-arm.mjs` requires the evaluation plugin checkout's `HEAD` to match the declared evaluation SHA and rejects staged or unstaged tracked changes. B/B′ runs also retain session-level proof that `skill://ompstack` resolved. B′ freezes its R1 map before a separate R2 review.
 
 ## Install from npm
 
@@ -122,7 +122,7 @@ For autonomous, multi-phase, high-risk, or handoff work, `ompstack-decision-trai
 
 Prewalk, Advisor, session handoff/export, and Memory are opt-in OMP operator facilities. Ompstack never enables or configures them: Prewalk cannot become a route requirement; Advisor remains inspection-only concern coverage rather than a completion gate; persisted session artifacts remain primary handoff evidence; and any `memory://` context must be cited and revalidated against the current repository. Never share an export or capture a lesson without explicit authorization.
 
-See `docs/DESIGN.md`, `docs/BENCHMARK_EVIDENCE.md`, and `examples/usage.md`.
+See [the design](docs/DESIGN.md), [benchmark evidence](docs/BENCHMARK_EVIDENCE.md), and [usage examples](examples/usage.md).
 
 ## Validate
 

@@ -103,6 +103,8 @@ assertExactSet(
   new Set([
     "agents",
     "commands",
+    "docs",
+    "examples",
     "scripts",
     "skills",
     "NOTICE.md",

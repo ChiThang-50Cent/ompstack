@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "maxLines": 10000,
+  "vendoredPrefixes": [
+    "vendor/",
+    "node_modules/",
+    "third_party/"
+  ],
+  "generatedPathPatterns": [
+    "(?:^|/)generated/",
+    "\\.generated\\.",
+    "\\.gen\\."
+  ]
+}

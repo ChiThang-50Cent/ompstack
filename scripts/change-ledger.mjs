@@ -1,6 +1,5 @@
-import { lstat, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
 import { collectChangeSet } from "./change-set.mjs";
 
 const POLICY_PATH = fileURLToPath(new URL("./change-ledger-policy.json", import.meta.url));
@@ -43,18 +42,12 @@ export async function loadChangeLedgerPolicy(path = POLICY_PATH) {
   }
 }
 
-function lineCount(text) {
-  return text === "" ? 0 : text.split("\n").length;
-}
-async function exclusionFor(change, { root, policy, userExcludedPaths }) {
+async function exclusionFor(change, { policy, userExcludedPaths }) {
   if (userExcludedPaths.has(change.path)) return "user-excluded";
   if (change.binary) return "binary";
   if (policy.vendoredPrefixes.some((prefix) => change.path.startsWith(prefix))) return "vendored";
   if (policy.generatedPathPatterns.some((pattern) => pattern.test(change.path))) return "generated";
-  if (change.changeType !== "deleted" && !(await lstat(resolve(root, change.path))).isSymbolicLink()) {
-    const content = await Bun.file(resolve(root, change.path)).text();
-    if (lineCount(content) > policy.maxLines) return "size-cap";
-  }
+  if (change.addedLines + change.deletedLines > policy.maxLines) return "size-cap";
   return null;
 }
 
@@ -91,7 +84,7 @@ export async function createChangeLedger({ base, head, root = process.cwd(), pol
   const changes = await collectChangeSet({ base, head, root });
   const excludedPaths = new Set(userExcludedPaths);
   const entries = await Promise.all(changes.map(async (change) => {
-    const reason = await exclusionFor(change, { root, policy: effectivePolicy, userExcludedPaths: excludedPaths });
+    const reason = await exclusionFor(change, { policy: effectivePolicy, userExcludedPaths: excludedPaths });
     return {
       path: change.path,
       changeType: change.changeType,

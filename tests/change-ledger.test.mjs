@@ -127,3 +127,68 @@ test("change ledger requires terminal reasons and preserves entries", async () =
     );
   });
 });
+
+test("change ledger reads tracked metadata from the requested revisions", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-change-ledger-history-"));
+  try {
+    await git(root, "init");
+    await git(root, "config", "user.email", "test@example.com");
+    await git(root, "config", "user.name", "Test");
+    await writeFile(join(root, "README.md"), "base\n");
+    await git(root, "add", ".");
+    await git(root, "commit", "-m", "base");
+    const base = await git(root, "rev-parse", "HEAD");
+    await writeFile(join(root, "temp.txt"), "historical review target\n");
+    await git(root, "add", ".");
+    await git(root, "commit", "-m", "add target");
+    const head = await git(root, "rev-parse", "HEAD");
+    await git(root, "rm", "temp.txt");
+    await git(root, "commit", "-m", "delete target");
+
+    const ledger = await createChangeLedger({ base, head, root });
+    assert.deepEqual(ledger.entries, [{
+      path: "temp.txt",
+      changeType: "added",
+      disposition: "pending",
+      reason: null,
+    }]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("change ledger caps changed lines while separately capping untracked files", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-change-ledger-size-"));
+  try {
+    await git(root, "init");
+    await git(root, "config", "user.email", "test@example.com");
+    await git(root, "config", "user.name", "Test");
+    const lines = Array.from({ length: 20_000 }, (_, index) => `line ${index}\n`);
+    await writeFile(join(root, "big.txt"), lines.join(""));
+    await git(root, "add", ".");
+    await git(root, "commit", "-m", "large base");
+    const base = await git(root, "rev-parse", "HEAD");
+    lines[10_000] = "changed\n";
+    await writeFile(join(root, "big.txt"), lines.join(""));
+    await git(root, "add", ".");
+    await git(root, "commit", "-m", "small large-file change");
+    const head = await git(root, "rev-parse", "HEAD");
+    await writeFile(join(root, "untracked.txt"), "new\n".repeat(10_001));
+
+    const entries = new Map((await createChangeLedger({ base, head, root })).entries.map((entry) => [entry.path, entry]));
+    assert.deepEqual(entries.get("big.txt"), {
+      path: "big.txt",
+      changeType: "modified",
+      disposition: "pending",
+      reason: null,
+    });
+    assert.deepEqual(entries.get("untracked.txt"), {
+      path: "untracked.txt",
+      changeType: "untracked",
+      disposition: "skipped",
+      reason: "size-cap",
+    });
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});

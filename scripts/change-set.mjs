@@ -64,11 +64,13 @@ function parseNumstat(output) {
   return entries;
 }
 
-async function isUntrackedBinary(root, path) {
+async function untrackedStatistics(root, path) {
   const fullPath = resolve(root, path);
-  if ((await lstat(fullPath)).isSymbolicLink()) return false;
+  if ((await lstat(fullPath)).isSymbolicLink()) return { binary: false, addedLines: 0 };
   const bytes = await readFile(fullPath);
-  return bytes.includes(0);
+  let addedLines = bytes.length === 0 ? 0 : 1;
+  for (const byte of bytes) if (byte === 10) addedLines += 1;
+  return { binary: bytes.includes(0), addedLines };
 }
 
 /** Collects committed changes between base and head plus current untracked files. */
@@ -91,11 +93,11 @@ export async function collectChangeSet({ base, head, root = process.cwd() }) {
   const knownPaths = new Set(changed.map((entry) => entry.path));
   for (const path of untracked.split("\0")) {
     if (!path || knownPaths.has(path)) continue;
+    const untracked = await untrackedStatistics(repositoryRoot, path);
     changed.push({
       path,
       changeType: "untracked",
-      binary: await isUntrackedBinary(repositoryRoot, path),
-      addedLines: 0,
+      ...untracked,
       deletedLines: 0,
     });
   }

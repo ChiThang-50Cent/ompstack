@@ -26,6 +26,12 @@ omp plugin marketplace update ompstack
 omp plugin upgrade ompstack@ompstack
 ```
 
+## Release 0.3
+
+Version 0.3 adds requirement-reconstruction evaluation tooling: strict A/B/B′ artifacts, session telemetry, and a deterministic scorer. It is for evaluating that policy; it does **not** gate ordinary Ompstack use and no Phase-0 empirical result is claimed by the synthetic evaluator fixture.
+
+`scripts/run-reconstruction-arm.mjs` requires a clean Git checkout matching the declared evaluation SHA. B/B′ runs also retain session-level proof that `skill://ompstack` resolved. B′ freezes its R1 map before a separate R2 review.
+
 ## Install from npm
 
 The npm package remains available as an alternative distribution channel:

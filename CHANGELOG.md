@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-14
+
+### Added
+
+- Documented the 0.3 release and marketplace upgrade path in the README.
+- Added native project guidance at `.omp/AGENTS.md`; marketplace plugin discovery does not inject it into consumer project context.
+- Added ignore coverage and a pre-push cleanup requirement for local evaluation artifacts and unintegrated experiments.
+
+## [0.3.0] - 2026-09-14
+
+### Added
+
+- Added strict requirement-reconstruction evaluation artifacts, deterministic SORR scoring, and the A/B/B′ arm runner with session telemetry.
+
+### Fixed
+
+- Bound evaluation artifacts to a clean, exact plugin checkout; constrained A baseline output; and froze B′ R1 state before R2 scoring.
+
 ## [0.2.3] - 2026-09-09
 
 ### Changed

@@ -192,3 +192,42 @@ test("change ledger caps changed lines while separately capping untracked files"
     await rm(root, { force: true, recursive: true });
   }
 });
+
+test("change ledger preserves rename diff statistics", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-change-ledger-rename-"));
+  try {
+    await git(root, "init");
+    await git(root, "config", "user.email", "test@example.com");
+    await git(root, "config", "user.name", "Test");
+    const lines = Array.from({ length: 20_000 }, (_, index) => `line ${index}\n`);
+    await writeFile(join(root, "large.txt"), lines.join(""));
+    await git(root, "add", ".");
+    await git(root, "commit", "-m", "large base");
+    const base = await git(root, "rev-parse", "HEAD");
+
+    await git(root, "mv", "large.txt", "renamed.txt");
+    await git(root, "commit", "-m", "pure rename");
+    const pureRenameHead = await git(root, "rev-parse", "HEAD");
+    assert.deepEqual((await createChangeLedger({ base, head: pureRenameHead, root })).entries, [{
+      path: "renamed.txt",
+      changeType: "renamed",
+      disposition: "pending",
+      reason: null,
+    }]);
+
+    await git(root, "mv", "renamed.txt", "edited.txt");
+    lines[10_000] = "changed\n";
+    await writeFile(join(root, "edited.txt"), lines.join(""));
+    await git(root, "add", ".");
+    await git(root, "commit", "-m", "rename with small edit");
+    const editedRenameHead = await git(root, "rev-parse", "HEAD");
+    assert.deepEqual((await createChangeLedger({ base, head: editedRenameHead, root })).entries, [{
+      path: "edited.txt",
+      changeType: "renamed",
+      disposition: "pending",
+      reason: null,
+    }]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});

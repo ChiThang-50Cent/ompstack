@@ -43,16 +43,20 @@ function parseNameStatus(output) {
 }
 
 function parseNumstat(output) {
+  const fields = output.split("\0");
+  fields.pop();
   const entries = new Map();
-  for (const record of output.split("\0")) {
-    if (!record) continue;
+  for (let index = 0; index < fields.length;) {
+    const record = fields[index++];
     const firstTab = record.indexOf("\t");
     const secondTab = record.indexOf("\t", firstTab + 1);
     if (firstTab <= 0 || secondTab <= firstTab + 1) fail(`malformed numstat record: ${record}`);
     const added = record.slice(0, firstTab);
     const deleted = record.slice(firstTab + 1, secondTab);
-    const path = record.slice(secondTab + 1);
-    if (!/^(?:\d+|-)$/.test(added) || !/^(?:\d+|-)$/.test(deleted) || !path) {
+    const pathField = record.slice(secondTab + 1);
+    const sourcePath = pathField === "" ? fields[index++] : null;
+    const path = pathField === "" ? fields[index++] : pathField;
+    if (!/^(?:\d+|-)$/.test(added) || !/^(?:\d+|-)$/.test(deleted) || !path || (pathField === "" && !sourcePath)) {
       fail(`malformed numstat record: ${record}`);
     }
     entries.set(path, {
@@ -82,7 +86,7 @@ export async function collectChangeSet({ base, head, root = process.cwd() }) {
   const revisionRange = `${base}...${head}`;
   const [nameStatus, numstat, untracked] = await Promise.all([
     runGit(repositoryRoot, ["diff", "--name-status", "-z", "--find-renames", "--find-copies", revisionRange]),
-    runGit(repositoryRoot, ["diff", "--numstat", "--no-renames", "-z", revisionRange]),
+    runGit(repositoryRoot, ["diff", "--numstat", "-z", "--find-renames", "--find-copies", revisionRange]),
     runGit(repositoryRoot, ["ls-files", "--others", "--exclude-standard", "-z"]),
   ]);
   const statistics = parseNumstat(numstat);

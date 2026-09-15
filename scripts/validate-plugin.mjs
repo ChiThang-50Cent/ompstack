@@ -8,6 +8,7 @@ import {
   validateRoutingCorpus,
 } from "./routing-validation.mjs";
 import { loadChangeLedgerPolicy } from "./change-ledger.mjs";
+import { loadRoutingPolicy } from "./routing/policy.mjs";
 
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -115,6 +116,7 @@ assert.deepEqual(
   "reconstruction routing cases must satisfy the policy",
 );
 await loadChangeLedgerPolicy();
+await loadRoutingPolicy();
 const manifest = JSON.parse(await read("package.json"));
 
 assert.match(manifest.version, /^\d+\.\d+\.\d+$/, "package version must be a release semver");
@@ -128,6 +130,7 @@ assertExactSet(
     "docs",
     "examples",
     "scripts",
+    "policy",
     "skills",
     "NOTICE.md",
     "third_party/PSTACK_LICENSE",

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "thresholds": {
+    "maxMediumConsumerFamilies": 1,
+    "maxMediumCodeFiles": 5,
+    "maxMediumAffectedModules": 1,
+    "maxMediumReverseDependents": 12,
+    "maxMediumChangedLines": 300
+  }
+}

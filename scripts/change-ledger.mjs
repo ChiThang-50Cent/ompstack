@@ -1,8 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { collectChangeSet } from "./change-set.mjs";
-
-const POLICY_PATH = fileURLToPath(new URL("./change-ledger-policy.json", import.meta.url));
+import { loadPolicy } from "./policy.mjs";
 const dispositions = new Set(["pending", "reviewed", "skipped"]);
 
 function fail(message) {
@@ -33,13 +30,8 @@ function validatePolicy(policy) {
   };
 }
 
-export async function loadChangeLedgerPolicy(path = POLICY_PATH) {
-  try {
-    return validatePolicy(JSON.parse(await readFile(path, "utf8")));
-  } catch (error) {
-    if (error instanceof SyntaxError) fail("policy is not valid JSON");
-    throw error;
-  }
+export async function loadChangeLedgerPolicy() {
+  return validatePolicy(await loadPolicy("change-ledger"));
 }
 
 async function exclusionFor(change, { policy, userExcludedPaths }) {

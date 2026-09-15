@@ -30,6 +30,7 @@ function normalizedPath(value) {
 }
 
 function regexes(patterns, label) {
+  if (Array.isArray(patterns) && patterns.length > 0 && patterns.every((pattern) => pattern instanceof RegExp)) return patterns;
   if (!Array.isArray(patterns) || patterns.length === 0 || !patterns.every((pattern) => typeof pattern === "string" && pattern !== "")) {
     fail(`${label} must be a non-empty pattern array`);
   }

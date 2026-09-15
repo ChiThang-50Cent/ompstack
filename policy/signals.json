@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "codePathPatterns": [
+    "\\.(?:go|py|ts|tsx|mts|cts|java)$"
+  ],
+  "packageRootMarkers": [
+    "package.json",
+    "go.mod",
+    "pyproject.toml",
+    "setup.py",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts"
+  ],
+  "knownFlags": [],
+  "pathRules": []
+}

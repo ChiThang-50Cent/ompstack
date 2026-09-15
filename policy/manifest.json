@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "policyVersion": "1",
   "policies": [
+    "signals",
     "change-ledger",
     "routing"
   ]

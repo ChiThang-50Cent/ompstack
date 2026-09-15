@@ -54,6 +54,7 @@ export function validateSignalPolicy(policy) {
   ) {
     fail("policy has an invalid shape");
   }
+  const generatedPathPatterns = regexes(policy.generatedPathPatterns, "generatedPathPatterns");
   const codePathPatterns = regexes(policy.codePathPatterns, "codePathPatterns");
   const ids = new Set();
   const pathRules = policy.pathRules.map((rule) => {
@@ -73,7 +74,7 @@ export function validateSignalPolicy(policy) {
       fail("pathRules contains an invalid pattern");
     }
   });
-  return { ...policy, codePathPatterns, pathRules };
+  return { ...policy, codePathPatterns, generatedPathPatterns, pathRules };
 }
 
 export async function loadSignalPolicy() {
@@ -124,6 +125,9 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
     for (const rule of effectivePolicy.pathRules) {
       if (rule.pathPattern.test(change.path)) for (const flag of rule.flags) matchedFlags.add(flag);
     }
+  }
+  for (const change of changeSet) {
+    if (effectivePolicy.generatedPathPatterns.some((pattern) => pattern.test(change.path))) matchedFlags.add("touchesGeneratedCode");
   }
   const flags = Object.fromEntries(SIGNAL_FLAGS.map((flag) => [
     flag,

@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "changedLinesScope": "code-files-only",
+  "generatedPathPatterns": [
+    "(?:^|/)generated/",
+    "\\.generated\\.",
+    "\\.gen\\."
+  ],
   "codePathPatterns": [
     "\\.(?:go|py|ts|tsx|mts|cts|java)$"
   ],

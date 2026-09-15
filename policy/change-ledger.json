@@ -5,10 +5,5 @@
     "vendor/",
     "node_modules/",
     "third_party/"
-  ],
-  "generatedPathPatterns": [
-    "(?:^|/)generated/",
-    "\\.generated\\.",
-    "\\.gen\\."
   ]
 }

@@ -17,6 +17,7 @@ const policy = {
   schemaVersion: 1,
   policyVersion: "test",
   changedLinesScope: "code-files-only",
+  generatedPathPatterns: ["(?:^|/)generated/"],
   codePathPatterns: ["\\.(?:ts|py)$"],
   packageRootMarkers: ["package.json"],
   knownFlags: ["touchesAuthorization"],

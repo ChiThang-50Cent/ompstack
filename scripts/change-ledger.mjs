@@ -1,5 +1,6 @@
 import { collectChangeSet } from "./change-set.mjs";
 import { loadPolicy } from "./policy.mjs";
+import { loadSignalPolicy } from "./routing/collect-signals.mjs";
 const dispositions = new Set(["pending", "reviewed", "skipped"]);
 
 function fail(message) {
@@ -31,7 +32,14 @@ function validatePolicy(policy) {
 }
 
 export async function loadChangeLedgerPolicy() {
-  return validatePolicy(await loadPolicy("change-ledger"));
+  const [policy, signalPolicy] = await Promise.all([
+    loadPolicy("change-ledger"),
+    loadSignalPolicy(),
+  ]);
+  return validatePolicy({
+    ...policy,
+    generatedPathPatterns: signalPolicy.generatedPathPatterns.map((pattern) => pattern.source),
+  });
 }
 
 async function exclusionFor(change, { policy, userExcludedPaths }) {

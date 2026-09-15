@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "bun:test";
 import ompstackRuntime from "../extensions/ompstack-runtime.ts";
 
@@ -8,6 +11,8 @@ function chain() {
 
 function createRuntime() {
   const handlers = new Map();
+  const tools = new Map();
+  const entries = [];
   const pi = {
     zod: {
       object: chain,
@@ -17,59 +22,140 @@ function createRuntime() {
       boolean: chain,
       number: chain,
     },
-    appendEntry: async () => undefined,
+    appendEntry: async (customType, data) => entries.push({ customType, data }),
     on: (event, handler) => handlers.set(event, handler),
-    registerTool: () => {},
+    registerTool: (tool) => tools.set(tool.name, tool),
   };
   ompstackRuntime(pi);
-  return handlers;
+  return { entries, handlers, tools };
 }
 
 const decisionId = "a".repeat(64);
+const decision = {
+  type: "custom",
+  customType: "io.github.chithang-50cent.ompstack.route-decision.v1",
+  data: { decisionId, requiredIndependentEvidence: ["reviewer", "verifier"] },
+};
+const invalidated = {
+  type: "custom",
+  customType: "io.github.chithang-50cent.ompstack.route-decision-state.v1",
+  data: { decisionId, state: "invalidated", reason: "superseded-by-fresh-route" },
+};
 
-test("runtime extension blocks writes before a route and leaves known reads available", async () => {
-  const handlers = createRuntime();
-  const gate = handlers.get("tool_call");
-  assert.deepEqual(await gate({ toolName: "write", input: {} }), {
-    block: true,
-    reason: "ompstack requires a valid RouteDecision before mutable or unknown execution",
-  });
-  assert.equal(await gate({ toolName: "write", input: { path: "xd://ompstack_route" } }), undefined);
-  assert.equal(await gate({ toolName: "read", input: {} }), undefined);
+async function restore(runtime, entries) {
+  await runtime.handlers.get("session_start")({}, { sessionManager: { getBranch: () => entries } });
+  return runtime.handlers.get("tool_call");
+}
+
+async function git(root, ...args) {
+  const process = Bun.spawn(["git", "-C", root, ...args], { stdout: "pipe", stderr: "pipe" });
+  const [stdout, stderr, exitCode] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited]);
+  assert.equal(exitCode, 0, stderr);
+  return stdout.trim();
+}
+
+async function withRepository(callback) {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-runtime-"));
+  try {
+    await git(root, "init");
+    await git(root, "config", "user.email", "runtime@example.test");
+    await git(root, "config", "user.name", "Runtime test");
+    await git(root, "commit", "--allow-empty", "-m", "base");
+    await callback(root, await git(root, "rev-parse", "HEAD"));
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+}
+
+function routeInput(root, revision) {
+  return {
+    intent: "feature",
+    targets: ["src/example.ts"],
+    taskFacts: { behaviorAffecting: true, plannedWriteLanes: ["parent"], proofSurface: "runtime test" },
+    repository: { root, base: revision, head: revision },
+    riskFacts: { sharedSemanticBoundary: false, consumerFamilies: 1, executionModes: 1, graphTraversal: false, materialUnknown: false },
+    graphPolicy: { sourceRoots: { go: [], python: [], typescript: [], java: [] } },
+  };
+}
+
+test("runtime stays inactive until Ompstack records a decision", async () => {
+  const runtime = createRuntime();
+  const gate = runtime.handlers.get("tool_call");
+  assert.equal(await gate({ toolName: "write", input: { path: "unrelated.txt" } }), undefined);
+  assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
 });
 
-test("runtime extension requires an exact task decision header and consumes authorization", async () => {
-  const handlers = createRuntime();
-  await handlers.get("session_start")({}, {
-    sessionManager: {
-      getBranch: () => [{ type: "custom", customType: "io.github.chithang-50cent.ompstack.route-decision.v1", data: { decisionId } }],
-    },
-  });
-  const gate = handlers.get("tool_call");
+test("runtime keeps an active decision across mutable calls and Todo inspection", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [decision]);
   assert.deepEqual(await gate({ toolName: "task", input: { context: "# Context" } }), {
     block: true,
     reason: "task requires an exact Route-Decision header",
   });
   assert.equal(await gate({ toolName: "task", input: { context: `Route-Decision: sha256:${decisionId}` } }), undefined);
-  assert.deepEqual(await gate({ toolName: "edit", input: {} }), {
-    block: true,
-    reason: "ompstack requires a valid RouteDecision before mutable or unknown execution",
-  });
+  assert.equal(await gate({ toolName: "edit", input: {} }), undefined);
+  assert.equal(await gate({ toolName: "edit", input: {} }), undefined);
+  assert.equal(await gate({ toolName: "bash", input: {} }), undefined);
+  assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
+  assert.deepEqual(runtime.entries, []);
 });
 
-
-test("runtime extension does not restore a consumed persisted decision", async () => {
-  const handlers = createRuntime();
-  await handlers.get("session_start")({}, {
-    sessionManager: {
-      getBranch: () => [
-        { type: "custom", customType: "io.github.chithang-50cent.ompstack.route-decision.v1", data: { decisionId } },
-        { type: "custom", customType: "io.github.chithang-50cent.ompstack.route-decision-state.v1", data: { decisionId, state: "consumed" } },
-      ],
-    },
-  });
-  assert.deepEqual(await handlers.get("tool_call")({ toolName: "edit", input: {} }), {
+test("runtime fails closed after an invalidated persisted decision", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [decision, invalidated]);
+  assert.deepEqual(await gate({ toolName: "write", input: { path: "xd://ompstack_route" } }), {
     block: true,
     reason: "ompstack requires a valid RouteDecision before mutable or unknown execution",
+  });
+  assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
+});
+
+test("runtime records only successfully launched required evidence lanes", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [decision]);
+  await gate({
+    toolCallId: "task-1",
+    toolName: "task",
+    input: {
+      context: `Route-Decision: sha256:${decisionId}`,
+      tasks: [{ agent: "reviewer" }, { agent: "security-reviewer" }],
+    },
+  });
+  await runtime.handlers.get("tool_execution_end")({ toolCallId: "task-1", toolName: "task", isError: false });
+  const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
+  assert.deepEqual(phase.details, {
+    decisionId,
+    requiredIndependentEvidence: ["reviewer", "verifier"],
+    observedIndependentEvidence: ["reviewer"],
+    missingIndependentEvidence: ["verifier"],
+    runtimeEvidenceCoverage: "partial",
+  });
+  assert.deepEqual(runtime.entries, [{
+    customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
+    data: { decisionId, evidence: "reviewer" },
+  }]);
+});
+
+test("fresh routing invalidates and replaces the prior decision", async () => {
+  await withRepository(async (root, revision) => {
+    const runtime = createRuntime();
+    const route = runtime.tools.get("ompstack_route");
+    const first = await route.execute("first", routeInput(root, revision));
+    const second = await route.execute("second", routeInput(root, revision));
+    assert.equal(first.details.decisionId, second.details.decisionId);
+    assert.deepEqual(
+      runtime.entries.map((entry) => entry.customType),
+      [
+        "io.github.chithang-50cent.ompstack.route-decision.v1",
+        "io.github.chithang-50cent.ompstack.route-decision-state.v1",
+        "io.github.chithang-50cent.ompstack.route-decision.v1",
+      ],
+    );
+    assert.deepEqual(runtime.entries[1].data, {
+      decisionId: first.details.decisionId,
+      state: "invalidated",
+      reason: "superseded-by-fresh-route",
+    });
+    assert.equal(await runtime.handlers.get("tool_call")({ toolName: "edit", input: {} }), undefined);
   });
 });

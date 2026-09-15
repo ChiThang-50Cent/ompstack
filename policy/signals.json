@@ -18,6 +18,35 @@
     "build.gradle",
     "build.gradle.kts"
   ],
-  "knownFlags": [],
-  "pathRules": []
+  "knownPathPatterns": [
+    "^(?:agents|commands|docs|examples|extensions|policy|scripts|skills|tests)/",
+    "^(?:CHANGELOG\\.md|NOTICE\\.md|README\\.md|package(?:-lock)?\\.json)$"
+  ],
+  "knownFlags": [
+    "touchesAuth",
+    "touchesAuthorization",
+    "touchesCryptoOrSecrets",
+    "touchesTenantIsolation",
+    "touchesMoneyMovement",
+    "touchesMigration",
+    "destructiveMigration",
+    "touchesRuntimeConfig",
+    "touchesPublicAPI",
+    "touchesPersistence",
+    "touchesConcurrency",
+    "touchesGeneratedCode",
+    "touchesExposedParser"
+  ],
+  "pathRules": [
+    {
+      "id": "extension-runtime",
+      "pathPattern": "^extensions/",
+      "flags": ["touchesRuntimeConfig"]
+    },
+    {
+      "id": "package-runtime",
+      "pathPattern": "^package\\.json$",
+      "flags": ["touchesRuntimeConfig"]
+    }
+  ]
 }

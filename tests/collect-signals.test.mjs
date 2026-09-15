@@ -21,6 +21,7 @@ const policy = {
   codePathPatterns: ["\\.(?:ts|py)$"],
   packageRootMarkers: ["package.json"],
   knownFlags: ["touchesAuthorization"],
+  knownPathPatterns: ["^services/auth/", "^notes\\.md$", "^unowned/"],
   pathRules: [
     { id: "auth", pathPattern: "^services/auth/", flags: ["touchesAuth"] },
   ],
@@ -45,7 +46,7 @@ test("signal collector measures one supplied change set and preserves uncertaint
     assert.equal(signals.changedCodeFiles, 2);
     assert.equal(signals.changedLines, 9);
     assert.equal(signals.changedLinesScope, "code-files-only");
-    assert.equal(signals.unclassifiedChangedFiles, 1);
+    assert.equal(signals.unclassifiedChangedFiles, 0);
     assert.equal(signals.packageRoots, 1);
     assert.equal(signals.touchesAuth, true);
     assert.equal(signals.touchesAuthorization, false);
@@ -57,11 +58,28 @@ test("signal collector measures one supplied change set and preserves uncertaint
   }
 });
 
+test("signal collector preserves unknowns outside configured repository paths", async () => {
+  const signals = await collectSignals({
+    policy,
+    changeSet: [change("external/service.ts", 1)],
+  });
+  assert.equal(signals.unclassifiedChangedFiles, 1);
+  assert.equal(signals.touchesAuthorization, "unknown");
+});
+
 test("signal collector rejects malformed change paths", async () => {
   await assert.rejects(
     collectSignals({ policy, changeSet: [change("../secret.ts", 1)] }),
     /changeSet has an invalid entry/,
   );
+});
+
+test("default policy gives known ompstack paths determinate signal values", async () => {
+  const signals = await collectSignals({
+    changeSet: [change("scripts/routing/policy.mjs", 1)],
+  });
+  assert.equal(signals.unclassifiedChangedFiles, 0);
+  for (const flag of SIGNAL_FLAGS) assert.equal(signals[flag], false);
 });
 
 test("default empty mapping leaves every sensitive flag unknown", async () => {

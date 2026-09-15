@@ -15,6 +15,7 @@ export const SIGNAL_FLAGS = Object.freeze([
   "touchesPersistence",
   "touchesConcurrency",
   "touchesGeneratedCode",
+  "touchesExposedParser",
 ]);
 
 function fail(message) {
@@ -57,12 +58,13 @@ export function validateSignalPolicy(policy) {
   }
   const generatedPathPatterns = regexes(policy.generatedPathPatterns, "generatedPathPatterns");
   const codePathPatterns = regexes(policy.codePathPatterns, "codePathPatterns");
+  const knownPathPatterns = regexes(policy.knownPathPatterns, "knownPathPatterns");
   const ids = new Set();
   const pathRules = policy.pathRules.map((rule) => {
     if (
       !plainObject(rule) ||
       typeof rule.id !== "string" || rule.id === "" || ids.has(rule.id) ||
-      typeof rule.pathPattern !== "string" || rule.pathPattern === "" ||
+      !(typeof rule.pathPattern === "string" && rule.pathPattern !== "" || rule.pathPattern instanceof RegExp) ||
       !Array.isArray(rule.flags) || rule.flags.length === 0 || !rule.flags.every((flag) => SIGNAL_FLAGS.includes(flag)) ||
       new Set(rule.flags).size !== rule.flags.length
     ) {
@@ -70,12 +72,12 @@ export function validateSignalPolicy(policy) {
     }
     ids.add(rule.id);
     try {
-      return { ...rule, pathPattern: new RegExp(rule.pathPattern) };
+      return { ...rule, pathPattern: rule.pathPattern instanceof RegExp ? rule.pathPattern : new RegExp(rule.pathPattern) };
     } catch {
       fail("pathRules contains an invalid pattern");
     }
   });
-  return { ...policy, codePathPatterns, generatedPathPatterns, pathRules };
+  return { ...policy, codePathPatterns, generatedPathPatterns, knownPathPatterns, pathRules };
 }
 
 export async function loadSignalPolicy() {
@@ -116,6 +118,7 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
   validateChangeSet(changeSet);
   const effectivePolicy = policy === undefined ? await loadSignalPolicy() : validateSignalPolicy(policy);
   const codeChanges = changeSet.filter((change) => effectivePolicy.codePathPatterns.some((pattern) => pattern.test(change.path)));
+  const allPathsKnown = changeSet.every((change) => effectivePolicy.knownPathPatterns.some((pattern) => pattern.test(change.path)));
   const packageRoots = new Set();
   for (const change of codeChanges) {
     const packageRoot = await nearestPackageRoot(root, change.path, effectivePolicy.packageRootMarkers);
@@ -132,7 +135,7 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
   }
   const flags = Object.fromEntries(SIGNAL_FLAGS.map((flag) => [
     flag,
-    matchedFlags.has(flag) ? true : effectivePolicy.knownFlags.includes(flag) ? false : "unknown",
+    matchedFlags.has(flag) ? true : allPathsKnown && effectivePolicy.knownFlags.includes(flag) ? false : "unknown",
   ]));
   return {
     schemaVersion: 1,
@@ -140,7 +143,7 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
     changedLinesScope: effectivePolicy.changedLinesScope,
     changedCodeFiles: codeChanges.length,
     changedLines: codeChanges.reduce((total, change) => total + change.addedLines + change.deletedLines, 0),
-    unclassifiedChangedFiles: changeSet.length - codeChanges.length,
+    unclassifiedChangedFiles: changeSet.filter((change) => !effectivePolicy.knownPathPatterns.some((pattern) => pattern.test(change.path))).length,
     packageRoots: packageRoots.size,
     ...flags,
   };

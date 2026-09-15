@@ -1,8 +1,8 @@
 import { deriveRiskFloorFromFacts } from "./classify-risk.mjs";
 
-const criticalFlags = new Set(["touchesAuth", "touchesAuthorization", "touchesCryptoOrSecrets", "touchesTenantIsolation", "touchesMoneyMovement", "destructiveMigration"]);
+const criticalFlags = new Set(["touchesAuth", "touchesAuthorization", "touchesCryptoOrSecrets", "touchesTenantIsolation", "touchesMoneyMovement", "destructiveMigration", "touchesExposedParser"]);
 const highFlags = new Set(["touchesPersistence", "touchesPublicAPI", "touchesConcurrency", "touchesMigration", "touchesRuntimeConfig"]);
-const signalFlags = ["touchesAuth", "touchesAuthorization", "touchesCryptoOrSecrets", "touchesTenantIsolation", "touchesMoneyMovement", "touchesMigration", "destructiveMigration", "touchesRuntimeConfig", "touchesPublicAPI", "touchesPersistence", "touchesConcurrency", "touchesGeneratedCode"];
+const signalFlags = ["touchesAuth", "touchesAuthorization", "touchesCryptoOrSecrets", "touchesTenantIsolation", "touchesMoneyMovement", "touchesMigration", "destructiveMigration", "touchesRuntimeConfig", "touchesPublicAPI", "touchesPersistence", "touchesConcurrency", "touchesGeneratedCode", "touchesExposedParser"];
 
 function fail(message) { throw new Error(`route classifier: ${message}`); }
 function object(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }

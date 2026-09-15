@@ -86,6 +86,10 @@ Or invoke the skill directly:
 
 Ompstack is intended for explicit invocation through `/ompstack` or `/skill:ompstack`; it is not the default workflow for every coding task.
 
+The runtime gate is opt-in at session level: it starts only after `ompstack_route` successfully records a RouteDecision, or a persisted decision is restored. Before then, explicit invocation is enforced by the skill contract; the extension does not block unrelated sessions.
+
+`ompstack_phase` reports which required reviewer/verifier/security-reviewer task lanes OMP successfully launched. This is session-local, partial coverage—not a sandbox or a conformance verdict.
+
 ## Design goal
 
 Keep the pstack ideas that transfer cleanly to OMP:

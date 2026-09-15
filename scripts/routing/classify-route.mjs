@@ -14,11 +14,18 @@ export function classifyRoute({ signals, graph, taskFacts, riskFacts, policy }) 
   const reasons = [];
   const trueFlags = signalFlags.filter((flag) => signals[flag] === true);
   const unknownFlags = signalFlags.filter((flag) => signals[flag] === "unknown");
-  if (trueFlags.some((flag) => criticalFlags.has(flag))) reasons.push("critical-sensitive-surface");
-  else if (unknownFlags.length || graph.materialUnknown || signals.unclassifiedChangedFiles > 0) reasons.push("material-uncertainty");
-  else if (trueFlags.some((flag) => highFlags.has(flag))) reasons.push("high-sensitive-surface");
-  else if (deriveRiskFloorFromFacts(riskFacts).minimumRisk === "high") reasons.push("risk-floor");
-  else if (signals.changedCodeFiles > policy.thresholds.maxMediumCodeFiles || signals.changedLines > policy.thresholds.maxMediumChangedLines || graph.affectedModuleCount > policy.thresholds.maxMediumAffectedModules || graph.reverseDependentCount > policy.thresholds.maxMediumReverseDependents) reasons.push("blast-radius-threshold");
-  const risk = reasons[0] === "critical-sensitive-surface" ? "critical" : reasons.length ? "high" : taskFacts.behaviorAffecting ? "medium" : "low";
-  return Object.freeze({ risk, reasonCodes: Object.freeze(reasons), securityReviewRequired: risk === "critical", verificationRequired: risk !== "low" });
+  const critical = trueFlags.filter((flag) => criticalFlags.has(flag));
+  const high = trueFlags.filter((flag) => highFlags.has(flag));
+  if (critical.length) reasons.push(...critical.map((flag) => `critical:${flag}`));
+  if (unknownFlags.length) reasons.push("uncertainty:unknown-signals");
+  if (graph.materialUnknown) reasons.push("uncertainty:partial-graph");
+  if (signals.unclassifiedChangedFiles > 0) reasons.push("uncertainty:unclassified-changes");
+  if (high.length) reasons.push(...high.map((flag) => `high:${flag}`));
+  reasons.push(...deriveRiskFloorFromFacts(riskFacts).reasons.map((reason) => `floor:${reason}`));
+  if (signals.changedCodeFiles > policy.thresholds.maxMediumCodeFiles) reasons.push("threshold:code-files");
+  if (signals.changedLines > policy.thresholds.maxMediumChangedLines) reasons.push("threshold:changed-lines");
+  if (graph.affectedModuleCount > policy.thresholds.maxMediumAffectedModules) reasons.push("threshold:affected-modules");
+  if (graph.reverseDependentCount > policy.thresholds.maxMediumReverseDependents) reasons.push("threshold:reverse-dependents");
+  const risk = critical.length ? "critical" : reasons.length ? "high" : taskFacts.behaviorAffecting ? "medium" : "low";
+  return Object.freeze({ risk, reasonCodes: Object.freeze(reasons), securityReviewRequired: critical.length > 0, verificationRequired: risk !== "low" });
 }

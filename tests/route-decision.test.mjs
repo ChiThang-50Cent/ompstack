@@ -24,3 +24,21 @@ test("confirmed auth surface is critical", () => {
   assert.equal(classification.risk, "critical");
   assert.equal(classification.securityReviewRequired, true);
 });
+
+test("classifier retains simultaneous routing reasons", () => {
+  const classification = classifyRoute({
+    signals: { ...signals, unclassifiedChangedFiles: 1, changedCodeFiles: 6 },
+    graph: { ...graph, materialUnknown: true, affectedModuleCount: 2 },
+    taskFacts: { behaviorAffecting: true },
+    riskFacts: { ...facts, sharedSemanticBoundary: true },
+    policy,
+  });
+  assert.deepEqual(classification.reasonCodes, [
+    "uncertainty:unknown-signals",
+    "uncertainty:partial-graph",
+    "uncertainty:unclassified-changes",
+    "floor:shared-semantic-boundary",
+    "threshold:code-files",
+    "threshold:affected-modules",
+  ]);
+});

@@ -7,12 +7,13 @@ function stable(value) {
 }
 
 /** Creates an immutable, content-addressed routing decision. */
-export function createRouteDecision({ intent, classification, signals, graph, policyVersion }) {
-  if (typeof intent !== "string" || intent === "" || !classification || !signals || !graph || typeof policyVersion !== "string" || policyVersion === "") throw new Error("route decision: input has an invalid shape");
+export function createRouteDecision({ intent, classification, signals, graph, policyVersion, routeInputDigest }) {
+  if (typeof intent !== "string" || intent === "" || !classification || !signals || !graph || typeof policyVersion !== "string" || policyVersion === "" || !/^[a-f0-9]{64}$/.test(routeInputDigest)) throw new Error("route decision: input has an invalid shape");
   const signalsDigest = createHash("sha256").update(stable({ signals, graph })).digest("hex");
   const body = {
     schemaVersion: 1,
     policyVersion,
+    routeInputDigest,
     intent,
     risk: classification.risk,
     requiredPlaybooks: Object.freeze([]),

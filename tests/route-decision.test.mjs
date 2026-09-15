@@ -11,7 +11,7 @@ const policy = { thresholds: { maxMediumCodeFiles: 5, maxMediumChangedLines: 300
 test("unknown signals fail closed and decisions are stable", () => {
   const classification = classifyRoute({ signals, graph, taskFacts: { behaviorAffecting: true }, riskFacts: facts, policy });
   assert.equal(classification.risk, "high");
-  const input = { intent: "feature", classification, signals, graph, policyVersion: "1" };
+  const input = { intent: "feature", classification, signals, graph, policyVersion: "1", routeInputDigest: "0".repeat(64) };
   const left = createRouteDecision(input);
   const right = createRouteDecision(input);
   assert.equal(left.decisionId, right.decisionId);

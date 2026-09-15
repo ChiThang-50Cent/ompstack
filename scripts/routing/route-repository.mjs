@@ -4,18 +4,21 @@ import { analyzeImportGraph } from "./import-graph.mjs";
 import { loadRoutingPolicy } from "./policy.mjs";
 import { classifyRoute } from "./classify-route.mjs";
 import { createRouteDecision } from "./route-decision.mjs";
+import { normalizeRouteInput } from "./route-input.mjs";
 
 /** Routes one declared revision pair; graph roots remain an explicit target-repository input. */
-export async function routeRepository({ root = process.cwd(), base, head, intent, taskFacts, riskFacts, graphPolicy }) {
+export async function routeRepository(input) {
+  const routeInput = normalizeRouteInput(input);
+  const { repository, intent, taskFacts, riskFacts, graphPolicy } = routeInput;
   const [changeSet, signalPolicy, routingPolicy] = await Promise.all([
-    collectChangeSet({ root, base, head }),
+    collectChangeSet({ root: repository.root, base: repository.base, head: repository.head }),
     loadSignalPolicy(),
     loadRoutingPolicy(),
   ]);
   const [signals, graph] = await Promise.all([
-    collectSignals({ root, changeSet, policy: signalPolicy }),
-    analyzeImportGraph({ root, changeSet, policy: { ...graphPolicy, policyVersion: routingPolicy.policyVersion } }),
+    collectSignals({ root: repository.root, changeSet, policy: signalPolicy }),
+    analyzeImportGraph({ root: repository.root, changeSet, policy: { ...graphPolicy, policyVersion: routingPolicy.policyVersion } }),
   ]);
   const classification = classifyRoute({ signals, graph, taskFacts, riskFacts, policy: routingPolicy });
-  return createRouteDecision({ intent, classification, signals, graph, policyVersion: routingPolicy.policyVersion });
+  return createRouteDecision({ intent, classification, signals, graph, policyVersion: routingPolicy.policyVersion, routeInputDigest: routeInput.routeInputDigest });
 }

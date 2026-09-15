@@ -1,4 +1,6 @@
 // @ts-check
+import { deriveRiskFloorFromFacts } from "./routing/classify-risk.mjs";
+
 
 export const ROUTING_ERROR_CODES = Object.freeze({
   MALFORMED_INPUT: "MALFORMED_INPUT",
@@ -42,7 +44,6 @@ const error = (code, path, message) => ({ code, path, message });
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const string = (value) => typeof value === "string" && value.trim() !== "";
 const verificationPhase = (expected) => Array.isArray(expected.phases) && expected.phases.includes("verification");
-const highFromFacts = (facts) => facts.sharedSemanticBoundary || facts.executionModes > 1 || facts.graphTraversal || facts.materialUnknown;
 
 function validateReconstruction(expected, errors) {
   const reconstruction = expected.reconstruction;
@@ -140,7 +141,7 @@ export function validateRoutingCase(routingCase) {
     const facts = routingCase.riskFacts;
     if (!object(facts) || typeof facts.sharedSemanticBoundary !== "boolean" || typeof facts.graphTraversal !== "boolean" || typeof facts.materialUnknown !== "boolean" || !Number.isInteger(facts.consumerFamilies) || !Number.isInteger(facts.executionModes)) {
       errors.push(error(ROUTING_ERROR_CODES.MALFORMED_INPUT, "riskFacts", "riskFacts has an invalid shape"));
-    } else if (highFromFacts(facts)) {
+    } else if (deriveRiskFloorFromFacts(facts).minimumRisk === "high") {
       if (!["high", "critical"].includes(expected.risk)) errors.push(error(ROUTING_ERROR_CODES.RISK_FACTS_REQUIRE_HIGH, "expected.risk", "risk facts require High or Critical"));
       const lanes = expected.independentEvidence.split("+").map((lane) => lane.trim());
       if (!["reviewer", "verifier"].every((lane) => lanes.includes(lane))) errors.push(error(ROUTING_ERROR_CODES.HIGH_REQUIRES_DUAL_EVIDENCE, "expected.independentEvidence", "risk facts require reviewer and verifier"));

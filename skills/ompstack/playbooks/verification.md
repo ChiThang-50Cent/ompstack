@@ -55,7 +55,7 @@ For every behavior-affecting change, use the closest available real proof surfac
 
 ### Change ledger
 
-When a workflow uses `scripts/change-ledger.mjs`, generate its ledger from the declared base and head before independent review. A review lane MUST NOT close while its ledger has a `pending` entry. Each ledger entry ends as `reviewed` or `skipped`; every `skipped` entry records its reason.
+When a workflow uses `scripts/change-ledger.mjs`, generate its ledger from the declared base and head before independent review. A review lane MUST NOT close while its ledger has a `pending` entry. Each ledger entry ends as `reviewed` or `skipped`; every `skipped` entry records its reason. This is review policy, not runtime enforcement: until G7/G8 call `assertLedgerReadyForCloseout`, compliance remains model-controlled.
 
 ### Requirement-reconstruction evidence
 

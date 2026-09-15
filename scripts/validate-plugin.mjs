@@ -198,6 +198,7 @@ assert.match(design, /Native Todo is a separate conditional parent progress laye
 assert.match(readme, /conditional native Todo progress state/);
 assert.match(verification, /DOCTOR: BLOCKED/);
 assert.match(verification, /optional unattended evidence adapters/);
+// G9 replaces these prose pins with runtime closeout enforcement.
 assert.match(verification, /### Change ledger/);
 assert.match(verification, /MUST NOT close while its ledger has a `pending` entry/);
 assert.match(skill, /proof-surface matrix/);

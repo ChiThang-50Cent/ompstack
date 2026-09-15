@@ -4,16 +4,6 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-## [0.3.3] - 2026-09-15
-
-### Added
-
-- Added deterministic route signals, primary-playbook decisions, runtime phase evidence, and OMP ExtensionAPI type checking.
-
-### Fixed
-
-- Made runtime routing opt-in, durable across tool calls, digest-bound for task lanes, and explicit about partial coverage.
-- Added critical exposed-parser classification and removed the inert configurable consumer-family threshold.
 
 ## [0.3.2] - 2026-09-15
 

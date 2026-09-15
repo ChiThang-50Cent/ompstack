@@ -17,6 +17,11 @@ for (const { label, facts, expected } of [
     expected: { minimumRisk: "high", reasons: ["shared-semantic-boundary"] },
   },
   {
+    label: "multiple consumer families",
+    facts: { ...boundedFacts, consumerFamilies: 2 },
+    expected: { minimumRisk: "high", reasons: ["multiple-consumer-families"] },
+  },
+  {
     label: "multiple execution modes",
     facts: { ...boundedFacts, executionModes: 2 },
     expected: { minimumRisk: "high", reasons: ["multiple-execution-modes"] },
@@ -29,6 +34,16 @@ for (const { label, facts, expected } of [
   {
     label: "material uncertainty",
     facts: { ...boundedFacts, materialUnknown: true },
+    expected: { minimumRisk: "high", reasons: ["material-uncertainty"] },
+  },
+  {
+    label: "unknown consumer families",
+    facts: { ...boundedFacts, consumerFamilies: 0 },
+    expected: { minimumRisk: "high", reasons: ["material-uncertainty"] },
+  },
+  {
+    label: "unknown execution modes",
+    facts: { ...boundedFacts, executionModes: 0 },
     expected: { minimumRisk: "high", reasons: ["material-uncertainty"] },
   },
   {

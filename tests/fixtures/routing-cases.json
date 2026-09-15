@@ -1165,5 +1165,43 @@
         "evidence": []
       }
     }
+  },
+  {
+    "id": "multiple-consumer-families",
+    "prompt": "Fix a bounded local behavior with two distinct consumer families and verify both consumer paths.",
+    "riskFacts": {
+      "sharedSemanticBoundary": false,
+      "consumerFamilies": 2,
+      "executionModes": 1,
+      "graphTraversal": false,
+      "materialUnknown": false
+    },
+    "expected": {
+      "route": "bug-fix",
+      "overlays": [],
+      "phases": [
+        "verification"
+      ],
+      "progressTracking": "none",
+      "risk": "high",
+      "proofSurface": "both consumer-family reproductions",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "reviewer + verifier",
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false,
+        "contractIneligibilityReason": "routing fixture does not define an executable verification contract"
+      },
+      "reconstruction": {
+        "enabled": true,
+        "trigger": "high-critical-default",
+        "requirementEvolution": false,
+        "evidence": []
+      }
+    }
   }
 ]

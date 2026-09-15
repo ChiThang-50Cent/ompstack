@@ -52,7 +52,7 @@ test("the production routing corpus satisfies its declared schema", () => {
   }
   assert.deepEqual(validateRoutingCorpus(realCases), []);
   assert.deepEqual(validateReconstructionRoutingCorpus(realCases), []);
-  assert.equal(realCases.length, 37);
+  assert.equal(realCases.length, 38);
 });
 
 test("routing validator requires Medium and higher reconstruction decisions", () => {

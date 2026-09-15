@@ -9,7 +9,7 @@ Select the primary workflow from task intent first. Before selecting final risk,
 Record:
 - mutation target and source evidence
 - semantic boundary: local implementation, shared normalization/parser/serializer/compiler/cache/fallback, public API, or security
-- consumer families and execution modes
+- consumer families and execution modes; record an unresolved count as `0`
 - invariants that must remain true
 - graph/reference traversal or code generation behavior
 - material unknowns after direct inspection
@@ -17,6 +17,8 @@ Record:
 Final Medium requires source evidence that the target is local, has one bounded consumer family and execution mode, has no shared semantic boundary or graph traversal, and has no material unknown.
 
 Unresolved material uncertainty after direct inspection escalates to High. It never justifies retaining Medium.
+
+A consumer-family or execution-mode count of `0` is material uncertainty and escalates to High.
 
 ## Low
 
@@ -52,6 +54,7 @@ Use both only when the change has enough surface area to justify it.
 
 High predicates:
 - shared validation normalization, parser, serializer, compiler, code generator, cache policy, or fallback policy
+- multiple consumer families for the changed behavior
 - multiple execution modes for the changed behavior
 - schema, AST, reference, or recursive graph traversal
 - persistence, public API compatibility, concurrency, or async ordering

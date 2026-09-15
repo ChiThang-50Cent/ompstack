@@ -53,6 +53,10 @@ Choose the narrowest commands that prove the relevant property. Do not run expen
 
 For every behavior-affecting change, use the closest available real proof surface: a project-native verification skill when one matches, otherwise a browser UI flow, CLI/TUI interaction, API consumer, migration replay, or equivalent runtime behavior. Tests, typechecks, and builds support the claim but do not replace that surface. If it cannot be exercised, report the exact gap as `BLOCKED` or unverified.
 
+### Change ledger
+
+When a workflow uses `scripts/change-ledger.mjs`, generate its ledger from the declared base and head before independent review. A review lane MUST NOT close while its ledger has a `pending` entry. Each ledger entry ends as `reviewed` or `skipped`; every `skipped` entry records its reason.
+
 ### Requirement-reconstruction evidence
 
 For a reconstruction-policy evaluation, preserve the raw-evidence locators, strict reconstruction/freeze artifacts, strict B reviewer envelopes, deterministic-gate output, and real proof-surface evidence for each run. Before accepting or scoring B findings, the parent validates `requirementReconstructionBReviewerEnvelopeV1` and confirms every finding `source_evidence` ID is declared by `reconstruction.evidence`; unbound findings are not evidence. A reconstruction map or reviewer opinion is not execution proof and MUST NOT override a failed deterministic gate, an unavailable required surface, or observed real execution evidence.

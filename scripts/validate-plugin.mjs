@@ -7,6 +7,7 @@ import {
   validateRoutingCase,
   validateRoutingCorpus,
 } from "./routing-validation.mjs";
+import { loadChangeLedgerPolicy } from "./change-ledger.mjs";
 
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -113,6 +114,7 @@ assert.deepEqual(
   [],
   "reconstruction routing cases must satisfy the policy",
 );
+await loadChangeLedgerPolicy();
 const manifest = JSON.parse(await read("package.json"));
 
 assert.match(manifest.version, /^\d+\.\d+\.\d+$/, "package version must be a release semver");
@@ -193,6 +195,8 @@ assert.match(design, /Native Todo is a separate conditional parent progress laye
 assert.match(readme, /conditional native Todo progress state/);
 assert.match(verification, /DOCTOR: BLOCKED/);
 assert.match(verification, /optional unattended evidence adapters/);
+assert.match(verification, /### Change ledger/);
+assert.match(verification, /MUST NOT close while its ledger has a `pending` entry/);
 assert.match(skill, /proof-surface matrix/);
 assert.match(verification, /## Proof-surface selection/);
 assert.match(verification, /Browser through Eval/);

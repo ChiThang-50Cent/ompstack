@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-15
+
+### Changed
+
+- Included the README-linked design, benchmark evidence, and usage documents in the npm artifact.
+- Clarified the README's reconstruction-runner checkout requirements.
+
 ## [0.3.1] - 2026-09-14
 
 ### Added

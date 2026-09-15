@@ -71,7 +71,10 @@ export async function analyzeImportGraph({ root = process.cwd(), changeSet, poli
   const changedModules = [];
   for (const change of changeSet) {
     const language = languageFor(change.path);
-    if (!language) continue;
+    if (!language) {
+      reasons.add(`unsupported-language:${extname(change.path) || "[none]"}`);
+      continue;
+    }
     if (!known.has(change.path) || /^(deleted|renamed)$/.test(change.changeType)) reasons.add("deleted-or-unowned-source");
     else changedModules.push(change.path);
   }
@@ -96,5 +99,5 @@ export async function analyzeImportGraph({ root = process.cwd(), changeSet, poli
   const changed = [...new Set(changedModules)].sort();
   const reverseDependents = [...depths.keys()].filter((file) => !changed.includes(file)).sort();
   const status = reasons.size === 0 ? "complete" : "partial";
-  return { schemaVersion: 1, policyVersion: effectivePolicy.policyVersion, status, materialUnknown: status === "partial", partialReasons: [...reasons].sort(), changedModules: changed, affectedModules: [...depths.keys()].sort(), reverseDependents, maxDepth: Math.max(0, ...depths.values()) };
+  return { schemaVersion: 1, policyVersion: effectivePolicy.policyVersion, status, materialUnknown: status === "partial", partialReasons: [...reasons].sort(), changedModules: changed, affectedModules: [...depths.keys()].sort(), affectedModuleCount: depths.size, reverseDependents, reverseDependentCount: reverseDependents.length, maxDepth: Math.max(0, ...depths.values()) };
 }

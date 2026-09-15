@@ -26,7 +26,9 @@ test("import graph traverses reverse TypeScript dependencies", async () => {
       partialReasons: [],
       changedModules: ["src/core.ts"],
       affectedModules: ["src/api.ts", "src/core.ts"],
+      affectedModuleCount: 2,
       reverseDependents: ["src/api.ts"],
+      reverseDependentCount: 1,
       maxDepth: 1,
     });
   } finally {
@@ -47,6 +49,19 @@ test("import graph fails closed for Java and deleted sources", async () => {
     assert.equal(graph.status, "partial");
     assert.equal(graph.materialUnknown, true);
     assert.deepEqual(graph.partialReasons, ["deleted-or-unowned-source", "java-semantic-dependencies-unsupported"]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("import graph fails closed for unsupported changed languages", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-import-unknown-"));
+  try {
+    await mkdir(join(root, "src"));
+    const graph = await analyzeImportGraph({ root, policy, changeSet: changeSet("src/router.mjs") });
+    assert.equal(graph.status, "partial");
+    assert.equal(graph.materialUnknown, true);
+    assert.deepEqual(graph.partialReasons, ["unsupported-language:.mjs"]);
   } finally {
     await rm(root, { force: true, recursive: true });
   }

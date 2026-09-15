@@ -16,6 +16,7 @@ const change = (path, addedLines, deletedLines = 0) => ({
 const policy = {
   schemaVersion: 1,
   policyVersion: "test",
+  changedLinesScope: "code-files-only",
   codePathPatterns: ["\\.(?:ts|py)$"],
   packageRootMarkers: ["package.json"],
   knownFlags: ["touchesAuthorization"],
@@ -42,6 +43,8 @@ test("signal collector measures one supplied change set and preserves uncertaint
     assert.equal(signals.policyVersion, "test");
     assert.equal(signals.changedCodeFiles, 2);
     assert.equal(signals.changedLines, 9);
+    assert.equal(signals.changedLinesScope, "code-files-only");
+    assert.equal(signals.unclassifiedChangedFiles, 1);
     assert.equal(signals.packageRoots, 1);
     assert.equal(signals.touchesAuth, true);
     assert.equal(signals.touchesAuthorization, false);

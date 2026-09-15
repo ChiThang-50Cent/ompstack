@@ -45,6 +45,7 @@ export function validateSignalPolicy(policy) {
     !plainObject(policy) ||
     policy.schemaVersion !== 1 ||
     typeof policy.policyVersion !== "string" || policy.policyVersion.trim() === "" ||
+    policy.changedLinesScope !== "code-files-only" ||
     !Array.isArray(policy.packageRootMarkers) || policy.packageRootMarkers.length === 0 ||
     !policy.packageRootMarkers.every((marker) => typeof marker === "string" && marker !== "" && !marker.includes("/")) ||
     !Array.isArray(policy.knownFlags) || !policy.knownFlags.every((flag) => SIGNAL_FLAGS.includes(flag)) ||
@@ -131,8 +132,10 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
   return {
     schemaVersion: 1,
     policyVersion: effectivePolicy.policyVersion,
+    changedLinesScope: effectivePolicy.changedLinesScope,
     changedCodeFiles: codeChanges.length,
     changedLines: codeChanges.reduce((total, change) => total + change.addedLines + change.deletedLines, 0),
+    unclassifiedChangedFiles: changeSet.length - codeChanges.length,
     packageRoots: packageRoots.size,
     ...flags,
   };

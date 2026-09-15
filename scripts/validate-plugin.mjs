@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { validateReconstructionRoutingCorpus } from "./routing-validation.mjs";
+import {
+  validateReconstructionRoutingCorpus,
+  validateRoutingCase,
+  validateRoutingCorpus,
+} from "./routing-validation.mjs";
 
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -88,6 +92,22 @@ const maintainVerificationCommand = await read(
   "commands/ompstack-maintain-verification.md",
 );
 const cases = JSON.parse(await read("tests/fixtures/routing-cases.json"));
+const caseErrors = cases.flatMap((routingCase) =>
+  validateRoutingCase(routingCase).map((validationError) => ({
+    caseId: routingCase.id,
+    ...validationError,
+  })),
+);
+assert.deepEqual(
+  caseErrors,
+  [],
+  "every routing fixture must satisfy the strict routing-case schema",
+);
+assert.deepEqual(
+  validateRoutingCorpus(cases),
+  [],
+  "routing corpus must satisfy corpus-level coverage rules",
+);
 assert.deepEqual(
   validateReconstructionRoutingCorpus(cases),
   [],

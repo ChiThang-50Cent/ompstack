@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "bun:test";
+import { readFileSync } from "node:fs";
 import {
   validateReconstructionRoutingCorpus,
   validateRoutingCase,
@@ -10,6 +11,10 @@ const valid = {
   id: "valid", prompt: "Verify a bounded change.",
   expected: { route: "feature", overlays: [], phases: ["verification"], progressTracking: "none", risk: "medium", proofTopology: "direct", riskTierBasis: "impact", contractDerivation: "not-required", proofSurface: "command", writeOwnership: "parent", independentEvidence: "verifier", evidence: { floor: "parent-reexecuted", reExecutable: true, contractEligible: false }, reconstruction: { enabled: false, trigger: "not-eligible", requirementEvolution: false, evidence: [] } },
 };
+
+const realCases = JSON.parse(
+  readFileSync(new URL("./fixtures/routing-cases.json", import.meta.url), "utf8"),
+);
 
 test("routing validator returns structured errors instead of throwing", () => {
   assert.deepEqual(validateRoutingCase(null).map((item) => item.code), ["MALFORMED_INPUT"]);
@@ -41,6 +46,15 @@ test("reconstruction permits evolved Medium work only with evidence", () => {
   );
 });
 
+test("the production routing corpus satisfies its declared schema", () => {
+  for (const routingCase of realCases) {
+    assert.deepEqual(validateRoutingCase(routingCase), [], routingCase.id);
+  }
+  assert.deepEqual(validateRoutingCorpus(realCases), []);
+  assert.deepEqual(validateReconstructionRoutingCorpus(realCases), []);
+  assert.equal(realCases.length, 37);
+});
+
 test("routing validator requires Medium and higher reconstruction decisions", () => {
   const missing = structuredClone(valid);
   delete missing.expected.reconstruction;
@@ -62,6 +76,29 @@ test("routing topology and evidence rules reject invalid routes", () => {
   high.expected.evidence.contractIneligibilityReason = "no adapter";
   high.expected.contractDerivation = "not-required";
   assert.ok(validateRoutingCase(high).some((item) => item.code === "DERIVATION_REQUIRED_MISSING"));
+});
+
+test("High and Critical ineligible contracts need a reason without verification", () => {
+  const highWithoutVerification = structuredClone(valid);
+  highWithoutVerification.expected.risk = "high";
+  highWithoutVerification.expected.phases = [];
+  highWithoutVerification.expected.contractDerivation = "required";
+  highWithoutVerification.expected.evidence = {
+    floor: "not-applicable",
+    reExecutable: false,
+    contractEligible: false,
+  };
+  highWithoutVerification.expected.reconstruction = {
+    enabled: true,
+    trigger: "high-critical-default",
+    requirementEvolution: false,
+    evidence: [],
+  };
+  assert.ok(
+    validateRoutingCase(highWithoutVerification).some(
+      (item) => item.code === "CONTRACT_INELIGIBILITY_UNEXPLAINED",
+    ),
+  );
 });
 
 test("routing corpus separates duplicate corpus failures", () => {

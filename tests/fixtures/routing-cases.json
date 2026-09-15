@@ -10,8 +10,17 @@
       "risk": "low",
       "proofSurface": "source evidence",
       "writeOwnership": "parent",
-      "independentEvidence": "none"
-    }
+      "independentEvidence": "none",
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "not-applicable",
+        "reExecutable": false,
+        "contractEligible": false
+      }
+    },
+    "migrationDefault": true
   },
   {
     "id": "reproduced-local-bug",
@@ -32,8 +41,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "small-feature",
@@ -54,8 +72,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "concurrent-idempotency",
@@ -78,8 +105,18 @@
         "trigger": "high-critical-default",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false,
+        "contractIneligibilityReason": "legacy routing fixture does not define an executable verification contract"
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "behavior-preserving-extraction",
@@ -100,8 +137,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "interaction-decision",
@@ -120,8 +166,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "not-applicable",
+        "reExecutable": false,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "measured-slowness",
@@ -142,8 +197,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "idle-cpu-spin",
@@ -162,8 +226,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "not-applicable",
+        "reExecutable": false,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "captured-heap-profile",
@@ -182,8 +255,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "not-applicable",
+        "reExecutable": false,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "independent-package-queue",
@@ -206,8 +288,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "workflow-policy-change",
@@ -228,8 +319,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "standalone-behavior-verification",
@@ -250,8 +350,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "critical-authz-change",
@@ -272,8 +381,18 @@
         "trigger": "high-critical-default",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false,
+        "contractIneligibilityReason": "legacy routing fixture does not define an executable verification contract"
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "existing-project-verification-skill",
@@ -295,8 +414,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "repository-proof-without-skill",
@@ -318,8 +446,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "explicit-verification-capability",
@@ -341,8 +478,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "doctor-blocked-runtime",
@@ -364,8 +510,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "verification-maintenance",
@@ -387,8 +542,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "multi-phase-progress-tracking",
@@ -409,8 +573,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "partial-fan-in-queue",
@@ -433,8 +606,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "web-interaction-proof",
@@ -455,8 +637,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "cli-interaction-proof",
@@ -477,8 +668,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "runtime-debugger-proof",
@@ -497,8 +697,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "not-applicable",
+        "reExecutable": false,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "symbol-refactor-proof",
@@ -519,8 +728,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "service-capability-proof",
@@ -542,8 +760,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "prewalk-operator-option",
@@ -564,8 +791,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "advisor-concern-boundary",
@@ -586,8 +822,18 @@
         "trigger": "high-critical-default",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false,
+        "contractIneligibilityReason": "legacy routing fixture does not define an executable verification contract"
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "session-handoff-artifacts",
@@ -606,8 +852,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "not-applicable",
+        "reExecutable": false,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "memory-revalidation-boundary",
@@ -620,8 +875,17 @@
       "risk": "low",
       "proofSurface": "current repository evidence with cited and revalidated memory context",
       "writeOwnership": "parent",
-      "independentEvidence": "none"
-    }
+      "independentEvidence": "none",
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "not-applicable",
+        "reExecutable": false,
+        "contractEligible": false
+      }
+    },
+    "migrationDefault": true
   },
   {
     "id": "localized-bug-economy-stop",
@@ -642,8 +906,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "shared-normalization-boundary",
@@ -671,8 +944,18 @@
         "trigger": "high-critical-default",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false,
+        "contractIneligibilityReason": "legacy routing fixture does not define an executable verification contract"
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "shared-normalization-domain-twin",
@@ -700,8 +983,18 @@
         "trigger": "high-critical-default",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false,
+        "contractIneligibilityReason": "legacy routing fixture does not define an executable verification contract"
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "bounded-local-normalization-control",
@@ -729,8 +1022,17 @@
         "trigger": "not-eligible",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "unresolved-mutation-target",
@@ -758,8 +1060,18 @@
         "trigger": "high-critical-default",
         "requirementEvolution": false,
         "evidence": []
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false,
+        "contractIneligibilityReason": "legacy routing fixture does not define an executable verification contract"
       }
-    }
+    },
+    "migrationDefault": true
   },
   {
     "id": "medium-evolved-reconstruction",
@@ -782,6 +1094,75 @@
         "evidence": [
           "user turn 2: preserve archive reader compatibility"
         ]
+      },
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
+      }
+    },
+    "migrationDefault": true
+  },
+  {
+    "id": "contract-executed-gate",
+    "prompt": "Add a bounded behavior change with a versioned executable verification contract.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": [
+        "verification"
+      ],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "versioned executable verification contract",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier",
+      "proofTopology": "direct",
+      "riskTierBasis": "impact",
+      "contractDerivation": "not-required",
+      "evidence": {
+        "floor": "contract-executed",
+        "reExecutable": true,
+        "contractEligible": true
+      },
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
+      }
+    }
+  },
+  {
+    "id": "deferred-floor-promotion",
+    "prompt": "Promote a bounded behavior change to deferred verification with a parent-reexecuted evidence floor.",
+    "expected": {
+      "route": "feature",
+      "overlays": [],
+      "phases": [
+        "verification"
+      ],
+      "progressTracking": "none",
+      "risk": "medium",
+      "proofSurface": "parent-reexecuted deferred verification",
+      "writeOwnership": "parent or one task lane",
+      "independentEvidence": "verifier",
+      "proofTopology": "deferred",
+      "riskTierBasis": "deferred-floor",
+      "contractDerivation": "required",
+      "evidence": {
+        "floor": "parent-reexecuted",
+        "reExecutable": true,
+        "contractEligible": false
+      },
+      "reconstruction": {
+        "enabled": false,
+        "trigger": "not-eligible",
+        "requirementEvolution": false,
+        "evidence": []
       }
     }
   }

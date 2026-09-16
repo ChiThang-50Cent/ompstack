@@ -50,7 +50,7 @@ After an explicit Ompstack invocation, before any mutable or unknown tool, the p
 - `repository.root` MUST be the absolute repository root. `base` is the resolved merge-base baseline against the selected integration target; `head` is the checked-out candidate `HEAD`, supplied as its resolved SHA. The route rejects a `head` that is not the checked-out `HEAD`.
 - The route measures the checked-out working tree relative to that merge base, including staged, unstaged, and untracked files. It binds the resulting file content through `changeSetDigest`; it is not a claim about a future diff.
 - `graphPolicy.sourceRoots` MUST include `go`, `python`, `typescript`, and `java`. Use repository-relative roots and `[]` for unused languages; do not guess roots from a task prompt.
-- A repository MAY add ordinary paths through `.omp/ompstack-routing.json`: `{ "schemaVersion": 1, "knownPathPatterns": ["^src/"] }`. This overlay only extends the shipped `knownPathPatterns`; it cannot replace sensitive path rules or `knownFlags`. Invalid overlays fail routing rather than falling back to unknown policy.
+- A repository MAY add coverage through `.omp/ompstack-routing.json`. `knownPathPatterns` only remove `unclassified-changes`; sensitive flags remain unknown until a matching additive `pathRule` declares `flags` true or lists them in `knownFlags` as checked false. Shipped sensitive rules always union with overlay rules and win over false coverage. Invalid overlays fail routing rather than falling back to unknown policy.
 
 Resolve one route intent before calling `ompstack_route`:
 

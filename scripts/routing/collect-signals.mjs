@@ -31,12 +31,6 @@ function isMissing(error) {
   return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
-function additiveKnownPathPatterns(value) {
-  if (!plainObject(value) || Object.keys(value).length !== 2 || value.schemaVersion !== 1 || !Array.isArray(value.knownPathPatterns) || value.knownPathPatterns.length === 0 || !value.knownPathPatterns.every((pattern) => typeof pattern === "string" && pattern !== "") || new Set(value.knownPathPatterns).size !== value.knownPathPatterns.length) {
-    fail("repository routing overlay has an invalid shape");
-  }
-  return value.knownPathPatterns;
-}
 function normalizedPath(value) {
   return typeof value === "string" && value !== "" && !value.startsWith("/") && !value.startsWith("./") && !value.split("/").includes("..");
 }
@@ -51,6 +45,53 @@ function regexes(patterns, label) {
   } catch {
     fail(`${label} contains an invalid pattern`);
   }
+}
+
+function exactKeys(value, keys) {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+}
+
+function optionalRegexes(patterns, label) {
+  return patterns === undefined || Array.isArray(patterns) && patterns.length === 0 ? [] : regexes(patterns, label);
+}
+
+function compilePathRules(value, label, { overlay = false } = {}) {
+  if (!Array.isArray(value)) fail(`${label} has an invalid shape`);
+  const ids = new Set();
+  return value.map((rule) => {
+    const keys = overlay ? ["id", "pathPattern", "flags", "knownFlags"] : ["id", "pathPattern", "flags"];
+    if (
+      !plainObject(rule) ||
+      !exactKeys(rule, keys) ||
+      typeof rule.id !== "string" || rule.id === "" || ids.has(rule.id) ||
+      !(typeof rule.pathPattern === "string" && rule.pathPattern !== "" || rule.pathPattern instanceof RegExp) ||
+      !Array.isArray(rule.flags) || !rule.flags.every((flag) => SIGNAL_FLAGS.includes(flag)) ||
+      new Set(rule.flags).size !== rule.flags.length ||
+      (!overlay && rule.flags.length === 0) ||
+      (overlay && (!Array.isArray(rule.knownFlags) || !rule.knownFlags.every((flag) => SIGNAL_FLAGS.includes(flag)) || new Set(rule.knownFlags).size !== rule.knownFlags.length || rule.flags.some((flag) => rule.knownFlags.includes(flag)) || (rule.flags.length === 0 && rule.knownFlags.length === 0)))
+    ) fail(`${label} has an invalid shape`);
+    ids.add(rule.id);
+    try {
+      return { ...rule, pathPattern: rule.pathPattern instanceof RegExp ? rule.pathPattern : new RegExp(rule.pathPattern) };
+    } catch {
+      fail(`${label} contains an invalid pattern`);
+    }
+  });
+}
+
+function additiveOverlay(value) {
+  if (
+    !plainObject(value) ||
+    ![2, 3].includes(Object.keys(value).length) ||
+    !Object.keys(value).every((key) => ["schemaVersion", "knownPathPatterns", "pathRules"].includes(key)) ||
+    value.schemaVersion !== 1 ||
+    !Array.isArray(value.knownPathPatterns) || value.knownPathPatterns.length === 0 ||
+    !value.knownPathPatterns.every((pattern) => typeof pattern === "string" && pattern !== "") ||
+    new Set(value.knownPathPatterns).size !== value.knownPathPatterns.length
+  ) fail("repository routing overlay has an invalid shape");
+  return { knownPathPatterns: value.knownPathPatterns, pathRules: compilePathRules(value.pathRules ?? [], "repository routing overlay", { overlay: true }) };
 }
 
 export function validateSignalPolicy(policy) {
@@ -70,39 +111,28 @@ export function validateSignalPolicy(policy) {
   const generatedPathPatterns = regexes(policy.generatedPathPatterns, "generatedPathPatterns");
   const codePathPatterns = regexes(policy.codePathPatterns, "codePathPatterns");
   const knownPathPatterns = regexes(policy.knownPathPatterns, "knownPathPatterns");
-  const ids = new Set();
-  const pathRules = policy.pathRules.map((rule) => {
-    if (
-      !plainObject(rule) ||
-      typeof rule.id !== "string" || rule.id === "" || ids.has(rule.id) ||
-      !(typeof rule.pathPattern === "string" && rule.pathPattern !== "" || rule.pathPattern instanceof RegExp) ||
-      !Array.isArray(rule.flags) || rule.flags.length === 0 || !rule.flags.every((flag) => SIGNAL_FLAGS.includes(flag)) ||
-      new Set(rule.flags).size !== rule.flags.length
-    ) {
-      fail("pathRules has an invalid shape");
-    }
-    ids.add(rule.id);
-    try {
-      return { ...rule, pathPattern: rule.pathPattern instanceof RegExp ? rule.pathPattern : new RegExp(rule.pathPattern) };
-    } catch {
-      fail("pathRules contains an invalid pattern");
-    }
-  });
-  return { ...policy, codePathPatterns, generatedPathPatterns, knownPathPatterns, pathRules };
+  const repositoryKnownPathPatterns = optionalRegexes(policy.repositoryKnownPathPatterns, "repositoryKnownPathPatterns");
+  const pathRules = compilePathRules(policy.pathRules, "pathRules");
+  const repositoryPathRules = policy.repositoryPathRules === undefined ? [] : compilePathRules(policy.repositoryPathRules, "repositoryPathRules", { overlay: true });
+  return { ...policy, codePathPatterns, generatedPathPatterns, knownPathPatterns, repositoryKnownPathPatterns, pathRules, repositoryPathRules };
 }
 
-/** Loads shipped signal policy plus an additive repository known-path overlay. */
+/** Loads shipped signal policy plus an additive repository coverage overlay. */
 export async function loadSignalPolicy({ root = process.cwd() } = {}) {
   const policy = await loadPolicy("signals");
-  let knownPathPatterns = [];
+  let overlay;
   try {
-    knownPathPatterns = additiveKnownPathPatterns(JSON.parse(await readFile(join(root, ".omp", "ompstack-routing.json"), "utf8")));
+    overlay = additiveOverlay(JSON.parse(await readFile(join(root, ".omp", "ompstack-routing.json"), "utf8")));
   } catch (error) {
     if (isMissing(error)) return validateSignalPolicy(policy);
     if (error instanceof SyntaxError) fail("repository routing overlay is not valid JSON");
     throw error;
   }
-  return validateSignalPolicy({ ...policy, knownPathPatterns: [...policy.knownPathPatterns, ...knownPathPatterns] });
+  return validateSignalPolicy({
+    ...policy,
+    repositoryKnownPathPatterns: overlay.knownPathPatterns,
+    repositoryPathRules: overlay.pathRules,
+  });
 }
 
 function validateChangeSet(changeSet) {
@@ -139,7 +169,8 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
   validateChangeSet(changeSet);
   const effectivePolicy = policy === undefined ? await loadSignalPolicy() : validateSignalPolicy(policy);
   const codeChanges = changeSet.filter((change) => effectivePolicy.codePathPatterns.some((pattern) => pattern.test(change.path)));
-  const allPathsKnown = changeSet.every((change) => effectivePolicy.knownPathPatterns.some((pattern) => pattern.test(change.path)));
+  const shippedKnown = (path) => effectivePolicy.knownPathPatterns.some((pattern) => pattern.test(path));
+  const repositoryKnown = (path) => effectivePolicy.repositoryKnownPathPatterns.some((pattern) => pattern.test(path));
   const packageRoots = new Set();
   for (const change of codeChanges) {
     const packageRoot = await nearestPackageRoot(root, change.path, effectivePolicy.packageRootMarkers);
@@ -147,7 +178,7 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
   }
   const matchedFlags = new Set();
   for (const change of changeSet) {
-    for (const rule of effectivePolicy.pathRules) {
+    for (const rule of [...effectivePolicy.pathRules, ...effectivePolicy.repositoryPathRules]) {
       if (rule.pathPattern.test(change.path)) for (const flag of rule.flags) matchedFlags.add(flag);
     }
   }
@@ -156,7 +187,13 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
   }
   const flags = Object.fromEntries(SIGNAL_FLAGS.map((flag) => [
     flag,
-    matchedFlags.has(flag) ? true : allPathsKnown && effectivePolicy.knownFlags.includes(flag) ? false : "unknown",
+    matchedFlags.has(flag)
+      ? true
+      : effectivePolicy.knownFlags.includes(flag) && changeSet.every((change) =>
+        shippedKnown(change.path) || effectivePolicy.repositoryPathRules.some((rule) => rule.pathPattern.test(change.path) && rule.knownFlags.includes(flag)),
+      )
+        ? false
+        : "unknown",
   ]));
   return {
     schemaVersion: 1,
@@ -164,7 +201,7 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
     changedLinesScope: effectivePolicy.changedLinesScope,
     changedCodeFiles: codeChanges.length,
     changedLines: codeChanges.reduce((total, change) => total + change.addedLines + change.deletedLines, 0),
-    unclassifiedChangedFiles: changeSet.filter((change) => !effectivePolicy.knownPathPatterns.some((pattern) => pattern.test(change.path))).length,
+    unclassifiedChangedFiles: changeSet.filter((change) => !shippedKnown(change.path) && !repositoryKnown(change.path)).length,
     packageRoots: packageRoots.size,
     ...flags,
   };

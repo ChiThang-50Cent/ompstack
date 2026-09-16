@@ -95,10 +95,21 @@ The runtime gate is opt-in at session level. On OMP's current interactive input 
 To mark repository-local ordinary paths as known, add `.omp/ompstack-routing.json`:
 
 ```json
-{ "schemaVersion": 1, "knownPathPatterns": ["^src/", "^lib/"] }
+{
+  "schemaVersion": 1,
+  "knownPathPatterns": ["^src/", "^lib/"],
+  "pathRules": [
+    {
+      "id": "auth-module",
+      "pathPattern": "^src/auth/",
+      "flags": ["touchesAuth"],
+      "knownFlags": ["touchesAuthorization", "touchesCryptoOrSecrets", "touchesTenantIsolation", "touchesMoneyMovement", "touchesMigration", "destructiveMigration", "touchesRuntimeConfig", "touchesPublicAPI", "touchesPersistence", "touchesConcurrency", "touchesGeneratedCode", "touchesExposedParser"]
+    }
+  ]
+}
 ```
 
-The overlay is additive. It cannot replace shipped sensitive path rules or known signal flags; malformed overlays fail routing.
+`knownPathPatterns` only removes `unclassified-changes`; it does not turn sensitive flags false. An overlay `pathRule` may add true `flags` and explicitly establish false `knownFlags` for the matched path. Shipped sensitive rules always union with overlay rules and win over false coverage. Malformed overlays fail routing.
 
 Measure a fixed first-parent sample against a selected repository rather than the plugin checkout:
 

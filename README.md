@@ -100,6 +100,14 @@ To mark repository-local ordinary paths as known, add `.omp/ompstack-routing.jso
 
 The overlay is additive. It cannot replace shipped sensitive path rules or known signal flags; malformed overlays fail routing.
 
+Measure a fixed first-parent sample against a selected repository rather than the plugin checkout:
+
+```sh
+bun scripts/eval-risk-distribution.mjs --repo /path/to/repository --count 24 --output /tmp/risk-distribution.json
+```
+
+The JSON record identifies the repository, sampled `HEAD`, sample size, and tier distribution. A single-tier distribution exits nonzero after writing the record.
+
 ## Design goal
 
 Keep the pstack ideas that transfer cleanly to OMP:

@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -76,15 +76,17 @@ async function collectCommitChangeSet(root, base, head) {
 function argumentsFor(argv) {
   let count = 30;
   let repository = process.cwd();
+  let output = null;
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
     const value = argv[index + 1];
-    if (typeof value !== "string") fail("usage: bun scripts/eval-risk-distribution.mjs [--repo PATH] [--count N]");
+    if (typeof value !== "string") fail("usage: bun scripts/eval-risk-distribution.mjs [--repo PATH] [--count N] [--output FILE]");
     if (flag === "--count" && /^\d+$/.test(value) && Number(value) > 0) count = Number(value);
     else if (flag === "--repo" && value !== "") repository = value;
-    else fail("usage: bun scripts/eval-risk-distribution.mjs [--repo PATH] [--count N]");
+    else if (flag === "--output" && value !== "") output = value;
+    else fail("usage: bun scripts/eval-risk-distribution.mjs [--repo PATH] [--count N] [--output FILE]");
   }
-  return { count, root: resolve(repository) };
+  return { count, root: resolve(repository), output: output === null ? null : resolve(output) };
 }
 
 async function parentOf(root, commit) {
@@ -108,7 +110,7 @@ async function classifyCommit(root, commit, base, signalPolicy, routingPolicy) {
   }
 }
 
-const { count, root } = argumentsFor(Bun.argv.slice(2));
+const { count, root, output } = argumentsFor(Bun.argv.slice(2));
 const commits = (await runGit(root, ["rev-list", "--first-parent", `--max-count=${count + 1}`, "HEAD"])).trim().split("\n").filter(Boolean);
 const parents = await Promise.all(commits.map((commit) => parentOf(root, commit)));
 const candidates = commits.filter((_, index) => parents[index] !== null).slice(0, count);
@@ -122,5 +124,10 @@ for (const [index, commit] of candidates.entries()) {
   distribution[result.risk] += 1;
   console.log(`${index + 1}. ${commit.slice(0, 12)} ${result.risk} ${result.reasonCodes.join(",") || "no-escalation"}`);
 }
+const record = { schemaVersion: 1, repository: root, head: commits[0], sampleCount: candidates.length, distribution };
 console.log(`risk distribution (${candidates.length} commits): ${risks.map((risk) => `${risk}=${distribution[risk]}`).join(" ")}`);
+if (output !== null) {
+  await writeFile(output, `${JSON.stringify(record, null, 2)}\n`);
+  console.log(`record: ${output}`);
+}
 if (risks.some((risk) => distribution[risk] === candidates.length)) fail(`degenerate risk distribution: every commit is ${risks.find((risk) => distribution[risk] === candidates.length)}`);

@@ -8,6 +8,7 @@ type SessionContext = { sessionManager: { getBranch(): Iterable<unknown> } };
 
 const DECISION_TYPE = "io.github.chithang-50cent.ompstack.route-decision.v1";
 const DECISION_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-decision-state.v1";
+const ACTIVATION_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-activation.v1";
 const EVIDENCE_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-evidence.v1";
 const READ_ONLY_TOOLS: Record<string, true> = { read: true, grep: true, glob: true, web_search: true, ompstack_route: true, ompstack_phase: true };
 const EVIDENCE_LANES = new Set<EvidenceLane>(["reviewer", "verifier", "security-reviewer"]);
@@ -24,6 +25,10 @@ function isDecision(value: unknown): value is ActiveDecision {
 function isDecisionState(value: unknown): value is { decisionId: string; state: "invalidated"; reason: string } {
   const candidate = record(value);
   return isDecision(value) && candidate?.state === "invalidated" && typeof candidate.reason === "string" && candidate.reason !== "";
+}
+
+function isActivationState(value: unknown): value is { workflow: "ompstack" } {
+  return record(value)?.workflow === "ompstack";
 }
 
 function isEvidenceState(value: unknown): value is { decisionId: string; evidence: EvidenceLane } {
@@ -56,6 +61,7 @@ function isReadOnlyTool(event: ToolCallEvent) {
   return event.toolName in READ_ONLY_TOOLS || (event.toolName === "todo" && record(event.input)?.op === "view");
 }
 
+
 /** Persists one measured RouteDecision for the explicit Ompstack session until a fresh route supersedes it. */
 export default function ompstackRuntime(pi: ExtensionAPI) {
   const z = pi.zod;
@@ -85,6 +91,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     for (const entry of ctx.sessionManager.getBranch()) {
       const item = record(entry);
       if (item?.type !== "custom") continue;
+      if (item.customType === ACTIVATION_STATE_TYPE && isActivationState(item.data)) enforcementActive = true;
       if (item.customType === DECISION_TYPE && isDecision(item.data)) {
         enforcementActive = true;
         activeDecision = item.data;
@@ -104,9 +111,15 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   pi.on("session_start", (_event, ctx) => rebuild(ctx));
   pi.on("session_branch", (_event, ctx) => rebuild(ctx));
   pi.on("session_tree", (_event, ctx) => rebuild(ctx));
+  pi.on("input", (event) => {
+    if (!/(?:^|\s)\/(?:skill:)?ompstack(?:\s|$)/.test(event.text) || enforcementActive) return;
+    pi.appendEntry(ACTIVATION_STATE_TYPE, { workflow: "ompstack" });
+    enforcementActive = true;
+  });
 
   pi.registerTool({
     name: "ompstack_route",
+
     label: "Route repository change",
     description: "Measure a declared repository revision pair and persist its immutable RouteDecision.",
     parameters: z.object({

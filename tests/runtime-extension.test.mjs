@@ -42,6 +42,12 @@ const invalidated = {
   data: { decisionId, state: "invalidated", reason: "superseded-by-fresh-route" },
 };
 
+const activation = {
+  type: "custom",
+  customType: "io.github.chithang-50cent.ompstack.route-activation.v1",
+  data: { workflow: "ompstack" },
+};
+
 async function restore(runtime, entries) {
   await runtime.handlers.get("session_start")({}, { sessionManager: { getBranch: () => entries } });
   return runtime.handlers.get("tool_call");
@@ -83,6 +89,28 @@ test("runtime stays inactive until Ompstack records a decision", async () => {
   const gate = runtime.handlers.get("tool_call");
   assert.equal(await gate({ toolName: "write", input: { path: "unrelated.txt" } }), undefined);
   assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
+});
+
+test("interactive Ompstack invocation activates write-before-route enforcement", async () => {
+  const runtime = createRuntime();
+  await runtime.handlers.get("input")({ text: "/skill:ompstack add a route", source: "interactive" });
+  assert.deepEqual(await runtime.handlers.get("tool_call")({ toolName: "edit", input: {} }), {
+    block: true,
+    reason: "ompstack requires a valid RouteDecision before mutable or unknown execution",
+  });
+  assert.deepEqual(runtime.entries, [{
+    customType: "io.github.chithang-50cent.ompstack.route-activation.v1",
+    data: { workflow: "ompstack" },
+  }]);
+});
+
+test("persisted explicit activation retains write-before-route enforcement", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [activation]);
+  assert.deepEqual(await gate({ toolName: "write", input: {} }), {
+    block: true,
+    reason: "ompstack requires a valid RouteDecision before mutable or unknown execution",
+  });
 });
 
 test("runtime keeps an active decision across mutable calls and Todo inspection", async () => {

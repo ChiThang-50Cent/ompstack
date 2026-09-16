@@ -76,7 +76,14 @@ test("signal collector rejects malformed change paths", async () => {
 
 test("default policy gives known ompstack paths determinate signal values", async () => {
   const signals = await collectSignals({
-    changeSet: [change("scripts/routing/policy.mjs", 1)],
+    changeSet: [
+      change("scripts/routing/policy.mjs", 1),
+      change(".omp/AGENTS.md", 1),
+      change(".omp-plugin/marketplace.json", 1),
+      change(".gitignore", 1),
+      change("bun.lock", 1),
+      change("tsconfig.plugin.json", 1),
+    ],
   });
   assert.equal(signals.unclassifiedChangedFiles, 0);
   for (const flag of SIGNAL_FLAGS) assert.equal(signals[flag], false);

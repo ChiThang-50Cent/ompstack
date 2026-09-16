@@ -20,7 +20,8 @@
   ],
   "knownPathPatterns": [
     "^(?:agents|commands|docs|examples|extensions|policy|scripts|skills|tests)/",
-    "^(?:CHANGELOG\\.md|NOTICE\\.md|README\\.md|package(?:-lock)?\\.json)$"
+    "^(?:CHANGELOG\\.md|NOTICE\\.md|README\\.md|package(?:-lock)?\\.json)$",
+    "^(?:\\.omp(?:-plugin)?/|\\.gitignore$|bun\\.lock$|tsconfig\\.plugin\\.json$)"
   ],
   "knownFlags": [
     "touchesAuth",

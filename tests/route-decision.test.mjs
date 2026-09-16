@@ -11,13 +11,15 @@ const policy = { thresholds: { maxMediumCodeFiles: 5, maxMediumChangedLines: 300
 test("unknown signals fail closed and decisions are stable", () => {
   const classification = classifyRoute({ signals, graph, taskFacts: { behaviorAffecting: true }, riskFacts: facts, policy });
   assert.equal(classification.risk, "high");
-  const input = { intent: "feature", classification, signals, graph, policyVersion: "1", routeInputDigest: "0".repeat(64) };
+  const input = { intent: "feature", measurementPurpose: "material", targets: ["src/example.ts"], repositoryRoot: "/repo", changeSetDigest: "1".repeat(64), classification, signals, graph, policyVersion: "1", routeInputDigest: "0".repeat(64) };
   const left = createRouteDecision(input);
   const right = createRouteDecision(input);
   assert.equal(left.decisionId, right.decisionId);
   assert.equal(left.signalsDigest, right.signalsDigest);
   assert.ok(Object.isFrozen(left));
   assert.deepEqual(left.requiredPlaybooks, ["skill://ompstack/playbooks/feature.md"]);
+  assert.equal(left.changeSetDigest, "1".repeat(64));
+  assert.equal(left.measurementPurpose, "material");
 });
 
 test("confirmed auth surface is critical", () => {

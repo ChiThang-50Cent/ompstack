@@ -35,14 +35,21 @@ Todo state is deliberately separate from Hub/task lifecycle, feature maps, sessi
 
 ## Runtime bootstrap and route facts
 
-After an explicit Ompstack invocation, before any mutable or unknown tool, the parent MUST establish a RouteDecision:
+After an explicit Ompstack invocation, before any mutable or unknown tool, the parent MUST establish a bootstrap RouteDecision:
 
 1. Resolve the route intent and declared mutation targets.
 2. For every non-Low write task, inspect the mutation target directly. Record the target, semantic boundary, consumer families, execution modes, invariants, graph/reference behavior, and material unknowns. A final Medium route requires source evidence that this surface is bounded and local; unresolved material uncertainty escalates to High. Use `scout` only when direct mapping is genuinely broad or the target remains unknown.
-3. Call `ompstack_route` with the resolved intent, targets, task facts, repository revisions, risk facts, and graph policy.
+3. Call `ompstack_route` with `measurementPurpose: "bootstrap"`, the resolved intent, targets, task facts, repository revisions, risk facts, and graph policy.
 4. Treat the returned RouteDecision as authority for final risk, required independent evidence, and the primary playbook. Read only its `requiredPlaybooks`; do not select a competing primary playbook from prose.
 5. Copy the returned exact `Route-Decision: sha256:<decisionId>` line into the shared `context` of every mutable `task` batch. A task may carry it in its task body, but `context` is the canonical batch-preflight location.
 6. Use `ompstack_phase` only to inspect session-local, partial observation of launched evidence lanes. It does not establish closeout or sandbox conformance.
+7. After any successful parent `write` or `edit`, before launching required independent evidence, call `ompstack_route` again with `measurementPurpose: "material"`. A material RouteDecision measures the current candidate and is stale after the next successful parent mutation.
+
+### Route inputs
+
+- `repository.root` MUST be the absolute repository root. `base` is the resolved merge-base baseline against the selected integration target; `head` is the checked-out candidate `HEAD`, supplied as its resolved SHA. The route rejects a `head` that is not the checked-out `HEAD`.
+- The route measures the checked-out working tree relative to that merge base, including staged, unstaged, and untracked files. It binds the resulting file content through `changeSetDigest`; it is not a claim about a future diff.
+- `graphPolicy.sourceRoots` MUST include `go`, `python`, `typescript`, and `java`. Use repository-relative roots and `[]` for unused languages; do not guess roots from a task prompt.
 
 Resolve one route intent before calling `ompstack_route`:
 

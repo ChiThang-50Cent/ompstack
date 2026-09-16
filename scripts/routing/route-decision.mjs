@@ -18,15 +18,19 @@ const playbooks = Object.freeze({
   eval: "skill://ompstack/playbooks/eval.md",
 });
 
-/** Creates an immutable, content-addressed routing decision. */
-export function createRouteDecision({ intent, classification, signals, graph, policyVersion, routeInputDigest }) {
+/** Creates an immutable decision bound to normalized inputs and a measured working-tree snapshot. */
+export function createRouteDecision({ intent, measurementPurpose, targets, repositoryRoot, changeSetDigest, classification, signals, graph, policyVersion, routeInputDigest }) {
   const requiredPlaybook = playbooks[intent];
-  if (typeof intent !== "string" || requiredPlaybook === undefined || !classification || !signals || !graph || typeof policyVersion !== "string" || policyVersion === "" || !/^[a-f0-9]{64}$/.test(routeInputDigest)) throw new Error("route decision: input has an invalid shape");
+  if (typeof intent !== "string" || requiredPlaybook === undefined || !["bootstrap", "material"].includes(measurementPurpose) || !Array.isArray(targets) || targets.length === 0 || !targets.every((target) => typeof target === "string" && target !== "") || typeof repositoryRoot !== "string" || repositoryRoot === "" || !/^[a-f0-9]{64}$/.test(changeSetDigest) || !classification || !signals || !graph || typeof policyVersion !== "string" || policyVersion === "" || !/^[a-f0-9]{64}$/.test(routeInputDigest)) throw new Error("route decision: input has an invalid shape");
   const signalsDigest = createHash("sha256").update(stable({ signals, graph })).digest("hex");
   const body = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     policyVersion,
     routeInputDigest,
+    changeSetDigest,
+    measurementPurpose,
+    repositoryRoot,
+    targets: Object.freeze([...targets]),
     intent,
     risk: classification.risk,
     requiredPlaybooks: Object.freeze([requiredPlaybook]),

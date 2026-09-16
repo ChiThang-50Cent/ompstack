@@ -148,10 +148,14 @@ assert.match(skill, /Execution overlays\/phases:/);
 assert.match(skill, /Independent evidence:/);
 assert.match(skill, /reviewer \+ verifier \+ security-reviewer/);
 assert.match(skill, /## Runtime bootstrap and route facts/);
-assert.match(skill, /Call `ompstack_route` with the resolved intent/);
+assert.match(skill, /Call `ompstack_route` with `measurementPurpose: "bootstrap"`, the resolved intent/);
 assert.match(skill, /Read only its `requiredPlaybooks`/);
 assert.match(skill, /shared `context` of every mutable `task` batch/);
 assert.match(skill, /For every non-Low write task, inspect the mutation target directly/);
+assert.match(skill, /`measurementPurpose: "bootstrap"`/);
+assert.match(skill, /`measurementPurpose: "material"`/);
+assert.match(skill, /`repository\.root` MUST be the absolute repository root/);
+assert.match(skill, /`changeSetDigest`/);
 assert.match(skill, /Risk basis:/);
 assert.match(riskRouting, /## Risk scan before final classification/);
 assert.match(riskRouting, /Final Medium requires source evidence/);
@@ -203,7 +207,7 @@ assert.match(design, /Native Todo is a separate conditional parent progress laye
 assert.match(readme, /conditional native Todo progress state/);
 assert.match(verification, /DOCTOR: BLOCKED/);
 assert.match(verification, /optional unattended evidence adapters/);
-// G9 replaces these prose pins with runtime closeout enforcement.
+// Future runtime closeout enforcement replaces these prose pins.
 assert.match(verification, /### Change ledger/);
 assert.match(verification, /MUST NOT close while its ledger has a `pending` entry/);
 assert.match(skill, /proof-surface matrix/);

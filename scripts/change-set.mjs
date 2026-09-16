@@ -1,4 +1,5 @@
-import { lstat, readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { lstat, readFile, readlink } from "node:fs/promises";
 import { resolve } from "node:path";
 
 function fail(message) {
@@ -68,26 +69,79 @@ function parseNumstat(output) {
   return entries;
 }
 
-async function untrackedStatistics(root, path) {
-  const fullPath = resolve(root, path);
-  if ((await lstat(fullPath)).isSymbolicLink()) return { binary: false, addedLines: 0 };
-  const bytes = await readFile(fullPath);
-  let addedLines = bytes.length === 0 ? 0 : 1;
-  for (const byte of bytes) if (byte === 10) addedLines += 1;
-  return { binary: bytes.includes(0), addedLines };
+function isMissing(error) {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
-/** Collects committed changes between base and head plus current untracked files. */
-export async function collectChangeSet({ base, head, root = process.cwd() }) {
-  if (typeof base !== "string" || base.length === 0 || typeof head !== "string" || head.length === 0) {
-    fail("base and head must be non-empty Git revisions");
+async function untrackedStatistics(root, path) {
+  const fullPath = resolve(root, path);
+  try {
+    if ((await lstat(fullPath)).isSymbolicLink()) return { binary: false, addedLines: 0 };
+    const bytes = await readFile(fullPath);
+    let addedLines = bytes.length === 0 ? 0 : 1;
+    for (const byte of bytes) if (byte === 10) addedLines += 1;
+    return { binary: bytes.includes(0), addedLines };
+  } catch (error) {
+    if (isMissing(error)) return null;
+    throw error;
+  }
+}
+
+function stable(value) {
+  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+  if (value && typeof value === "object") return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stable(value[key])}`).join(",")}}`;
+  return JSON.stringify(value);
+}
+
+async function contentDigest(root, path) {
+  const fullPath = resolve(root, path);
+  try {
+    if ((await lstat(fullPath)).isSymbolicLink()) return createHash("sha256").update(`symlink:${await readlink(fullPath)}`).digest("hex");
+    return createHash("sha256").update(await readFile(fullPath)).digest("hex");
+  } catch (error) {
+    if (isMissing(error)) fail(`working-tree snapshot changed while reading ${path}`);
+    throw error;
+  }
+}
+
+/** Hashes the exact current content of a collected working-tree change set. */
+export async function digestChangeSet({ changeSet, root = process.cwd() }) {
+  const repositoryRoot = resolve(root);
+  const snapshot = await Promise.all(changeSet.map(async (change) => ({
+    ...change,
+    contentDigest: change.changeType === "deleted" ? null : await contentDigest(repositoryRoot, change.path),
+  })));
+  return createHash("sha256").update(stable(snapshot)).digest("hex");
+}
+
+/** Collects declared revision changes plus current untracked files, optionally including the checked-out working tree. */
+export async function collectChangeSet({ base, head, root = process.cwd(), workingTree = false }) {
+  if (typeof base !== "string" || base.length === 0 || typeof head !== "string" || head.length === 0 || typeof workingTree !== "boolean") {
+    fail("base and head must be non-empty Git revisions and workingTree must be boolean");
   }
   const repositoryRoot = resolve(root);
-  const revisionRange = `${base}...${head}`;
-  const [nameStatus, numstat, untracked] = await Promise.all([
-    runGit(repositoryRoot, ["diff", "--name-status", "-z", "--find-renames", "--find-copies", revisionRange]),
-    runGit(repositoryRoot, ["diff", "--numstat", "-z", "--find-renames", "--find-copies", revisionRange]),
+  const [untracked, revision] = await Promise.all([
     runGit(repositoryRoot, ["ls-files", "--others", "--exclude-standard", "-z"]),
+    workingTree
+      ? Promise.all([
+          runGit(repositoryRoot, ["merge-base", base, head]),
+          runGit(repositoryRoot, ["rev-parse", "HEAD"]),
+          runGit(repositoryRoot, ["rev-parse", head]),
+        ])
+      : Promise.resolve([`${base}...${head}`]),
+  ]);
+  let diffTarget;
+  if (workingTree) {
+    const [mergeBase, currentHead, declaredHead] = revision;
+    if (currentHead.trim() !== declaredHead.trim()) fail("head must resolve to the checked-out HEAD for a working-tree snapshot");
+    diffTarget = mergeBase.trim();
+    if (!diffTarget) fail("could not resolve merge base");
+  } else {
+    [diffTarget] = revision;
+  }
+  const [nameStatus, numstat] = await Promise.all([
+    runGit(repositoryRoot, ["diff", "--name-status", "-z", "--find-renames", "--find-copies", diffTarget]),
+    runGit(repositoryRoot, ["diff", "--numstat", "-z", "--find-renames", "--find-copies", diffTarget]),
   ]);
   const statistics = parseNumstat(numstat);
   const changed = parseNameStatus(nameStatus).map((entry) => ({
@@ -97,11 +151,12 @@ export async function collectChangeSet({ base, head, root = process.cwd() }) {
   const knownPaths = new Set(changed.map((entry) => entry.path));
   for (const path of untracked.split("\0")) {
     if (!path || knownPaths.has(path)) continue;
-    const untracked = await untrackedStatistics(repositoryRoot, path);
+    const statistics = await untrackedStatistics(repositoryRoot, path);
+    if (!statistics) continue;
     changed.push({
       path,
       changeType: "untracked",
-      ...untracked,
+      ...statistics,
       deletedLines: 0,
     });
   }

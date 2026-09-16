@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { access, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { createAgentSession } from "@oh-my-pi/pi-coding-agent";
 import { ExtensionRunner, loadExtensions } from "@oh-my-pi/pi-coding-agent/extensibility/extensions";
+import { createMockModel, registerMockApi } from "@oh-my-pi/pi-ai/providers/mock";
 import { SessionManager } from "@oh-my-pi/pi-coding-agent/session/session-manager";
 import { join } from "node:path";
 import { test } from "bun:test";
+
 import ompstackRuntime from "../extensions/ompstack-runtime.ts";
+registerMockApi("ompstack-runtime-test");
 
 function chain() {
   return { min: chain, int: chain, nonnegative: chain, strict: chain };
@@ -37,7 +41,7 @@ const decisionId = "a".repeat(64);
 const decision = {
   type: "custom",
   customType: "io.github.chithang-50cent.ompstack.route-decision.v1",
-  data: { decisionId, requiredIndependentEvidence: ["reviewer", "verifier"] },
+  data: { decisionId, measurementPurpose: "material", repositoryRoot: process.cwd(), targets: ["tests"], requiredIndependentEvidence: ["reviewer", "verifier"] },
 };
 const invalidated = {
   type: "custom",
@@ -79,6 +83,7 @@ async function withRepository(callback) {
 function routeInput(root, revision) {
   return {
     intent: "feature",
+    measurementPurpose: "material",
     targets: ["src/example.ts"],
     taskFacts: { behaviorAffecting: true, plannedWriteLanes: ["parent"], proofSurface: "runtime test" },
     repository: { root, base: revision, head: revision },
@@ -122,8 +127,56 @@ async function createHostRuntime() {
       getSystemPrompt: () => [],
     },
   );
+
   return { runner, sessionManager };
 }
+test("AgentSession turns a route gate block into a blocked write execution", async () => {
+  await withRepository(async (root) => {
+    const mock = createMockModel({
+      provider: "ollama",
+      responses: [
+        { content: [{ type: "toolCall", name: "write", arguments: { path: "blocked.txt", content: "must not exist" } }] },
+        { content: ["Write was blocked."] },
+      ],
+    });
+    const sessionManager = SessionManager.create(root, join(root, ".sessions"));
+    sessionManager.appendCustomEntry("io.github.chithang-50cent.ompstack.route-activation.v1", activation.data);
+    const { session, extensionsResult } = await createAgentSession({
+      cwd: root,
+      agentDir: join(root, ".agent"),
+      model: mock.model,
+      sessionManager,
+      additionalExtensionPaths: [extensionPath()],
+      disableExtensionDiscovery: true,
+      skills: [],
+      rules: [],
+      contextFiles: [],
+      promptTemplates: [],
+      slashCommands: [],
+      enableMCP: false,
+      enableLsp: false,
+      enableIrc: false,
+      skipPythonPreflight: true,
+      toolNames: ["write"],
+      autoApprove: true,
+    });
+    assert.deepEqual(extensionsResult.errors, []);
+    assert.ok(extensionsResult.extensions.some((extension) => extension.resolvedPath === extensionPath()));
+      await sessionManager.flush();
+      assert.equal(await session.fork(), true);
+    try {
+      await session.prompt("Create blocked.txt");
+      await assert.rejects(access(join(root, "blocked.txt")));
+      const blocked = session.agent.state.messages.find((message) => message.role === "toolResult" && message.toolName === "write");
+      assert.equal(blocked?.isError, true);
+      assert.match(blocked?.content[0]?.text ?? "", /ompstack requires a valid RouteDecision/);
+    } finally {
+      await session.dispose();
+    }
+  });
+});
+
+
 
 
 test("runtime registers every session rebuild handler through the OMP loader", async () => {
@@ -199,8 +252,8 @@ test("runtime keeps an active decision across mutable calls and Todo inspection"
     reason: "task requires an exact Route-Decision header",
   });
   assert.equal(await gate({ toolName: "task", input: { context: `Route-Decision: sha256:${decisionId}` } }), undefined);
-  assert.equal(await gate({ toolName: "edit", input: {} }), undefined);
-  assert.equal(await gate({ toolName: "edit", input: {} }), undefined);
+  assert.equal(await gate({ toolName: "edit", input: { path: "tests/runtime-extension.test.mjs" } }), undefined);
+  assert.equal(await gate({ toolName: "edit", input: { path: "tests/runtime-extension.test.mjs" } }), undefined);
   assert.equal(await gate({ toolName: "bash", input: {} }), undefined);
   assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
   assert.deepEqual(runtime.entries, []);
@@ -231,6 +284,7 @@ test("runtime records only successfully launched required evidence lanes", async
   const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
   assert.deepEqual(phase.details, {
     decisionId,
+    materialRouteCurrent: true,
     requiredIndependentEvidence: ["reviewer", "verifier"],
     observedIndependentEvidence: ["reviewer"],
     missingIndependentEvidence: ["verifier"],
@@ -240,6 +294,33 @@ test("runtime records only successfully launched required evidence lanes", async
     customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
     data: { decisionId, evidence: "reviewer" },
   }]);
+});
+
+test("material routes enforce declared write scope and become stale after mutation", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [decision]);
+  assert.equal(await gate({ toolCallId: "in-scope-write", toolName: "write", input: { path: "tests/new-test-file.mjs" } }), undefined);
+  assert.deepEqual(
+    await gate({ toolCallId: "outside-write", toolName: "write", input: { path: "README.md" } }),
+    { block: true, reason: "ompstack target is outside the RouteDecision scope: README.md" },
+  );
+  assert.deepEqual(
+    await gate({ toolCallId: "mixed-hashline-edit", toolName: "edit", input: { paths: ["tests/runtime-extension.test.mjs", "README.md"] } }),
+    { block: true, reason: "ompstack target is outside the RouteDecision scope: README.md" },
+  );
+  await runtime.handlers.get("tool_execution_end")({ toolCallId: "in-scope-write", toolName: "write", isError: false });
+  assert.deepEqual(runtime.entries, [{
+    customType: "io.github.chithang-50cent.ompstack.route-decision-state.v1",
+    data: { decisionId, state: "material-stale", reason: "workspace-mutation-after-route" },
+  }]);
+  assert.deepEqual(
+    await gate({
+      toolCallId: "review-after-mutation",
+      toolName: "task",
+      input: { context: `Route-Decision: sha256:${decisionId}`, tasks: [{ agent: "reviewer" }] },
+    }),
+    { block: true, reason: "task requires a fresh material RouteDecision before independent evidence" },
+  );
 });
 
 test("fresh routing invalidates and replaces the prior decision", async () => {
@@ -262,6 +343,6 @@ test("fresh routing invalidates and replaces the prior decision", async () => {
       state: "invalidated",
       reason: "superseded-by-fresh-route",
     });
-    assert.equal(await runtime.handlers.get("tool_call")({ toolName: "edit", input: {} }), undefined);
+    assert.equal(await runtime.handlers.get("tool_call")({ toolName: "edit", input: { path: "src/example.ts" } }), undefined);
   });
 });

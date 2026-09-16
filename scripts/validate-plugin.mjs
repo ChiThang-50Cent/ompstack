@@ -156,6 +156,8 @@ assert.match(skill, /For every non-Low write task, inspect the mutation target d
 assert.match(skill, /The changed candidate derives a material RouteDecision/);
 assert.match(skill, /`repository\.root` MUST be the absolute repository root/);
 assert.match(skill, /`changeSetDigest`/);
+assert.match(skill, /`\.omp\/ompstack-routing\.json`/);
+assert.match(skill, /`knownPathPatterns` only remove `unclassified-changes`/);
 assert.match(skill, /Risk basis:/);
 assert.match(riskRouting, /## Risk scan before final classification/);
 assert.match(riskRouting, /Final Medium requires source evidence/);

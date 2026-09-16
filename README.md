@@ -90,6 +90,37 @@ The runtime gate is opt-in at session level. On OMP's current interactive input 
 
 `ompstack_phase` reports which required reviewer/verifier/security-reviewer task lanes OMP successfully launched. This is session-local, partial coverage—not a sandbox or a conformance verdict.
 
+### Repository routing overlay
+
+To mark repository-local ordinary paths as known, add `.omp/ompstack-routing.json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "knownPathPatterns": ["^src/", "^lib/"],
+  "pathRules": [
+    {
+      "id": "auth-module",
+      "pathPattern": "^src/auth/",
+      "flags": ["touchesAuth"],
+      "knownFlags": ["touchesAuthorization", "touchesCryptoOrSecrets", "touchesTenantIsolation", "touchesMoneyMovement", "touchesMigration", "destructiveMigration", "touchesRuntimeConfig", "touchesPublicAPI", "touchesPersistence", "touchesConcurrency", "touchesGeneratedCode", "touchesExposedParser"]
+    }
+  ]
+}
+```
+
+`knownPathPatterns` only removes `unclassified-changes`; it does not turn sensitive flags false. An overlay `pathRule` may add true `flags` and explicitly establish false `knownFlags` for the matched path. Shipped sensitive rules always union with overlay rules and win over false coverage. Malformed overlays fail routing.
+
+**Adoption cost:** a repository without overlay coverage remains conservative: each changed path with unresolved sensitive flags routes High. Medium routing requires maintaining narrow `pathRules` as modules evolve, with each `knownFlags` entry representing a reviewed negative claim. A broad rule that clears every flag across most of a repository can erase required review; it is not a substitute for a path-level sensitivity map. Treat this file as safety policy and review it with the affected code.
+
+Measure a fixed first-parent sample against a selected repository rather than the plugin checkout:
+
+```sh
+bun scripts/eval-risk-distribution.mjs --repo /path/to/repository --count 24 --output /tmp/risk-distribution.json
+```
+
+The JSON record identifies the repository, sampled `HEAD`, sample size, and tier distribution. A single-tier distribution exits nonzero after writing the record.
+
 ## Design goal
 
 Keep the pstack ideas that transfer cleanly to OMP:

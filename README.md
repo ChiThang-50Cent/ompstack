@@ -111,6 +111,8 @@ To mark repository-local ordinary paths as known, add `.omp/ompstack-routing.jso
 
 `knownPathPatterns` only removes `unclassified-changes`; it does not turn sensitive flags false. An overlay `pathRule` may add true `flags` and explicitly establish false `knownFlags` for the matched path. Shipped sensitive rules always union with overlay rules and win over false coverage. Malformed overlays fail routing.
 
+**Adoption cost:** a repository without overlay coverage remains conservative: each changed path with unresolved sensitive flags routes High. Medium routing requires maintaining narrow `pathRules` as modules evolve, with each `knownFlags` entry representing a reviewed negative claim. A broad rule that clears every flag across most of a repository can erase required review; it is not a substitute for a path-level sensitivity map. Treat this file as safety policy and review it with the affected code.
+
 Measure a fixed first-parent sample against a selected repository rather than the plugin checkout:
 
 ```sh

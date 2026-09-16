@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "2",
+  "policies": [
+    "signals",
+    "change-ledger",
+    "routing"
+  ]
+}

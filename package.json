@@ -6,8 +6,10 @@
     "agents",
     "commands",
     "docs",
+    "extensions",
     "examples",
     "scripts",
+    "policy",
     "skills",
     "NOTICE.md",
     "third_party/PSTACK_LICENSE"
@@ -16,9 +18,17 @@
     "access": "public"
   },
   "scripts": {
-    "check": "bun scripts/validate-plugin.mjs",
+    "check": "bun scripts/validate-plugin.mjs && tsc --project tsconfig.plugin.json",
     "test": "bun test tests",
     "prepublishOnly": "bun run check && bun test tests && npm pack --dry-run"
   },
-  "omp": {}
+  "devDependencies": {
+    "@oh-my-pi/pi-coding-agent": "^18.2.0",
+    "typescript": "^5.9.3"
+  },
+  "omp": {
+    "extensions": [
+      "./extensions/ompstack-runtime.ts"
+    ]
+  }
 }

@@ -7,6 +7,8 @@ import {
   validateRoutingCase,
   validateRoutingCorpus,
 } from "./routing-validation.mjs";
+import { loadChangeLedgerPolicy } from "./change-ledger.mjs";
+import { loadRoutingPolicy } from "./routing/policy.mjs";
 
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -80,6 +82,7 @@ const verification = await read("skills/ompstack/playbooks/verification.md");
 const investigation = await read("skills/ompstack/playbooks/investigation.md");
 const design = await read("docs/DESIGN.md");
 const readme = await read("README.md");
+const routeDecision = await read("scripts/routing/route-decision.mjs");
 const evaluation = await read("skills/ompstack/playbooks/eval.md");
 const createVerification = await read("skills/ompstack-create-verification/SKILL.md");
 const maintainVerification = await read("skills/ompstack-maintain-verification/SKILL.md");
@@ -113,6 +116,8 @@ assert.deepEqual(
   [],
   "reconstruction routing cases must satisfy the policy",
 );
+await loadChangeLedgerPolicy();
+await loadRoutingPolicy();
 const manifest = JSON.parse(await read("package.json"));
 
 assert.match(manifest.version, /^\d+\.\d+\.\d+$/, "package version must be a release semver");
@@ -124,8 +129,10 @@ assertExactSet(
     "agents",
     "commands",
     "docs",
+    "extensions",
     "examples",
     "scripts",
+    "policy",
     "skills",
     "NOTICE.md",
     "third_party/PSTACK_LICENSE",
@@ -140,8 +147,15 @@ assert.match(skill, /Primary route:/);
 assert.match(skill, /Execution overlays\/phases:/);
 assert.match(skill, /Independent evidence:/);
 assert.match(skill, /reviewer \+ verifier \+ security-reviewer/);
-assert.match(skill, /## Route intent, then finalize risk/);
+assert.match(skill, /## Runtime bootstrap and route facts/);
+assert.match(skill, /Call `ompstack_route` with the resolved intent, targets, task facts/);
+assert.match(skill, /The route derives `bootstrap` only for an empty candidate/);
+assert.match(skill, /Read only its `requiredPlaybooks`/);
+assert.match(skill, /shared `context` of every mutable `task` batch/);
 assert.match(skill, /For every non-Low write task, inspect the mutation target directly/);
+assert.match(skill, /The changed candidate derives a material RouteDecision/);
+assert.match(skill, /`repository\.root` MUST be the absolute repository root/);
+assert.match(skill, /`changeSetDigest`/);
 assert.match(skill, /Risk basis:/);
 assert.match(riskRouting, /## Risk scan before final classification/);
 assert.match(riskRouting, /Final Medium requires source evidence/);
@@ -193,6 +207,9 @@ assert.match(design, /Native Todo is a separate conditional parent progress laye
 assert.match(readme, /conditional native Todo progress state/);
 assert.match(verification, /DOCTOR: BLOCKED/);
 assert.match(verification, /optional unattended evidence adapters/);
+// Future runtime closeout enforcement replaces these prose pins.
+assert.match(verification, /### Change ledger/);
+assert.match(verification, /MUST NOT close while its ledger has a `pending` entry/);
 assert.match(skill, /proof-surface matrix/);
 assert.match(verification, /## Proof-surface selection/);
 assert.match(verification, /Browser through Eval/);
@@ -286,7 +303,8 @@ for (const playbook of playbooks) {
   const path = `skills/ompstack/playbooks/${playbook}.md`;
   const content = await read(path);
   assert.match(content, /^# .+/m, `${path} needs a title`);
-  assert.match(skill, new RegExp(`playbooks/${playbook}\\.md`), `${playbook} is not routed`);
+  const routeAuthority = primaryPlaybooks.includes(playbook) ? routeDecision : skill;
+  assert.match(routeAuthority, new RegExp(`playbooks/${playbook}\\.md`), `${playbook} is not routed`);
 }
 const expectedAgents = new Map([
   [

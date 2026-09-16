@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "changedLinesScope": "code-files-only",
+  "generatedPathPatterns": [
+    "(?:^|/)generated/",
+    "\\.generated\\.",
+    "\\.gen\\."
+  ],
+  "codePathPatterns": [
+    "\\.(?:go|py|ts|tsx|mts|cts|java)$"
+  ],
+  "packageRootMarkers": [
+    "package.json",
+    "go.mod",
+    "pyproject.toml",
+    "setup.py",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts"
+  ],
+  "knownPathPatterns": [
+    "^(?:agents|commands|docs|examples|extensions|policy|scripts|skills|tests)/",
+    "^(?:CHANGELOG\\.md|NOTICE\\.md|README\\.md|package(?:-lock)?\\.json)$"
+  ],
+  "knownFlags": [
+    "touchesAuth",
+    "touchesAuthorization",
+    "touchesCryptoOrSecrets",
+    "touchesTenantIsolation",
+    "touchesMoneyMovement",
+    "touchesMigration",
+    "destructiveMigration",
+    "touchesRuntimeConfig",
+    "touchesPublicAPI",
+    "touchesPersistence",
+    "touchesConcurrency",
+    "touchesGeneratedCode",
+    "touchesExposedParser"
+  ],
+  "pathRules": [
+    {
+      "id": "extension-runtime",
+      "pathPattern": "^extensions/",
+      "flags": ["touchesRuntimeConfig"]
+    },
+    {
+      "id": "package-runtime",
+      "pathPattern": "^package\\.json$",
+      "flags": ["touchesRuntimeConfig"]
+    }
+  ]
+}

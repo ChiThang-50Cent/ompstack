@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { loadPolicy } from "../policy.mjs";
 
@@ -26,6 +26,17 @@ function plainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+
+function isMissing(error) {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
+}
+
+function additiveKnownPathPatterns(value) {
+  if (!plainObject(value) || Object.keys(value).length !== 2 || value.schemaVersion !== 1 || !Array.isArray(value.knownPathPatterns) || value.knownPathPatterns.length === 0 || !value.knownPathPatterns.every((pattern) => typeof pattern === "string" && pattern !== "") || new Set(value.knownPathPatterns).size !== value.knownPathPatterns.length) {
+    fail("repository routing overlay has an invalid shape");
+  }
+  return value.knownPathPatterns;
+}
 function normalizedPath(value) {
   return typeof value === "string" && value !== "" && !value.startsWith("/") && !value.startsWith("./") && !value.split("/").includes("..");
 }
@@ -80,8 +91,18 @@ export function validateSignalPolicy(policy) {
   return { ...policy, codePathPatterns, generatedPathPatterns, knownPathPatterns, pathRules };
 }
 
-export async function loadSignalPolicy() {
-  return validateSignalPolicy(await loadPolicy("signals"));
+/** Loads shipped signal policy plus an additive repository known-path overlay. */
+export async function loadSignalPolicy({ root = process.cwd() } = {}) {
+  const policy = await loadPolicy("signals");
+  let knownPathPatterns = [];
+  try {
+    knownPathPatterns = additiveKnownPathPatterns(JSON.parse(await readFile(join(root, ".omp", "ompstack-routing.json"), "utf8")));
+  } catch (error) {
+    if (isMissing(error)) return validateSignalPolicy(policy);
+    if (error instanceof SyntaxError) fail("repository routing overlay is not valid JSON");
+    throw error;
+  }
+  return validateSignalPolicy({ ...policy, knownPathPatterns: [...policy.knownPathPatterns, ...knownPathPatterns] });
 }
 
 function validateChangeSet(changeSet) {

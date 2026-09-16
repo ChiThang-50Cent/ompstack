@@ -73,10 +73,18 @@ async function collectCommitChangeSet(root, base, head) {
   return parseNameStatus(nameStatus).map((change) => ({ ...change, ...(statistics.get(change.path) ?? { binary: false, addedLines: 0, deletedLines: 0 }) }));
 }
 
-function countArgument(argv) {
-  if (argv.length === 0) return 30;
-  if (argv.length !== 2 || argv[0] !== "--count" || !/^\d+$/.test(argv[1]) || Number(argv[1]) < 1) fail("usage: bun scripts/eval-risk-distribution.mjs [--count N]");
-  return Number(argv[1]);
+function argumentsFor(argv) {
+  let count = 30;
+  let repository = process.cwd();
+  for (let index = 0; index < argv.length; index += 2) {
+    const flag = argv[index];
+    const value = argv[index + 1];
+    if (typeof value !== "string") fail("usage: bun scripts/eval-risk-distribution.mjs [--repo PATH] [--count N]");
+    if (flag === "--count" && /^\d+$/.test(value) && Number(value) > 0) count = Number(value);
+    else if (flag === "--repo" && value !== "") repository = value;
+    else fail("usage: bun scripts/eval-risk-distribution.mjs [--repo PATH] [--count N]");
+  }
+  return { count, root: resolve(repository) };
 }
 
 async function parentOf(root, commit) {
@@ -100,13 +108,14 @@ async function classifyCommit(root, commit, base, signalPolicy, routingPolicy) {
   }
 }
 
-const count = countArgument(Bun.argv.slice(2));
-const root = resolve(process.cwd());
+const { count, root } = argumentsFor(Bun.argv.slice(2));
 const commits = (await runGit(root, ["rev-list", "--first-parent", `--max-count=${count + 1}`, "HEAD"])).trim().split("\n").filter(Boolean);
 const parents = await Promise.all(commits.map((commit) => parentOf(root, commit)));
 const candidates = commits.filter((_, index) => parents[index] !== null).slice(0, count);
 if (candidates.length !== count) fail(`requires ${count} commits with parents, found ${candidates.length}`);
-const [signalPolicy, routingPolicy] = await Promise.all([loadSignalPolicy(), loadRoutingPolicy()]);
+const [signalPolicy, routingPolicy] = await Promise.all([loadSignalPolicy({ root }), loadRoutingPolicy()]);
+console.log(`repository: ${root}`);
+console.log(`sample: ${candidates.length} first-parent commits ending at ${commits[0].slice(0, 12)}`);
 const distribution = Object.fromEntries(risks.map((risk) => [risk, 0]));
 for (const [index, commit] of candidates.entries()) {
   const result = await classifyCommit(root, commit, parents[commits.indexOf(commit)], signalPolicy, routingPolicy);

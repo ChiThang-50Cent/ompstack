@@ -12,7 +12,7 @@ export async function routeRepository(input) {
   const { repository, intent, targets, taskFacts, riskFacts, graphPolicy } = routeInput;
   const [changeSet, signalPolicy, routingPolicy] = await Promise.all([
     collectChangeSet({ root: repository.root, base: repository.base, head: repository.head, workingTree: true }),
-    loadSignalPolicy(),
+    loadSignalPolicy({ root: repository.root }),
     loadRoutingPolicy(),
   ]);
   const [signals, graph, changeSetDigest] = await Promise.all([

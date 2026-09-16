@@ -90,6 +90,16 @@ The runtime gate is opt-in at session level. On OMP's current interactive input 
 
 `ompstack_phase` reports which required reviewer/verifier/security-reviewer task lanes OMP successfully launched. This is session-local, partial coverage—not a sandbox or a conformance verdict.
 
+### Repository routing overlay
+
+To mark repository-local ordinary paths as known, add `.omp/ompstack-routing.json`:
+
+```json
+{ "schemaVersion": 1, "knownPathPatterns": ["^src/", "^lib/"] }
+```
+
+The overlay is additive. It cannot replace shipped sensitive path rules or known signal flags; malformed overlays fail routing.
+
 ## Design goal
 
 Keep the pstack ideas that transfer cleanly to OMP:

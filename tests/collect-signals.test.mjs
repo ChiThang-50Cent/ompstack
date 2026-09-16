@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "bun:test";
-import { collectSignals, SIGNAL_FLAGS } from "../scripts/routing/collect-signals.mjs";
+import { collectSignals, loadSignalPolicy, SIGNAL_FLAGS } from "../scripts/routing/collect-signals.mjs";
 
 const change = (path, addedLines, deletedLines = 0) => ({
   path,
@@ -87,6 +87,39 @@ test("default policy gives known ompstack paths determinate signal values", asyn
   });
   assert.equal(signals.unclassifiedChangedFiles, 0);
   for (const flag of SIGNAL_FLAGS) assert.equal(signals[flag], false);
+});
+
+test("repository overlay only adds known paths without replacing sensitive rules", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-signals-overlay-"));
+  try {
+    await mkdir(join(root, ".omp"));
+    await writeFile(join(root, ".omp", "ompstack-routing.json"), JSON.stringify({
+      schemaVersion: 1,
+      knownPathPatterns: ["^src/"],
+    }));
+    const overlayPolicy = await loadSignalPolicy({ root });
+    const known = await collectSignals({
+      policy: overlayPolicy,
+      changeSet: [change("src/widget.ts", 1)],
+    });
+    assert.equal(known.unclassifiedChangedFiles, 0);
+    for (const flag of SIGNAL_FLAGS) assert.equal(known[flag], false);
+
+    const sensitive = await collectSignals({
+      policy: overlayPolicy,
+      changeSet: [change("extensions/runtime.ts", 1)],
+    });
+    assert.equal(sensitive.touchesRuntimeConfig, true);
+
+    await writeFile(join(root, ".omp", "ompstack-routing.json"), JSON.stringify({
+      schemaVersion: 1,
+      knownPathPatterns: ["^src/"],
+      pathRules: [],
+    }));
+    await assert.rejects(loadSignalPolicy({ root }), /overlay has an invalid shape/);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
 });
 
 test("default empty mapping leaves every sensitive flag unknown", async () => {

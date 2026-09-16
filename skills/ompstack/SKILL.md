@@ -33,25 +33,30 @@ When Todo is active, use stable unique 5–10 word task names, non-empty route-s
 
 Todo state is deliberately separate from Hub/task lifecycle, feature maps, session artifacts, and the proportional decision trail.
 
-## Route intent, then finalize risk
+## Runtime bootstrap and route facts
 
-Select the primary workflow from task intent before spawning agents. Read `skill://ompstack/playbooks/risk-routing.md`.
+After an explicit Ompstack invocation, before any mutable or unknown tool, the parent MUST establish a RouteDecision:
 
-For every non-Low write task, inspect the mutation target directly before selecting final risk, write ownership, or independent evidence. Record the target, semantic boundary, consumer families, execution modes, invariants, graph/reference behavior, and material unknowns. A final Medium route requires source evidence that this surface is bounded and local; unresolved material uncertainty escalates to High. Use `scout` only when direct mapping is genuinely broad or the target remains unknown.
+1. Resolve the route intent and declared mutation targets.
+2. For every non-Low write task, inspect the mutation target directly. Record the target, semantic boundary, consumer families, execution modes, invariants, graph/reference behavior, and material unknowns. A final Medium route requires source evidence that this surface is bounded and local; unresolved material uncertainty escalates to High. Use `scout` only when direct mapping is genuinely broad or the target remains unknown.
+3. Call `ompstack_route` with the resolved intent, targets, task facts, repository revisions, risk facts, and graph policy.
+4. Treat the returned RouteDecision as authority for final risk, required independent evidence, and the primary playbook. Read only its `requiredPlaybooks`; do not select a competing primary playbook from prose.
+5. Copy the returned exact `Route-Decision: sha256:<decisionId>` line into the shared `context` of every mutable `task` batch. A task may carry it in its task body, but `context` is the canonical batch-preflight location.
+6. Use `ompstack_phase` only to inspect session-local, partial observation of launched evidence lanes. It does not establish closeout or sandbox conformance.
 
-Select one primary workflow by task intent:
+Resolve one route intent before calling `ompstack_route`:
 
-- Read-only question, explanation, or evidence-backed recommendation: read `skill://ompstack/playbooks/investigation.md`.
-- Bug or regression: read `skill://ompstack/playbooks/bug-fix.md`.
-- New or intentionally changed behavior: read `skill://ompstack/playbooks/feature.md`.
-- Structural change with unchanged behavior: read `skill://ompstack/playbooks/refactoring.md`.
-- Empirical design, interaction, behavior, or timing decision: read `skill://ompstack/playbooks/prototype.md`.
-- Measured slowness or throughput regression: read `skill://ompstack/playbooks/perf-issue.md`.
-- Live leak, idle CPU spin, race, or glitch diagnosis: read `skill://ompstack/playbooks/runtime-forensics.md`.
-- Captured trace, profile, heap snapshot, or spindump diagnosis: read `skill://ompstack/playbooks/trace-forensics.md`.
-- Change to this plugin's skill, agent, command, routing policy, or fixtures: read `skill://ompstack/playbooks/eval.md`.
+- Read-only question, explanation, or evidence-backed recommendation: `investigation`.
+- Bug or regression: `bug-fix`.
+- New or intentionally changed behavior: `feature`.
+- Structural change with unchanged behavior: `refactoring`.
+- Empirical design, interaction, behavior, or timing decision: `prototype`.
+- Measured slowness or throughput regression: `perf-issue`.
+- Live leak, idle CPU spin, race, or glitch diagnosis: `runtime-forensics`.
+- Captured trace, profile, heap snapshot, or spindump diagnosis: `trace-forensics`.
+- Change to this plugin's skill, agent, command, routing policy, or fixtures: `eval`.
 
-Then apply execution guidance without replacing the primary workflow:
+After reading the required primary playbook, apply execution guidance without replacing it:
 
 - Several independent work items: apply the queue overlay in `skill://ompstack/playbooks/queue.md`.
 - Verification or merge-readiness: apply the verification phase in `skill://ompstack/playbooks/verification.md`.

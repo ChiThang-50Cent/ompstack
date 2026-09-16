@@ -109,6 +109,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   }
 
   pi.on("session_start", (_event, ctx) => rebuild(ctx));
+  pi.on("session_switch", (_event, ctx) => rebuild(ctx));
   pi.on("session_branch", (_event, ctx) => rebuild(ctx));
   pi.on("session_tree", (_event, ctx) => rebuild(ctx));
   pi.on("input", (event) => {

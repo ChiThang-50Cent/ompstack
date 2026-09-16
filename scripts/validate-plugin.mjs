@@ -82,6 +82,7 @@ const verification = await read("skills/ompstack/playbooks/verification.md");
 const investigation = await read("skills/ompstack/playbooks/investigation.md");
 const design = await read("docs/DESIGN.md");
 const readme = await read("README.md");
+const routeDecision = await read("scripts/routing/route-decision.mjs");
 const evaluation = await read("skills/ompstack/playbooks/eval.md");
 const createVerification = await read("skills/ompstack-create-verification/SKILL.md");
 const maintainVerification = await read("skills/ompstack-maintain-verification/SKILL.md");
@@ -146,7 +147,10 @@ assert.match(skill, /Primary route:/);
 assert.match(skill, /Execution overlays\/phases:/);
 assert.match(skill, /Independent evidence:/);
 assert.match(skill, /reviewer \+ verifier \+ security-reviewer/);
-assert.match(skill, /## Route intent, then finalize risk/);
+assert.match(skill, /## Runtime bootstrap and route facts/);
+assert.match(skill, /Call `ompstack_route` with the resolved intent/);
+assert.match(skill, /Read only its `requiredPlaybooks`/);
+assert.match(skill, /shared `context` of every mutable `task` batch/);
 assert.match(skill, /For every non-Low write task, inspect the mutation target directly/);
 assert.match(skill, /Risk basis:/);
 assert.match(riskRouting, /## Risk scan before final classification/);
@@ -295,7 +299,8 @@ for (const playbook of playbooks) {
   const path = `skills/ompstack/playbooks/${playbook}.md`;
   const content = await read(path);
   assert.match(content, /^# .+/m, `${path} needs a title`);
-  assert.match(skill, new RegExp(`playbooks/${playbook}\\.md`), `${playbook} is not routed`);
+  const routeAuthority = primaryPlaybooks.includes(playbook) ? routeDecision : skill;
+  assert.match(routeAuthority, new RegExp(`playbooks/${playbook}\\.md`), `${playbook} is not routed`);
 }
 const expectedAgents = new Map([
   [

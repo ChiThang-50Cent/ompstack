@@ -4,7 +4,6 @@ import { normalizeRouteInput } from "../scripts/routing/route-input.mjs";
 
 const input = {
   intent: "feature",
-  measurementPurpose: "bootstrap",
   targets: ["src/b.ts", "src/a.ts"],
   taskFacts: { behaviorAffecting: true, plannedWriteLanes: ["review", "parent"], proofSurface: "CLI" },
   repository: { root: "/repo", base: "HEAD~1", head: "HEAD" },
@@ -17,8 +16,12 @@ test("route input canonicalizes declared scope", () => {
   assert.deepEqual(normalized.targets, ["src/a.ts", "src/b.ts"]);
   assert.deepEqual(normalized.taskFacts.plannedWriteLanes, ["parent", "review"]);
   assert.match(normalized.routeInputDigest, /^[a-f0-9]{64}$/);
-  assert.equal(normalized.measurementPurpose, "bootstrap");
+  assert.equal(normalized.measurementPurpose, undefined);
   assert.deepEqual(normalized.graphPolicy.sourceRoots, { go: [], python: [], typescript: ["src"], java: [] });
+});
+
+test("route input rejects caller-controlled measurement purpose", () => {
+  assert.throws(() => normalizeRouteInput({ ...input, measurementPurpose: "material" }), /invalid shape/);
 });
 
 test("route input rejects unresolved intent before routing", () => {

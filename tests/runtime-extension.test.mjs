@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, mkdtemp, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { createAgentSession } from "@oh-my-pi/pi-coding-agent";
@@ -83,7 +83,6 @@ async function withRepository(callback) {
 function routeInput(root, revision) {
   return {
     intent: "feature",
-    measurementPurpose: "material",
     targets: ["src/example.ts"],
     taskFacts: { behaviorAffecting: true, plannedWriteLanes: ["parent"], proofSurface: "runtime test" },
     repository: { root, base: revision, head: revision },
@@ -323,13 +322,36 @@ test("material routes enforce declared write scope and become stale after mutati
   );
 });
 
+test("runtime rejects a symlink that escapes its declared target", async () => {
+  await withRepository(async (root) => {
+    await Promise.all([
+      mkdir(join(root, "scripts")),
+      mkdir(join(root, "tests")),
+    ]);
+    await symlink("../scripts", join(root, "tests", "link"));
+    const runtime = createRuntime();
+    const gate = await restore(runtime, [{
+      ...decision,
+      data: { ...decision.data, repositoryRoot: root },
+    }]);
+    assert.deepEqual(
+      await gate({ toolName: "write", input: { path: "tests/link/escaped.mjs" } }),
+      { block: true, reason: "ompstack target escapes the RouteDecision scope through a symlink: tests/link/escaped.mjs" },
+    );
+  });
+});
+
 test("fresh routing invalidates and replaces the prior decision", async () => {
   await withRepository(async (root, revision) => {
     const runtime = createRuntime();
     const route = runtime.tools.get("ompstack_route");
     const first = await route.execute("first", routeInput(root, revision));
+    assert.equal(first.details.measurementPurpose, "bootstrap");
+    await mkdir(join(root, "src"));
+    await writeFile(join(root, "src", "example.ts"), "export {};\n");
     const second = await route.execute("second", routeInput(root, revision));
-    assert.equal(first.details.decisionId, second.details.decisionId);
+    assert.equal(second.details.measurementPurpose, "material");
+    assert.notEqual(first.details.decisionId, second.details.decisionId);
     assert.deepEqual(
       runtime.entries.map((entry) => entry.customType),
       [

@@ -39,11 +39,11 @@ After an explicit Ompstack invocation, before any mutable or unknown tool, the p
 
 1. Resolve the route intent and declared mutation targets.
 2. For every non-Low write task, inspect the mutation target directly. Record the target, semantic boundary, consumer families, execution modes, invariants, graph/reference behavior, and material unknowns. A final Medium route requires source evidence that this surface is bounded and local; unresolved material uncertainty escalates to High. Use `scout` only when direct mapping is genuinely broad or the target remains unknown.
-3. Call `ompstack_route` with `measurementPurpose: "bootstrap"`, the resolved intent, targets, task facts, repository revisions, risk facts, and graph policy.
+3. Call `ompstack_route` with the resolved intent, targets, task facts, repository revisions, risk facts, and graph policy. The route derives `bootstrap` only for an empty candidate; any staged, unstaged, or untracked change derives `material`.
 4. Treat the returned RouteDecision as authority for final risk, required independent evidence, and the primary playbook. Read only its `requiredPlaybooks`; do not select a competing primary playbook from prose.
 5. Copy the returned exact `Route-Decision: sha256:<decisionId>` line into the shared `context` of every mutable `task` batch. A task may carry it in its task body, but `context` is the canonical batch-preflight location.
 6. Use `ompstack_phase` only to inspect session-local, partial observation of launched evidence lanes. It does not establish closeout or sandbox conformance.
-7. After any successful parent `write` or `edit`, before launching required independent evidence, call `ompstack_route` again with `measurementPurpose: "material"`. A material RouteDecision measures the current candidate and is stale after the next successful parent mutation.
+7. After any successful parent `write` or `edit`, before launching required independent evidence, call `ompstack_route` again. The changed candidate derives a material RouteDecision, which is stale after the next successful parent mutation.
 
 ### Route inputs
 

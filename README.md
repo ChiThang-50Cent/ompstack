@@ -86,7 +86,7 @@ Or invoke the skill directly:
 
 Ompstack is intended for explicit invocation through `/ompstack` or `/skill:ompstack`; it is not the default workflow for every coding task.
 
-The runtime gate is opt-in at session level. On OMP's current interactive input path, it activates persistently when the user submits `/ompstack` or `/skill:ompstack`, so writes before the initial route are blocked. A bootstrap `ompstack_route` unlocks declared parent `write`/`edit` targets; a material route measures the checked-out staged, unstaged, and untracked candidate. A successful parent mutation makes that material route stale, so required independent evidence needs a fresh material route. The extension does not establish runtime activation coverage for non-interactive entry points; explicit invocation and route-before-write remain their skill contract.
+The runtime gate is opt-in at session level. On OMP's current interactive input path, it activates persistently when the user submits `/ompstack` or `/skill:ompstack`, so writes before the initial route are blocked. A route over an empty candidate is bootstrap and unlocks declared parent `write`/`edit` targets; any staged, unstaged, or untracked change derives a material route. A successful parent mutation makes that material route stale, so required independent evidence needs a fresh material route. The extension does not establish runtime activation coverage for non-interactive entry points; explicit invocation and route-before-write remain their skill contract.
 
 `ompstack_phase` reports which required reviewer/verifier/security-reviewer task lanes OMP successfully launched. This is session-local, partial coverage—not a sandbox or a conformance verdict.
 

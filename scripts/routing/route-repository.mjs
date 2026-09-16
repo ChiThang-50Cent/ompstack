@@ -9,7 +9,7 @@ import { normalizeRouteInput } from "./route-input.mjs";
 /** Routes a declared baseline to its checked-out working-tree snapshot. */
 export async function routeRepository(input) {
   const routeInput = normalizeRouteInput(input);
-  const { repository, intent, measurementPurpose, targets, taskFacts, riskFacts, graphPolicy } = routeInput;
+  const { repository, intent, targets, taskFacts, riskFacts, graphPolicy } = routeInput;
   const [changeSet, signalPolicy, routingPolicy] = await Promise.all([
     collectChangeSet({ root: repository.root, base: repository.base, head: repository.head, workingTree: true }),
     loadSignalPolicy(),
@@ -23,7 +23,7 @@ export async function routeRepository(input) {
   const classification = classifyRoute({ signals, graph, taskFacts, riskFacts, policy: routingPolicy });
   return createRouteDecision({
     intent,
-    measurementPurpose,
+    measurementPurpose: changeSet.length === 0 ? "bootstrap" : "material",
     targets,
     repositoryRoot: repository.root,
     changeSetDigest,

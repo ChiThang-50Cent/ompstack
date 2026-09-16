@@ -108,16 +108,19 @@ async function outsideDeclaredScope(decision: ActiveDecision, event: ToolCallEve
   if (paths === null) return "ompstack cannot determine the write or edit target";
   const repositoryRoot = resolve(decision.repositoryRoot);
   const realRepositoryRoot = await realpath(repositoryRoot);
+  const targets = await Promise.all(decision.targets.map(async (target) => {
+    const path = resolve(repositoryRoot, target);
+    return { path, realPath: await nearestExistingRealPath(path) };
+  }));
   for (const path of paths) {
     if (isProtocolPath(path)) continue;
     const candidate = resolve(repositoryRoot, path);
     if (!isDescendant(repositoryRoot, candidate)) return `ompstack target is outside the declared repository: ${path}`;
+    const target = targets.find(({ path: targetPath }) => candidate === targetPath || candidate.startsWith(`${targetPath}${sep}`));
+    if (target === undefined) return `ompstack target is outside the RouteDecision scope: ${path}`;
     const realCandidate = await nearestExistingRealPath(candidate);
     if (!isDescendant(realRepositoryRoot, realCandidate)) return `ompstack target escapes the declared repository through a symlink: ${path}`;
-    if (!decision.targets.some((target) => {
-      const targetPath = resolve(repositoryRoot, target);
-      return candidate === targetPath || candidate.startsWith(`${targetPath}${sep}`);
-    })) return `ompstack target is outside the RouteDecision scope: ${path}`;
+    if (!isDescendant(target.realPath, realCandidate)) return `ompstack target escapes the RouteDecision scope through a symlink: ${path}`;
   }
   return undefined;
 }
@@ -200,7 +203,6 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     description: "Measure the checked-out working tree against a declared baseline and persist its RouteDecision.",
     parameters: z.object({
       intent: z.enum(["investigation", "bug-fix", "feature", "refactoring", "prototype", "perf-issue", "runtime-forensics", "trace-forensics", "eval"]),
-      measurementPurpose: z.enum(["bootstrap", "material"]),
       targets: z.array(z.string()).min(1),
       taskFacts: z.object({ behaviorAffecting: z.boolean(), plannedWriteLanes: z.array(z.string()), proofSurface: z.string().min(1) }).strict(),
       repository: z.object({ root: z.string().min(1), base: z.string().min(1), head: z.string().min(1) }).strict(),

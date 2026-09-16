@@ -6,18 +6,18 @@
   },
   "metadata": {
     "description": "Risk-routed engineering workflows for Oh My Pi",
-    "version": "0.3.3"
+    "version": "0.3.4"
   },
   "plugins": [
     {
       "name": "ompstack",
       "description": "Risk-routed engineering workflow for Oh My Pi",
-      "version": "0.3.3",
+      "version": "0.3.4",
       "source": {
         "source": "github",
         "repo": "ChiThang-50Cent/ompstack",
-        "ref": "v0.3.3",
-        "sha": "f93dcdb275661620fa1014c7c40e821741dd4d1d"
+        "ref": "v0.3.4",
+        "sha": "dd62d291d35038b7caaf3f7ec2dbca6700b183e8"
       },
       "category": "development",
       "homepage": "https://github.com/ChiThang-50Cent/ompstack",

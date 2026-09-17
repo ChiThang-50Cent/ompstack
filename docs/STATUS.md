@@ -18,12 +18,24 @@ Ompstack now has a persisted runtime routing boundary rather than a prose-only w
 ## Current evidence and adoption contract
 
 - Deterministic repository check: `bun run check`.
-- Test suite at this snapshot: **85 passing tests across 15 files**.
+- Test suite at this snapshot: **88 passing tests across 16 files**.
 - `bun scripts/eval-risk-distribution.mjs --repo <path> --count <N> --output <file>` records a selected repository, sampled HEAD, sample size, and risk-tier distribution. It exits nonzero when the sample is entirely one tier.
 - The evaluator derives `behaviorAffecting` from each sampled change set: it is `false` only when no code file changed and no sensitive signal is observed `true`. It fixes `riskFacts` at bounded values, so its distribution is a lower bound on risk rather than a production expectation.
 - There is **no repository-independent risk distribution claim**. Evaluate a fixed sample for each target repository and retain its JSON record.
 - A repository without overlay coverage remains deliberately conservative: unresolved sensitive signals route High.
 - `.omp/ompstack-routing.json` requires path-level maintenance for Medium routing. `knownPathPatterns` only remove unclassified-path noise; `pathRules.flags` add observed sensitive signals and `pathRules.knownFlags` are reviewed negative claims. Broad false coverage can suppress required review and is not a valid substitute for a maintained sensitivity map.
+- `bun scripts/init-overlay.mjs --repo <absolute-path> [--force] [--dry-run]` generates a deterministic starting overlay. Every generated rule has `reviewed: false`: it is a draft that requires human confirmation, not an assertion that the path is safe. The field is optional and metadata-only, so existing overlays that omit it remain valid and are not implicitly treated as drafts.
+
+The file-level rule design was checked against 12 first-parent commits from each pinned external repository with neutral `riskFacts`:
+
+| repository | sampled HEAD | low | medium | high | critical |
+|---|---|---:|---:|---:|---:|
+| `psf/requests` | `dae7ef63b4df6eded86637f251fc4e3a06c3b479` | 0 | 3 | 9 | 0 |
+| `pallets/flask` | `d73fa1cdcbd8b1465c151db8924ba58b1dd14e35` | 1 | 6 | 5 | 0 |
+| `spf13/cobra` | `adbc8813901bba65827259daa8e22ff94ec1f30e` | 0 | 3 | 9 | 0 |
+| `sindresorhus/got` | `687eb7dcc100ea3e548ebba227173b886789e670` | 0 | 10 | 1 | 1 |
+
+Every sample spans at least two tiers and moves commits out of High. The sole Critical result is traceable to exact draft rules for `source/core/parse-link-header.ts` and `test/parse-link-header.ts`; ordinary directory rules did not inherit the parser flag. This evidence is why generated sensitive rules are anchored to individual files rather than parent directories.
 
 ## Release history
 

@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added `scripts/init-overlay.mjs` to generate deterministic, file-anchored repository overlay drafts with explicit paths requiring review.
+- Added optional `reviewed` metadata to repository `pathRules`. Existing overlays that omit the field remain valid and retain their previous behavior; generated rules use `reviewed: false` to mark an unreviewed draft without affecting signal collection or routing.
+
 ## [0.3.5] - 2026-09-17
 ### Added
 

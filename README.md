@@ -94,6 +94,8 @@ The runtime gate is opt-in at session level. On OMP's current interactive input 
 
 ### Repository routing overlay
 
+Generate a deterministic draft with `bun scripts/init-overlay.mjs --repo /absolute/path/to/repository`; every generated rule is marked `reviewed: false` until a human confirms it.
+
 To mark repository-local ordinary paths as known, add `.omp/ompstack-routing.json`:
 
 ```json

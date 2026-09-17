@@ -1,6 +1,6 @@
 # Current Project Status
 
-**Snapshot:** `v0.3.5` (`2026-09-17`). Update this page in every release with shipped behavior, current evidence, and unresolved work.
+**Snapshot:** `v0.3.6` (`2026-09-17`). Update this page in every release with shipped behavior, current evidence, and unresolved work.
 
 ## Where the project stands
 
@@ -24,7 +24,7 @@ Ompstack now has a persisted runtime routing boundary rather than a prose-only w
 - There is **no repository-independent risk distribution claim**. Evaluate a fixed sample for each target repository and retain its JSON record.
 - A repository without overlay coverage remains deliberately conservative: unresolved sensitive signals route High.
 - `.omp/ompstack-routing.json` requires path-level maintenance for Medium routing. `knownPathPatterns` only remove unclassified-path noise; `pathRules.flags` add observed sensitive signals and `pathRules.knownFlags` are reviewed negative claims. Broad false coverage can suppress required review and is not a valid substitute for a maintained sensitivity map.
-- `bun scripts/init-overlay.mjs --repo <absolute-path> [--force] [--dry-run]` generates a deterministic starting overlay. Every generated rule has `reviewed: false`: it is a draft that requires human confirmation, not an assertion that the path is safe. The field is optional and metadata-only, so existing overlays that omit it remain valid and are not implicitly treated as drafts.
+- `bun scripts/init-overlay.mjs --repo <absolute-path> [--force] [--dry-run]` generates a deterministic starting overlay. Every generated rule has `reviewed: false`: it is a draft that requires human confirmation, not an assertion that the path is safe. The field is optional and metadata-only, so existing overlays that omit it remain valid and are not implicitly treated as drafts. Nothing consumes `reviewed` as an enforcement signal yet; issue #2 tracks linting unreviewed rules. Keeping the field in the runtime-accepted overlay schema gives that future enforcement a live integration path rather than detached advisory state.
 
 The file-level rule design was checked against 12 first-parent commits from each pinned external repository with neutral `riskFacts`:
 
@@ -41,12 +41,14 @@ Every sample spans at least two tiers and moves commits out of High. The sole Cr
 
 - `v0.3.3`: runtime RouteDecision authority, working-tree binding, session rebuild, mutable-scope enforcement, and purpose derivation.
 - `v0.3.4`: classifier calibration, cross-repository risk evaluation, additive repository coverage, per-flag overlay safety, and adoption guidance.
+- `v0.3.5`: explicit route-fact guidance, fail-closed code classification, and evaluator task-fact derivation.
+- `v0.3.6`: deterministic file-anchored overlay drafts, optional review metadata, and pinned cross-repository adoption evidence.
 
 See [`CHANGELOG.md`](../CHANGELOG.md) for complete release notes.
 
 ## Open work
 
 - [Issue #1 — Clarify change-ledger size-cap semantics](https://github.com/ChiThang-50Cent/ompstack/issues/1): decide whether policy naming should say diff churn rather than file size.
-- [Issue #2 — Deferred routing hardening](https://github.com/ChiThang-50Cent/ompstack/issues/2): protocol-path allow-list; `digestChangeSet` size and concurrency bounds; `/ompstack off`; derived route inputs; route conformance; output-quality telemetry; and machine-local digest documentation.
+- [Issue #2 — Deferred routing hardening](https://github.com/ChiThang-50Cent/ompstack/issues/2): overlay lint and enforcement for `reviewed: false`; protocol-path allow-list; `digestChangeSet` size and concurrency bounds; `/ompstack off`; derived route inputs; route conformance; output-quality telemetry; and machine-local digest documentation.
 
 This repository uses descriptive release notes and issue titles for unresolved work. It does not maintain a separate numbered gap taxonomy.

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { classifyRoute } from "./routing/classify-route.mjs";
-import { collectSignals, loadSignalPolicy } from "./routing/collect-signals.mjs";
+import { SIGNAL_FLAGS, collectSignals, loadSignalPolicy } from "./routing/collect-signals.mjs";
 import { analyzeImportGraph } from "./routing/import-graph.mjs";
 import { loadRoutingPolicy } from "./routing/policy.mjs";
 
@@ -20,6 +20,10 @@ const graphPolicy = Object.freeze({
 });
 
 function fail(message) { throw new Error(`risk distribution eval: ${message}`); }
+function deriveTaskFacts(signals) {
+  return { behaviorAffecting: signals.changedCodeFiles > 0 || SIGNAL_FLAGS.some((flag) => signals[flag] === true) };
+}
+
 
 async function runGit(root, args) {
   const process = Bun.spawn(["git", "-C", root, ...args], { stdout: "pipe", stderr: "pipe" });
@@ -104,7 +108,7 @@ async function classifyCommit(root, commit, base, signalPolicy, routingPolicy) {
       collectSignals({ root: worktree, changeSet, policy: signalPolicy }),
       analyzeImportGraph({ root: worktree, changeSet, policy: { ...graphPolicy, policyVersion: routingPolicy.policyVersion } }),
     ]);
-    return classifyRoute({ signals, graph, taskFacts: { behaviorAffecting: true }, riskFacts: neutralRiskFacts, policy: routingPolicy });
+    return classifyRoute({ signals, graph, taskFacts: deriveTaskFacts(signals), riskFacts: neutralRiskFacts, policy: routingPolicy });
   } finally {
     await runGit(root, ["worktree", "remove", "--force", worktree]).catch(() => rm(worktree, { force: true, recursive: true }));
   }

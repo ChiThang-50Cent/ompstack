@@ -42,20 +42,24 @@ test("risk distribution evaluator records the selected external repository", asy
     await writeFile(join(root, "src", "requests", "auth.ts"), "export const authentication = true;\n");
     await git(root, "add", "src/requests/auth.ts");
     await git(root, "commit", "-m", "auth");
+    await writeFile(join(root, "README.md"), "# Documentation\n");
+    await git(root, "add", "README.md");
+    await git(root, "commit", "-m", "docs");
     const output = join(root, "risk-distribution.json");
-    const process = Bun.spawn([Bun.which("bun"), fileURLToPath(new URL("../scripts/eval-risk-distribution.mjs", import.meta.url)), "--repo", root, "--count", "3", "--output", output], { stdout: "pipe", stderr: "pipe" });
+    const process = Bun.spawn([Bun.which("bun"), fileURLToPath(new URL("../scripts/eval-risk-distribution.mjs", import.meta.url)), "--repo", root, "--count", "4", "--output", output], { stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, exitCode] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited]);
     assert.equal(exitCode, 0, stderr);
     assert.match(stdout, new RegExp(`repository: ${root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
-    assert.match(stdout, /sample: 3 first-parent commits/);
+    assert.match(stdout, /sample: 4 first-parent commits/);
+    assert.match(stdout, /low no-escalation/);
     assert.match(stdout, /critical critical:touchesAuth/);
-    assert.match(stdout, /risk distribution \(3 commits\): low=0 medium=1 high=1 critical=1/);
+    assert.match(stdout, /risk distribution \(4 commits\): low=1 medium=1 high=1 critical=1/);
     assert.deepEqual(JSON.parse(await readFile(output, "utf8")), {
       schemaVersion: 1,
       repository: root,
       head: await git(root, "rev-parse", "HEAD"),
-      sampleCount: 3,
-      distribution: { low: 0, medium: 1, high: 1, critical: 1 },
+      sampleCount: 4,
+      distribution: { low: 1, medium: 1, high: 1, critical: 1 },
     });
   } finally {
     await rm(root, { force: true, recursive: true });

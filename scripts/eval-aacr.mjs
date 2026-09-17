@@ -1,4 +1,4 @@
-import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,7 +7,7 @@ import { SIGNAL_FLAGS, collectSignals, loadSignalPolicy } from "./routing/collec
 import { analyzeImportGraph } from "./routing/import-graph.mjs";
 import { loadRoutingPolicy } from "./routing/policy.mjs";
 
-const USAGE = "usage: bun scripts/eval-aacr.mjs --dataset PATH --workdir PATH [--limit N] [--language Go,Python] [--output FILE]";
+const USAGE = "usage: bun scripts/eval-aacr.mjs --dataset PATH --workdir PATH [--limit N] [--language Go,Python] [--output FILE] [--resume]";
 const SUPPORTED_LANGUAGES = Object.freeze({ Go: "go", Python: "python", TypeScript: "typescript", Java: "java" });
 const SOURCE_EXTENSIONS = Object.freeze({ go: [".go"], python: [".py"], typescript: [".ts", ".tsx", ".mts", ".cts"], java: [".java"] });
 const NEUTRAL_RISK_FACTS = Object.freeze({
@@ -37,8 +37,13 @@ function parseArguments(argv) {
   let limit = null;
   let languages = null;
   let output = null;
+  let resume = false;
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
+    if (flag === "--resume" && !resume) {
+      resume = true;
+      continue;
+    }
     const value = argv[index + 1];
     if (typeof value !== "string") fail(USAGE);
     index += 1;
@@ -49,8 +54,8 @@ function parseArguments(argv) {
     else if (flag === "--output" && output === null && value !== "") output = resolve(value);
     else fail(USAGE);
   }
-  if (dataset === undefined || workdir === undefined || languages?.size === 0) fail(USAGE);
-  return { dataset, workdir, limit, languages, output };
+  if (dataset === undefined || workdir === undefined || languages?.size === 0 || resume && output === null) fail(USAGE);
+  return { dataset, workdir, limit, languages, output, resume };
 }
 
 async function run(command, args, { cwd } = {}) {
@@ -201,14 +206,21 @@ async function generateOverlay(worktree) {
 }
 
 async function resolveChangeSet(repositoryRoot, sample) {
-  await runGit(repositoryRoot, ["fetch", "--depth", "2", "origin", sample.target_commit, sample.source_commit]);
+  const fetched = await runGit(repositoryRoot, ["fetch", "--depth", "2", "origin", sample.target_commit, sample.source_commit])
+    .then(() => true)
+    .catch(() => false);
+  if (!fetched) return { unavailable: true };
+
   const parent = (await runGit(repositoryRoot, ["rev-parse", `${sample.target_commit}^`])).trim();
   let changeSet = await collectCommitChangeSet(repositoryRoot, parent, sample.target_commit);
   let missingPaths = missingLabeledPaths(sample.comments, changeSet);
   if (missingPaths.length === 0) return { base: parent, baseStrategy: "target-parent", changeSet, missingPaths };
 
   for (const depth of [32, 128, 512, 2048]) {
-    await runGit(repositoryRoot, ["fetch", "--depth", String(depth), "origin", sample.target_commit, sample.source_commit]);
+    const deepened = await runGit(repositoryRoot, ["fetch", "--depth", String(depth), "origin", sample.target_commit, sample.source_commit])
+      .then(() => true)
+      .catch(() => false);
+    if (!deepened) break;
     const mergeBase = await runGit(repositoryRoot, ["merge-base", sample.source_commit, sample.target_commit])
       .then((value) => value.trim())
       .catch(() => null);
@@ -220,10 +232,14 @@ async function resolveChangeSet(repositoryRoot, sample) {
   return { base: parent, baseStrategy: "target-parent", changeSet, missingPaths };
 }
 
-async function classifySample(repository, repositoryRoot, sample, routingPolicy) {
-  const { base, baseStrategy, changeSet, missingPaths } = await resolveChangeSet(repositoryRoot, sample);
+export async function classifySample(repository, repositoryRoot, sample, routingPolicy) {
+  const resolved = await resolveChangeSet(repositoryRoot, sample);
+  if (resolved.unavailable) {
+    return { excluded: true, exclusionType: "commitUnavailable", prUrl: sample.githubPrUrl, language: sample.project_main_language, reason: "commit-unavailable" };
+  }
+  const { base, baseStrategy, changeSet, missingPaths } = resolved;
   if (missingPaths.length > 0) {
-    return { excluded: true, prUrl: sample.githubPrUrl, language: sample.project_main_language, reason: "labeled-paths-not-in-resolved-diff", baseStrategy, missingPaths };
+    return { excluded: true, exclusionType: "baseValidation", prUrl: sample.githubPrUrl, language: sample.project_main_language, reason: "labeled-paths-not-in-resolved-diff", baseStrategy, missingPaths };
   }
 
   const worktree = join(repositoryRoot, "worktree");
@@ -321,8 +337,61 @@ async function ensureDirectory(path) {
   }
 }
 
+async function writeRecord(path, record) {
+  if (path === null) return;
+  const temporary = `${path}.tmp`;
+  await writeFile(temporary, `${JSON.stringify(record, null, 2)}\n`);
+  await rename(temporary, path);
+}
+
+export function buildRecord({ dataset, datasetCommit, limit, languages, samples, records, baseExclusions, unavailable, status }) {
+  const baseDenominator = records.length + baseExclusions.length;
+  const baseExclusionRate = baseDenominator === 0 ? 0 : baseExclusions.length / baseDenominator;
+  const invalidBaseDesign = baseExclusionRate > 0.15;
+  return {
+    schemaVersion: 2,
+    status: invalidBaseDesign ? "invalid-base-design" : status,
+    dataset: { path: dataset, commit: datasetCommit, file: "dataset/positive_samples.json" },
+    selection: {
+      limit,
+      languages: languages === null ? null : [...languages].sort(),
+      selectedCount: samples.length,
+      processedCount: records.length + baseExclusions.length + unavailable.length,
+    },
+    limitations: LIMITATIONS,
+    overlay: { generated: true, reviewed: false },
+    exclusions: {
+      commitUnavailable: { count: unavailable.length, records: unavailable },
+      baseValidation: { count: baseExclusions.length, denominator: baseDenominator, rate: baseExclusionRate, threshold: 0.15, records: baseExclusions },
+    },
+    metricsByLanguage: invalidBaseDesign ? {} : summarizeByLanguage(records),
+    records,
+  };
+}
+
+export async function resumeState(output, datasetCommit, limit, languages, samples) {
+  const record = JSON.parse(await readFile(output, "utf8"));
+  const selectedUrls = new Set(samples.map((sample) => sample.githubPrUrl));
+  const expectedLanguages = languages === null ? null : [...languages].sort();
+  if (
+    record?.schemaVersion !== 2 ||
+    record.dataset?.commit !== datasetCommit ||
+    record.selection?.limit !== limit ||
+    JSON.stringify(record.selection?.languages) !== JSON.stringify(expectedLanguages) ||
+    record.selection?.selectedCount !== samples.length
+  ) fail("resume record does not match the selected dataset and filters");
+  const records = record.records ?? [];
+  const baseExclusions = record.exclusions?.baseValidation?.records ?? [];
+  const unavailable = record.exclusions?.commitUnavailable?.records ?? [];
+  const outcomes = [...records, ...baseExclusions, ...unavailable];
+  if (!outcomes.every((entry) => selectedUrls.has(entry.prUrl)) || new Set(outcomes.map((entry) => entry.prUrl)).size !== outcomes.length) {
+    fail("resume record contains invalid or duplicate PR outcomes");
+  }
+  return { records, baseExclusions, unavailable };
+}
+
 async function main(argv) {
-  const { dataset, workdir, limit, languages, output } = parseArguments(argv);
+  const { dataset, workdir, limit, languages, output, resume } = parseArguments(argv);
   console.log(`LIMITATION: ${LIMITATIONS[0]}`);
   console.log(`LIMITATION: ${LIMITATIONS[1]}`);
   const [datasetCommit, routingPolicy, samplesJson] = await Promise.all([
@@ -336,20 +405,28 @@ async function main(argv) {
   if (samples.length === 0) fail("the selected dataset sample is empty");
 
   await ensureDirectory(workdir);
+  const state = resume
+    ? await resumeState(output, datasetCommit, limit, languages, samples)
+    : { records: [], baseExclusions: [], unavailable: [] };
+  const { records, baseExclusions, unavailable } = state;
+  const completed = new Set([...records, ...baseExclusions, ...unavailable].map((entry) => entry.prUrl));
+  if (resume) console.log(`resuming: ${completed.size}/${samples.length} PRs already recorded`);
+  const pendingSamples = samples.filter((sample) => !completed.has(sample.githubPrUrl));
   const runRoot = await mkdtemp(join(workdir, "ompstack-aacr-"));
-  const records = [];
-  const exclusions = [];
   try {
-    for (const [repository, repositorySamples] of groupByRepository(samples)) {
+    for (const [repository, repositorySamples] of groupByRepository(pendingSamples)) {
       const repositoryRoot = join(runRoot, repository.replace("/", "--"));
       try {
         await run("git", ["init", "--bare", repositoryRoot]);
         await runGit(repositoryRoot, ["remote", "add", "origin", `https://github.com/${repository}.git`]);
         for (const sample of repositorySamples) {
           const result = await classifySample(repository, repositoryRoot, sample, routingPolicy);
-          if (result.excluded) exclusions.push(result);
-          else records.push(result);
-          console.log(`${records.length + exclusions.length}/${samples.length} ${sample.githubPrUrl} ${result.excluded ? `excluded:${result.reason}` : `${result.risk} affected=${result.affectedModuleCount}`}`);
+          if (!result.excluded) records.push(result);
+          else if (result.exclusionType === "commitUnavailable") unavailable.push(result);
+          else baseExclusions.push(result);
+          const processed = records.length + baseExclusions.length + unavailable.length;
+          console.log(`${processed}/${samples.length} ${sample.githubPrUrl} ${result.excluded ? `excluded:${result.reason}` : `${result.risk} affected=${result.affectedModuleCount}`}`);
+          await writeRecord(output, buildRecord({ dataset, datasetCommit, limit, languages, samples, records, baseExclusions, unavailable, status: "in-progress" }));
         }
       } finally {
         await rm(repositoryRoot, { recursive: true, force: true });
@@ -359,25 +436,13 @@ async function main(argv) {
     await rm(runRoot, { recursive: true, force: true });
   }
 
-  const exclusionRate = exclusions.length / samples.length;
-  const invalidBaseDesign = exclusionRate > 0.15;
-  const record = {
-    schemaVersion: 1,
-    status: invalidBaseDesign ? "invalid-base-design" : "complete",
-    dataset: { path: dataset, commit: datasetCommit, file: "dataset/positive_samples.json" },
-    selection: { limit, languages: languages === null ? null : [...languages].sort(), selectedCount: samples.length },
-    limitations: LIMITATIONS,
-    overlay: { generated: true, reviewed: false },
-    exclusions: { count: exclusions.length, rate: exclusionRate, threshold: 0.15, records: exclusions },
-    metricsByLanguage: invalidBaseDesign ? {} : summarizeByLanguage(records),
-    records,
-  };
-  if (output !== null) {
-    await writeFile(output, `${JSON.stringify(record, null, 2)}\n`);
-    console.log(`record: ${output}`);
-  }
-  console.log(`excluded: ${exclusions.length}/${samples.length} (${(exclusionRate * 100).toFixed(1)}%)`);
-  if (invalidBaseDesign) fail("more than 15% of selected PRs failed the labeled-path subset check; target-parent is not a valid evaluation base");
+  const record = buildRecord({ dataset, datasetCommit, limit, languages, samples, records, baseExclusions, unavailable, status: "complete" });
+  await writeRecord(output, record);
+  if (output !== null) console.log(`record: ${output}`);
+  const base = record.exclusions.baseValidation;
+  console.log(`commit unavailable: ${unavailable.length}/${samples.length}`);
+  console.log(`base validation excluded: ${base.count}/${base.denominator} (${(base.rate * 100).toFixed(1)}%)`);
+  if (record.status === "invalid-base-design") fail("more than 15% of fetchable PRs failed the labeled-path subset check; resolved base is not valid for evaluation");
   for (const [language, metrics] of Object.entries(record.metricsByLanguage)) console.log(`${language}: ${JSON.stringify(metrics)}`);
   return record;
 }

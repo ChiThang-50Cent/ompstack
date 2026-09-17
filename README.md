@@ -12,6 +12,8 @@ It intentionally does **not** recreate OhMyPi's bundled `task`, `scout`, `review
 - `agents/ompstack-verifier.md` — trusted runtime/behavior verifier instructed not to edit; execution tools are not a write sandbox
 - `commands/ompstack.md` and `commands/ompstack-maintain-verification.md` — convenience entry points
 
+For the current shipped behavior, evidence, adoption cost, and open work, read [`docs/STATUS.md`](docs/STATUS.md).
+
 ## Install from the marketplace
 
 ```sh

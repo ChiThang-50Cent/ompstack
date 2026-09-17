@@ -3,6 +3,44 @@
 All notable changes to this project are documented in this file.
 
 ## [Unreleased]
+### Added
+
+- Added `docs/STATUS.md` as the release-maintained map of shipped behavior, current evidence, adoption cost, and open work.
+
+### Changed
+
+- Removed stale numbered gap references; unresolved work now has descriptive release notes or a linked issue.
+
+
+## [0.3.4] - 2026-09-17
+
+### Added
+
+- Added a repository-selected risk-distribution evaluator with persisted JSON records and a non-degenerate distribution guard.
+- Added repository routing overlays for path-level signal coverage, including explicit true flags and reviewed false coverage per sensitive dimension.
+- Added overlay-adoption guidance.
+
+### Changed
+
+- Calibrated routing so partial import graphs limit blast-radius confidence without independently escalating risk; threshold warnings retain Medium routing.
+- Raised the Medium affected-module threshold from one to two.
+
+### Fixed
+
+- Prevented `knownPathPatterns` from silently resolving sensitive signals to false. Overlay paths now require explicit per-flag coverage; shipped sensitive rules remain authoritative.
+
+## [0.3.3] - 2026-09-16
+
+### Added
+
+- Added persisted runtime RouteDecisions bound to the checked-out working-tree snapshot, declared targets, and a change-set content digest.
+- Added opt-in route-before-write enforcement, declared write-scope checks, material-route staleness after mutation, and session-state reconstruction across OMP session changes.
+- Added deterministic routing inputs, tri-state signal collection, conservative import-graph analysis, and runtime integration coverage through OMP's extension loader and AgentSession.
+
+### Fixed
+
+- Blocked target-scope escapes through in-repository symlinks.
+- Derived bootstrap versus material measurement purpose from the measured change set rather than trusting caller input.
 
 
 ## [0.3.2] - 2026-09-15

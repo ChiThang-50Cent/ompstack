@@ -11,6 +11,9 @@ Ompstack now has a persisted runtime routing boundary rather than a prose-only w
 - Bootstrap or material purpose is derived from the measured change set. A successful parent mutation makes a material decision stale before independent evidence can proceed.
 - Declared write scope rejects paths outside the repository, paths outside declared targets, and target escapes through symlinks. Session changes rebuild this state from persisted entries.
 - Routing measures tri-state signals, conservative import-graph reachability, direct risk facts, and policy thresholds. Partial graph information constrains blast-radius confidence; it does not independently elevate risk.
+- The route-fact contract has six declarations: `taskFacts.behaviorAffecting`, plus `riskFacts.sharedSemanticBoundary`, `consumerFamilies`, `executionModes`, `graphTraversal`, and `materialUnknown`. `consumerFamilies: 0` and `executionModes: 0` mean unknown and force High; conservative declarations are not free because `materialUnknown`, either zero sentinel, or multiple families or modes require 2–3 evidence lanes.
+- Code classification is separate from import-graph support: known JavaScript and supported graph-language extensions count as code, while any path outside explicit non-code coverage also counts as code. An unsupported graph language therefore cannot make real code non-behavior-affecting.
+- RouteDecision remains at schema version `2`: this release changes the route-input contract, not the persisted RouteDecision body.
 
 ## Current evidence and adoption contract
 

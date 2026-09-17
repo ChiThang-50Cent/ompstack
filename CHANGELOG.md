@@ -6,9 +6,11 @@ All notable changes to this project are documented in this file.
 ### Added
 
 - Added `docs/STATUS.md` as the release-maintained map of shipped behavior, current evidence, adoption cost, and open work.
+- Added `.describe()` guidance for all six route facts and matching `skill://ompstack` input guidance.
 
 ### Changed
 
+- **Breaking:** Removed `plannedWriteLanes` and `proofSurface` from `taskFacts`. Route input now rejects either retired field.
 - Removed stale numbered gap references; unresolved work now has descriptive release notes or a linked issue.
 
 
@@ -28,6 +30,7 @@ All notable changes to this project are documented in this file.
 ### Fixed
 
 - Prevented `knownPathPatterns` from silently resolving sensitive signals to false. Overlay paths now require explicit per-flag coverage; shipped sensitive rules remain authoritative.
+- Fixed code classification treating `.mjs` and `.js` as non-code, which could derive `behaviorAffecting: false` for real code. Code classification now fails closed for unknown file types and is separate from import-graph language support.
 
 ## [0.3.3] - 2026-09-16
 

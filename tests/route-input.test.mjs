@@ -5,7 +5,7 @@ import { normalizeRouteInput } from "../scripts/routing/route-input.mjs";
 const input = {
   intent: "feature",
   targets: ["src/b.ts", "src/a.ts"],
-  taskFacts: { behaviorAffecting: true, plannedWriteLanes: ["review", "parent"], proofSurface: "CLI" },
+  taskFacts: { behaviorAffecting: true },
   repository: { root: "/repo", base: "HEAD~1", head: "HEAD" },
   riskFacts: { sharedSemanticBoundary: false, consumerFamilies: 1, executionModes: 1, graphTraversal: false, materialUnknown: false },
   graphPolicy: { sourceRoots: { go: [], python: [], typescript: ["src"], java: [] } },
@@ -14,7 +14,7 @@ const input = {
 test("route input canonicalizes declared scope", () => {
   const normalized = normalizeRouteInput(input);
   assert.deepEqual(normalized.targets, ["src/a.ts", "src/b.ts"]);
-  assert.deepEqual(normalized.taskFacts.plannedWriteLanes, ["parent", "review"]);
+  assert.deepEqual(normalized.taskFacts, { behaviorAffecting: true });
   assert.match(normalized.routeInputDigest, /^[a-f0-9]{64}$/);
   assert.equal(normalized.measurementPurpose, undefined);
   assert.deepEqual(normalized.graphPolicy.sourceRoots, { go: [], python: [], typescript: ["src"], java: [] });
@@ -27,3 +27,4 @@ test("route input rejects caller-controlled measurement purpose", () => {
 test("route input rejects unresolved intent before routing", () => {
   assert.throws(() => normalizeRouteInput({ ...input, intent: "unresolved" }), /invalid shape/);
 });
+

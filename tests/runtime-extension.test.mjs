@@ -13,7 +13,7 @@ import ompstackRuntime from "../extensions/ompstack-runtime.ts";
 registerMockApi("ompstack-runtime-test");
 
 function chain() {
-  return { min: chain, int: chain, nonnegative: chain, strict: chain };
+  return { min: chain, int: chain, nonnegative: chain, strict: chain, describe: chain };
 }
 
 function createRuntime() {
@@ -84,7 +84,7 @@ function routeInput(root, revision) {
   return {
     intent: "feature",
     targets: ["src/example.ts"],
-    taskFacts: { behaviorAffecting: true, plannedWriteLanes: ["parent"], proofSurface: "runtime test" },
+    taskFacts: { behaviorAffecting: true },
     repository: { root, base: revision, head: revision },
     riskFacts: { sharedSemanticBoundary: false, consumerFamilies: 1, executionModes: 1, graphTraversal: false, materialUnknown: false },
     graphPolicy: { sourceRoots: { go: [], python: [], typescript: [], java: [] } },

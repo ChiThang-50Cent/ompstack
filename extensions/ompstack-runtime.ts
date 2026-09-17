@@ -204,9 +204,17 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     parameters: z.object({
       intent: z.enum(["investigation", "bug-fix", "feature", "refactoring", "prototype", "perf-issue", "runtime-forensics", "trace-forensics", "eval"]),
       targets: z.array(z.string()).min(1),
-      taskFacts: z.object({ behaviorAffecting: z.boolean(), plannedWriteLanes: z.array(z.string()), proofSurface: z.string().min(1) }).strict(),
+      taskFacts: z.object({
+        behaviorAffecting: z.boolean().describe("Whether the change alters observable product behavior. Use false only for documentation, changelogs, CI configuration, or formatting-only changes; when uncertain, use true."),
+      }).strict(),
       repository: z.object({ root: z.string().min(1), base: z.string().min(1), head: z.string().min(1) }).strict(),
-      riskFacts: z.object({ sharedSemanticBoundary: z.boolean(), consumerFamilies: z.number().int().nonnegative(), executionModes: z.number().int().nonnegative(), graphTraversal: z.boolean(), materialUnknown: z.boolean() }).strict(),
+      riskFacts: z.object({
+        sharedSemanticBoundary: z.boolean().describe("Whether the change touches a contract relied on by multiple callers, such as a schema, wire format, or public signature."),
+        consumerFamilies: z.number().int().nonnegative().describe("Number of independent caller families for the changed surface, not call sites. Ten calls from one module count as one; use materialUnknown when not directly inspected."),
+        executionModes: z.number().int().nonnegative().describe("Number of execution modes affected by the change, such as sync/async, CLI/server, or single/concurrent."),
+        graphTraversal: z.boolean().describe("Whether the change modifies graph traversal, recursion, or reachability logic."),
+        materialUnknown: z.boolean().describe("Set true when the changed surface has not been directly inspected. This declares investigation coverage, not a property of the code."),
+      }).strict(),
       graphPolicy: z.object({ sourceRoots: z.object({ go: z.array(z.string()), python: z.array(z.string()), typescript: z.array(z.string()), java: z.array(z.string()) }).strict() }).strict(),
     }).strict(),
     async execute(_id, input) {

@@ -50,6 +50,15 @@ After an explicit Ompstack invocation, before any mutable or unknown tool, the p
 - `repository.root` MUST be the absolute repository root. `base` is the resolved merge-base baseline against the selected integration target; `head` is the checked-out candidate `HEAD`, supplied as its resolved SHA. The route rejects a `head` that is not the checked-out `HEAD`.
 - The route measures the checked-out working tree relative to that merge base, including staged, unstaged, and untracked files. It binds the resulting file content through `changeSetDigest`; it is not a claim about a future diff.
 - `graphPolicy.sourceRoots` MUST include `go`, `python`, `typescript`, and `java`. Use repository-relative roots and `[]` for unused languages; do not guess roots from a task prompt.
+- `taskFacts.behaviorAffecting` declares whether the change alters observable product behavior. Use `false` only for documentation, changelogs, CI configuration, or formatting-only changes; when uncertain, use `true`.
+- `riskFacts.sharedSemanticBoundary` declares whether the change touches a contract that multiple callers rely on, such as a schema, wire format, or public signature.
+- `riskFacts.consumerFamilies` counts independent caller families for the changed surface, not call sites: one module calling ten times is `1`. If the surface was not directly inspected, set `riskFacts.materialUnknown` instead.
+- `riskFacts.executionModes` counts affected execution modes, such as sync/async, CLI/server, or single/concurrent.
+- `riskFacts.graphTraversal` declares whether the change modifies graph traversal, recursion, or reachability logic.
+- `riskFacts.materialUnknown` is `true` when the changed surface was not directly inspected. It declares investigation coverage, not a property of the code.
+- `consumerFamilies: 0` and `executionModes: 0` mean unknown and force High; never use `0` to mean no consumers—use `1`.
+
+Conservative declarations are not free. `materialUnknown: true`, either zero sentinel, `consumerFamilies > 1`, or `executionModes > 1` force High and require 2–3 lane evidence. Directly inspect the surface, then declare it accurately rather than defensively.
 - A repository MAY add coverage through `.omp/ompstack-routing.json`. `knownPathPatterns` only remove `unclassified-changes`; sensitive flags remain unknown until a matching additive `pathRule` declares `flags` true or lists them in `knownFlags` as checked false. Shipped sensitive rules always union with overlay rules and win over false coverage. Invalid overlays fail routing rather than falling back to unknown policy.
 
 Resolve one route intent before calling `ompstack_route`:

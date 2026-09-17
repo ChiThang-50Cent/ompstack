@@ -173,6 +173,44 @@ test("repository overlay requires explicit per-flag coverage before resolving se
   }
 });
 
+test("reviewed overlay metadata is neutral to collected signals", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-signals-reviewed-"));
+  try {
+    await mkdir(join(root, ".omp"));
+    const pathRules = [
+      {
+        id: "ordinary-source",
+        pathPattern: "^src/",
+        flags: [],
+        knownFlags: SIGNAL_FLAGS,
+      },
+      {
+        id: "auth-file",
+        pathPattern: "^src/auth\\.ts$",
+        flags: ["touchesAuth"],
+        knownFlags: SIGNAL_FLAGS.filter((flag) => flag !== "touchesAuth"),
+      },
+    ];
+    const changeSet = [change("src/auth.ts", 1)];
+    const results = [];
+    for (const reviewed of [false, true]) {
+      await writeFile(join(root, ".omp", "ompstack-routing.json"), JSON.stringify({
+        schemaVersion: 1,
+        knownPathPatterns: ["^src/"],
+        pathRules: pathRules.map((rule) => ({ ...rule, reviewed })),
+      }));
+      results.push(await collectSignals({
+        root,
+        policy: await loadSignalPolicy({ root }),
+        changeSet,
+      }));
+    }
+    assert.deepEqual(results[0], results[1]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 test("default empty mapping leaves every sensitive flag unknown", async () => {
   const signals = await collectSignals({
     changeSet: [change("src/index.ts", 1)],

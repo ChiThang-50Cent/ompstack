@@ -61,7 +61,8 @@ function compilePathRules(value, label, { overlay = false } = {}) {
   if (!Array.isArray(value)) fail(`${label} has an invalid shape`);
   const ids = new Set();
   return value.map((rule) => {
-    const keys = overlay ? ["id", "pathPattern", "flags", "knownFlags"] : ["id", "pathPattern", "flags"];
+    const hasReviewed = plainObject(rule) && Object.hasOwn(rule, "reviewed");
+    const keys = overlay ? ["id", "pathPattern", "flags", "knownFlags", ...(hasReviewed ? ["reviewed"] : [])] : ["id", "pathPattern", "flags"];
     if (
       !plainObject(rule) ||
       !exactKeys(rule, keys) ||
@@ -70,7 +71,8 @@ function compilePathRules(value, label, { overlay = false } = {}) {
       !Array.isArray(rule.flags) || !rule.flags.every((flag) => SIGNAL_FLAGS.includes(flag)) ||
       new Set(rule.flags).size !== rule.flags.length ||
       (!overlay && rule.flags.length === 0) ||
-      (overlay && (!Array.isArray(rule.knownFlags) || !rule.knownFlags.every((flag) => SIGNAL_FLAGS.includes(flag)) || new Set(rule.knownFlags).size !== rule.knownFlags.length || rule.flags.some((flag) => rule.knownFlags.includes(flag)) || (rule.flags.length === 0 && rule.knownFlags.length === 0)))
+      (overlay && (!Array.isArray(rule.knownFlags) || !rule.knownFlags.every((flag) => SIGNAL_FLAGS.includes(flag)) || new Set(rule.knownFlags).size !== rule.knownFlags.length || rule.flags.some((flag) => rule.knownFlags.includes(flag)) || (rule.flags.length === 0 && rule.knownFlags.length === 0))) ||
+      (hasReviewed && typeof rule.reviewed !== "boolean")
     ) fail(`${label} has an invalid shape`);
     ids.add(rule.id);
     try {

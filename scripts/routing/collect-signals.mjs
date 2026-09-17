@@ -104,17 +104,19 @@ export function validateSignalPolicy(policy) {
     !policy.packageRootMarkers.every((marker) => typeof marker === "string" && marker !== "" && !marker.includes("/")) ||
     !Array.isArray(policy.knownFlags) || !policy.knownFlags.every((flag) => SIGNAL_FLAGS.includes(flag)) ||
     new Set(policy.knownFlags).size !== policy.knownFlags.length ||
+    !Array.isArray(policy.nonCodePathPatterns) ||
     !Array.isArray(policy.pathRules)
   ) {
     fail("policy has an invalid shape");
   }
   const generatedPathPatterns = regexes(policy.generatedPathPatterns, "generatedPathPatterns");
   const codePathPatterns = regexes(policy.codePathPatterns, "codePathPatterns");
+  const nonCodePathPatterns = regexes(policy.nonCodePathPatterns, "nonCodePathPatterns");
   const knownPathPatterns = regexes(policy.knownPathPatterns, "knownPathPatterns");
   const repositoryKnownPathPatterns = optionalRegexes(policy.repositoryKnownPathPatterns, "repositoryKnownPathPatterns");
   const pathRules = compilePathRules(policy.pathRules, "pathRules");
-  const repositoryPathRules = policy.repositoryPathRules === undefined ? [] : compilePathRules(policy.repositoryPathRules, "repositoryPathRules", { overlay: true });
-  return { ...policy, codePathPatterns, generatedPathPatterns, knownPathPatterns, repositoryKnownPathPatterns, pathRules, repositoryPathRules };
+  const repositoryPathRules = policy.repositoryPathRules === undefined ? [] : compilePathRules(policy.repositoryPathRules, "repository routing overlay", { overlay: true });
+  return { ...policy, codePathPatterns, nonCodePathPatterns, generatedPathPatterns, knownPathPatterns, repositoryKnownPathPatterns, pathRules, repositoryPathRules };
 }
 
 /** Loads shipped signal policy plus an additive repository coverage overlay. */
@@ -168,7 +170,8 @@ async function nearestPackageRoot(root, path, markers) {
 export async function collectSignals({ root = process.cwd(), changeSet, policy } = {}) {
   validateChangeSet(changeSet);
   const effectivePolicy = policy === undefined ? await loadSignalPolicy() : validateSignalPolicy(policy);
-  const codeChanges = changeSet.filter((change) => effectivePolicy.codePathPatterns.some((pattern) => pattern.test(change.path)));
+  // Import-graph support is narrower; every path outside explicit non-code coverage counts as code.
+  const codeChanges = changeSet.filter((change) => effectivePolicy.codePathPatterns.some((pattern) => pattern.test(change.path)) || !effectivePolicy.nonCodePathPatterns.some((pattern) => pattern.test(change.path)));
   const shippedKnown = (path) => effectivePolicy.knownPathPatterns.some((pattern) => pattern.test(path));
   const repositoryKnown = (path) => effectivePolicy.repositoryKnownPathPatterns.some((pattern) => pattern.test(path));
   const packageRoots = new Set();

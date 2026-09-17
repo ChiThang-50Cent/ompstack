@@ -33,6 +33,7 @@ const policy = {
   changedLinesScope: "code-files-only",
   generatedPathPatterns: ["(?:^|/)generated/"],
   codePathPatterns: ["\\.(?:ts|py)$"],
+  nonCodePathPatterns: ["\\.md$"],
   packageRootMarkers: ["package.json"],
   knownFlags: ["touchesAuthorization"],
   knownPathPatterns: ["^services/auth/", "^notes\\.md$", "^unowned/"],
@@ -101,6 +102,18 @@ test("default policy gives known ompstack paths determinate signal values", asyn
   });
   assert.equal(signals.unclassifiedChangedFiles, 0);
   for (const flag of SIGNAL_FLAGS) assert.equal(signals[flag], false);
+});
+
+test("default policy counts script and extension changes as code", async () => {
+  for (const path of ["scripts/run-reconstruction-arm.mjs", "extensions/ompstack-runtime.ts"]) {
+    const signals = await collectSignals({ changeSet: [change(path, 1)] });
+    assert.equal(signals.changedCodeFiles, 1, path);
+  }
+});
+
+test("default policy fails closed for unknown file types", async () => {
+  const signals = await collectSignals({ changeSet: [change("fixtures/unknown-format.custom", 1)] });
+  assert.equal(signals.changedCodeFiles, 1);
 });
 
 test("repository overlay requires explicit per-flag coverage before resolving sensitivity", async () => {

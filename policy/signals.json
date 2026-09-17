@@ -7,7 +7,10 @@
     "\\.gen\\."
   ],
   "codePathPatterns": [
-    "\\.(?:go|py|ts|tsx|mts|cts|java)$"
+    "\\.(?:go|py|js|jsx|mjs|cjs|ts|tsx|mts|cts|java)$"
+  ],
+  "nonCodePathPatterns": [
+    "^(?:docs/|CHANGELOG\\.md$|NOTICE\\.md$|README\\.md$|\\.omp-plugin/marketplace\\.json$)"
   ],
   "packageRootMarkers": [
     "package.json",

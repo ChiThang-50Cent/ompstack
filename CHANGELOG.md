@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-09-18
+
+### Added
+
+- Added `scripts/eval-aacr.mjs` to evaluate shipped routing behavior against positive AACR-Bench samples with M1–M4 summaries by project language.
+- Added resumable AACR records with commit-availability tracking, labeled-path base validation, detached target worktrees, and explicit invalid-base-design status.
+
+### Changed
+
+- Documented AACR-Bench's missing clean-PR control group and the fixed-neutral-risk limitation that makes M1 an upper bound on the real false-negative rate.
+
 ## [0.3.6] - 2026-09-17
 
 ### Added

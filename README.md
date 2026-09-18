@@ -34,6 +34,25 @@ Version 0.3 adds requirement-reconstruction evaluation tooling: strict A/B/B′ 
 
 `scripts/run-reconstruction-arm.mjs` requires the evaluation plugin checkout's `HEAD` to match the declared evaluation SHA and rejects staged or unstaged tracked changes. B/B′ runs also retain session-level proof that `skill://ompstack` resolved. B′ freezes its R1 map before a separate R2 review.
 
+### AACR-Bench routing evaluation
+
+`scripts/eval-aacr.mjs` measures the shipped router against positive AACR-Bench samples. It runs each sample against the target commit's detached worktree, generates the same deterministic overlay used by the evaluator, and writes M1–M4 summaries by project language:
+
+```sh
+bun scripts/eval-aacr.mjs \
+  --dataset /path/to/aacr-bench \
+  --workdir /tmp/ompstack-aacr \
+  --limit 13 \
+  --language Go,Python \
+  --output /tmp/aacr-record.json
+```
+
+Use `--resume` to continue an interrupted record. The evaluator validates that labeled comment paths are present in the resolved diff, records unavailable commits and base-validation exclusions, and marks the record `invalid-base-design` when more than 15% of fetchable samples fail that check.
+
+AACR-Bench has no clean-PR control group, so its output cannot measure or infer over-triage. The evaluator uses neutral fixed risk facts to minimize assigned risk; M1 is an upper bound on the real false-negative rate. These records are evaluation evidence, not a runtime routing gate.
+
+[Read the current AACR evidence contract and limitations in `docs/STATUS.md`](docs/STATUS.md).
+
 ## Install from npm
 
 The npm package remains available as an alternative distribution channel:

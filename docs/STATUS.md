@@ -18,13 +18,15 @@ Ompstack now has a persisted runtime routing boundary rather than a prose-only w
 ## Current evidence and adoption contract
 
 - Deterministic repository check: `bun run check`.
-- Test suite at this snapshot: **88 passing tests across 16 files**.
+- Test suite at this snapshot: **93 passing tests across 17 files**.
 - `bun scripts/eval-risk-distribution.mjs --repo <path> --count <N> --output <file>` records a selected repository, sampled HEAD, sample size, and risk-tier distribution. It exits nonzero when the sample is entirely one tier.
 - The evaluator derives `behaviorAffecting` from each sampled change set: it is `false` only when no code file changed and no sensitive signal is observed `true`. It fixes `riskFacts` at bounded values, so its distribution is a lower bound on risk rather than a production expectation.
 - There is **no repository-independent risk distribution claim**. Evaluate a fixed sample for each target repository and retain its JSON record.
 - A repository without overlay coverage remains deliberately conservative: unresolved sensitive signals route High.
 - `.omp/ompstack-routing.json` requires path-level maintenance for Medium routing. `knownPathPatterns` only remove unclassified-path noise; `pathRules.flags` add observed sensitive signals and `pathRules.knownFlags` are reviewed negative claims. Broad false coverage can suppress required review and is not a valid substitute for a maintained sensitivity map.
 - `bun scripts/init-overlay.mjs --repo <absolute-path> [--force] [--dry-run]` generates a deterministic starting overlay. Every generated rule has `reviewed: false`: it is a draft that requires human confirmation, not an assertion that the path is safe. The field is optional and metadata-only, so existing overlays that omit it remain valid and are not implicitly treated as drafts. Nothing consumes `reviewed` as an enforcement signal yet; issue #2 tracks linting unreviewed rules. Keeping the field in the runtime-accepted overlay schema gives that future enforcement a live integration path rather than detached advisory state.
+- `bun scripts/eval-aacr.mjs --dataset <path> --workdir <path> [--limit N] [--language Go,Python,TypeScript,Java] [--output <file>] [--resume]` evaluates routing against AACR-Bench positive samples. It generates a deterministic overlay in each detached target worktree, fixes neutral risk facts, records M1–M4 by language, and persists commit-unavailable and labeled-path base-validation exclusions.
+- AACR-Bench has no clean-PR control group, so this evaluator cannot measure or infer over-triage. Its neutral fixed risk facts minimize assigned risk; M1 is therefore an upper bound on the real false-negative rate. A record with more than 15% base-validation exclusions is marked `invalid-base-design` rather than treated as valid evidence.
 
 The file-level rule design was checked against 12 first-parent commits from each pinned external repository with neutral `riskFacts`:
 
@@ -43,6 +45,7 @@ Every sample spans at least two tiers and moves commits out of High. The sole Cr
 - `v0.3.4`: classifier calibration, cross-repository risk evaluation, additive repository coverage, per-flag overlay safety, and adoption guidance.
 - `v0.3.5`: explicit route-fact guidance, fail-closed code classification, and evaluator task-fact derivation.
 - `v0.3.6`: deterministic file-anchored overlay drafts, optional review metadata, and pinned cross-repository adoption evidence.
+- `v0.3.7`: AACR-Bench routing evaluation, resumable records, labeled-path base validation, and evaluator limitations.
 
 See [`CHANGELOG.md`](../CHANGELOG.md) for complete release notes.
 

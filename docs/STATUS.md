@@ -1,6 +1,6 @@
 # Current Project Status
 
-**Snapshot:** `v0.3.6` (`2026-09-17`). Update this page in every release with shipped behavior, current evidence, and unresolved work.
+**Snapshot:** `v0.3.7` (`2026-09-18`). Update this page in every release with shipped behavior, current evidence, and unresolved work.
 
 ## Where the project stands
 

@@ -109,3 +109,25 @@ test("generated ordinary rules do not spread critical risk from exact heuristic 
     await rm(root, { force: true, recursive: true });
   }
 });
+test("common heuristic hits emit uncertainty coverage instead of flags", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-init-overlay-common-"));
+  try {
+    await mkdir(join(root, "src", "files"), { recursive: true });
+    await mkdir(join(root, "src", "shellexec"), { recursive: true });
+    await writeFile(join(root, "src", "files", "upload.ts"), "export {};\n");
+    await writeFile(join(root, "src", "shellexec", "runner.ts"), "export {};\n");
+
+    const generated = await runGenerator("--repo", root, "--dry-run");
+    assert.equal(generated.exitCode, 0, generated.stderr);
+    const overlay = JSON.parse(generated.stdout);
+    const common = overlay.pathRules.find((rule) => rule.id === "heuristic-src/files/upload.ts");
+    const distinctive = overlay.pathRules.find((rule) => rule.id === "heuristic-src/shellexec/runner.ts");
+
+    assert.deepEqual(common.flags, []);
+    assert.deepEqual(common.knownFlags, SIGNAL_FLAGS.filter((flag) => flag !== "touchesPersistence").sort());
+    assert.deepEqual(distinctive.flags, ["touchesExposedParser"]);
+    assert.deepEqual(distinctive.knownFlags, SIGNAL_FLAGS.filter((flag) => flag !== "touchesExposedParser").sort());
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});

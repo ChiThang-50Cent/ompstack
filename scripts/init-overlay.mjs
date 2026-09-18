@@ -1,19 +1,10 @@
 import { access, mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 
-import { SIGNAL_FLAGS } from "./routing/collect-signals.mjs";
+import { SIGNAL_FLAGS, validateSignalPolicy } from "./routing/collect-signals.mjs";
+import { loadPolicy } from "./policy.mjs";
 
 const IGNORED_DIRECTORIES = new Set([".git", ".omp", "node_modules"]);
-const HEURISTICS = Object.freeze([
-  { pattern: /auth|login|session|token|credential/i, flag: "touchesAuth" },
-  { pattern: /crypto|cipher|secret|key|hash|tls|ssl|cert/i, flag: "touchesCryptoOrSecrets" },
-  { pattern: /migrat|schema|alembic/i, flag: "touchesMigration" },
-  { pattern: /permission|acl|role|policy/i, flag: "touchesAuthorization" },
-  { pattern: /config|settings|env/i, flag: "touchesRuntimeConfig" },
-  { pattern: /parser|parse|decode|deserial|unmarshal/i, flag: "touchesExposedParser" },
-  { pattern: /concurren|thread|async|pool|lock|mutex/i, flag: "touchesConcurrency" },
-  { pattern: /store|storage|db|database|persist|cache/i, flag: "touchesPersistence" },
-]);
 const ALL_FLAGS = Object.freeze([...SIGNAL_FLAGS].sort());
 const USAGE = "usage: bun scripts/init-overlay.mjs --repo <absolute-path> [--force] [--dry-run]";
 
@@ -71,11 +62,15 @@ function rootFilesPattern(files) {
   return rootFiles.length === 0 ? null : `^(?:${rootFiles.map(escapePattern).join("|")})$`;
 }
 
-function flagsForPath(path) {
-  return HEURISTICS.filter(({ pattern }) => pattern.test(path)).map(({ flag }) => flag).sort(compareNames);
+function heuristicFlags(path, rules) {
+  const flags = new Set();
+  for (const rule of rules) {
+    if (rule.pattern.test(path)) for (const flag of rule.flags) flags.add(flag);
+  }
+  return [...flags].sort(compareNames);
 }
 
-function buildOverlay({ files, topDirectories }) {
+function buildOverlay({ files, topDirectories, heuristics }) {
   const knownPathPatterns = topDirectories.map((directory) => `^${escapePattern(directory)}/`);
   const rootPattern = rootFilesPattern(files);
   if (rootPattern !== null) knownPathPatterns.push(rootPattern);
@@ -89,12 +84,14 @@ function buildOverlay({ files, topDirectories }) {
     reviewed: false,
   }));
   const hitRules = files.flatMap((path) => {
-    const flags = flagsForPath(path);
-    return flags.length === 0 ? [] : [{
+    const flags = heuristicFlags(path, heuristics.distinctive);
+    const uncertainFlags = heuristicFlags(path, heuristics.common);
+    const coveredFlags = new Set([...flags, ...uncertainFlags]);
+    return coveredFlags.size === 0 ? [] : [{
       id: `heuristic-${path}`,
       pathPattern: `^${escapePattern(path)}$`,
       flags,
-      knownFlags: ALL_FLAGS.filter((flag) => !flags.includes(flag)),
+      knownFlags: ALL_FLAGS.filter((flag) => !coveredFlags.has(flag)),
       reviewed: false,
     }];
   });
@@ -134,7 +131,8 @@ async function main(argv) {
   if (!dryRun && !force && await pathExists(outputPath)) fail(`${outputPath} already exists; pass --force to replace it`);
 
   const scanned = await scanRepository(repository);
-  const { overlay, hitCount } = buildOverlay(scanned);
+  const signalPolicy = validateSignalPolicy(await loadPolicy("signals"));
+  const { overlay, hitCount } = buildOverlay({ ...scanned, heuristics: signalPolicy.overlayHeuristics });
   const output = `${JSON.stringify(overlay, null, 2)}\n`;
   if (dryRun) process.stdout.write(output);
   else {

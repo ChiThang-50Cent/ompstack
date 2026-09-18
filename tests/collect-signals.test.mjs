@@ -210,6 +210,32 @@ test("reviewed overlay metadata is neutral to collected signals", async () => {
     await rm(root, { force: true, recursive: true });
   }
 });
+test("specific overlay rules can leave a common heuristic flag unknown", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ompstack-signals-heuristic-"));
+  try {
+    await mkdir(join(root, ".omp"));
+    await writeFile(join(root, ".omp", "ompstack-routing.json"), JSON.stringify({
+      schemaVersion: 1,
+      knownPathPatterns: ["^src/"],
+      pathRules: [
+        { id: "ordinary-source", pathPattern: "^src/", flags: [], knownFlags: SIGNAL_FLAGS },
+        { id: "common-file", pathPattern: "^src/files/upload\\.ts$", flags: [], knownFlags: SIGNAL_FLAGS.filter((flag) => flag !== "touchesPersistence") },
+      ],
+    }));
+    const signals = await collectSignals({
+      root,
+      policy: await loadSignalPolicy({ root }),
+      changeSet: [change("src/files/upload.ts", 1)],
+    });
+    assert.equal(signals.touchesPersistence, "unknown");
+    for (const flag of SIGNAL_FLAGS.filter((flag) => flag !== "touchesPersistence")) assert.equal(signals[flag], false);
+    assert.equal(classify(signals).risk, "high");
+    assert.equal(classify(signals).securityReviewRequired, false);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 
 test("default empty mapping leaves every sensitive flag unknown", async () => {
   const signals = await collectSignals({

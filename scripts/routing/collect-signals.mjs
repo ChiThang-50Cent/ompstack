@@ -56,6 +56,38 @@ function exactKeys(value, keys) {
 function optionalRegexes(patterns, label) {
   return patterns === undefined || Array.isArray(patterns) && patterns.length === 0 ? [] : regexes(patterns, label);
 }
+function compileOverlayHeuristics(value, label) {
+  if (!plainObject(value) || !exactKeys(value, ["distinctive", "common"])) fail(`${label} has an invalid shape`);
+  const compileTier = (entries, tier) => {
+    if (!Array.isArray(entries)) fail(`${label}.${tier} has an invalid shape`);
+    return entries.map((entry, index) => {
+      if (
+        !plainObject(entry) ||
+        !exactKeys(entry, ["pattern", "flags"]) ||
+        !(typeof entry.pattern === "string" && entry.pattern !== "" || entry.pattern instanceof RegExp) ||
+        !Array.isArray(entry.flags) ||
+        entry.flags.length === 0 ||
+        !entry.flags.every((flag) => SIGNAL_FLAGS.includes(flag)) ||
+        new Set(entry.flags).size !== entry.flags.length
+      ) {
+        fail(`${label}.${tier}[${index}] has an invalid shape`);
+      }
+      try {
+        return {
+          pattern: entry.pattern instanceof RegExp ? new RegExp(entry.pattern.source, entry.pattern.flags) : new RegExp(entry.pattern),
+          flags: [...entry.flags],
+        };
+      } catch {
+        fail(`${label}.${tier}[${index}] contains an invalid pattern`);
+      }
+    });
+  };
+  return {
+    distinctive: compileTier(value.distinctive, "distinctive"),
+    common: compileTier(value.common, "common"),
+  };
+}
+
 
 function compilePathRules(value, label, { overlay = false } = {}) {
   if (!Array.isArray(value)) fail(`${label} has an invalid shape`);
@@ -118,7 +150,10 @@ export function validateSignalPolicy(policy) {
   const repositoryKnownPathPatterns = optionalRegexes(policy.repositoryKnownPathPatterns, "repositoryKnownPathPatterns");
   const pathRules = compilePathRules(policy.pathRules, "pathRules");
   const repositoryPathRules = policy.repositoryPathRules === undefined ? [] : compilePathRules(policy.repositoryPathRules, "repository routing overlay", { overlay: true });
-  return { ...policy, codePathPatterns, nonCodePathPatterns, generatedPathPatterns, knownPathPatterns, repositoryKnownPathPatterns, pathRules, repositoryPathRules };
+  const overlayHeuristics = policy.overlayHeuristics === undefined
+    ? { distinctive: [], common: [] }
+    : compileOverlayHeuristics(policy.overlayHeuristics, "overlayHeuristics");
+  return { ...policy, codePathPatterns, nonCodePathPatterns, generatedPathPatterns, knownPathPatterns, repositoryKnownPathPatterns, pathRules, repositoryPathRules, overlayHeuristics };
 }
 
 /** Loads shipped signal policy plus an additive repository coverage overlay. */
@@ -176,6 +211,10 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
   const codeChanges = changeSet.filter((change) => effectivePolicy.codePathPatterns.some((pattern) => pattern.test(change.path)) || !effectivePolicy.nonCodePathPatterns.some((pattern) => pattern.test(change.path)));
   const shippedKnown = (path) => effectivePolicy.knownPathPatterns.some((pattern) => pattern.test(path));
   const repositoryKnown = (path) => effectivePolicy.repositoryKnownPathPatterns.some((pattern) => pattern.test(path));
+  const repositoryCoversFlag = (path, flag) => {
+    const matchingRules = effectivePolicy.repositoryPathRules.filter((rule) => rule.pathPattern.test(path));
+    return matchingRules.length > 0 && matchingRules.every((rule) => rule.knownFlags.includes(flag));
+  };
   const packageRoots = new Set();
   for (const change of codeChanges) {
     const packageRoot = await nearestPackageRoot(root, change.path, effectivePolicy.packageRootMarkers);
@@ -195,7 +234,7 @@ export async function collectSignals({ root = process.cwd(), changeSet, policy }
     matchedFlags.has(flag)
       ? true
       : effectivePolicy.knownFlags.includes(flag) && changeSet.every((change) =>
-        shippedKnown(change.path) || effectivePolicy.repositoryPathRules.some((rule) => rule.pathPattern.test(change.path) && rule.knownFlags.includes(flag)),
+        shippedKnown(change.path) || repositoryCoversFlag(change.path, flag),
       )
         ? false
         : "unknown",

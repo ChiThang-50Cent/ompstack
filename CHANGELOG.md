@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Split repository overlay heuristics into distinctive signal emission and common-term uncertainty coverage. Common terms no longer create blanket Critical flags; they leave the mapped dimension unknown until reviewed.
+- Made overlapping repository rules fail closed: omitted `knownFlags` in a more-specific rule cannot be masked by a broader rule.
+
+### Evidence
+
+- On 12 first-parent commits at each pinned `requests`, `flask`, `cobra`, and `got` revision, every distribution retained Medium and no repository was degenerate. Critical-flag file coverage was 32/130 (24.6%), 9/236 (3.8%), 8/66 (12.1%), and 4/127 (3.1%), respectively.
+- On the 13 supported-language security PRs selected from AACR-Bench, the tiered overlay raised M3 from 2/13 to 3/13; path-name heuristics recognized 9/13 while remaining blind to content-only names such as `shellexec.go` and `create.go`.
+
 ## [0.3.7] - 2026-09-18
 
 ### Added

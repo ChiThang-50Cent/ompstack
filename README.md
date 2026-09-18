@@ -134,6 +134,10 @@ To mark repository-local ordinary paths as known, add `.omp/ompstack-routing.jso
 
 `knownPathPatterns` only removes `unclassified-changes`; it does not turn sensitive flags false. An overlay `pathRule` may add true `flags` and explicitly establish false `knownFlags` for the matched path. Shipped sensitive rules always union with overlay rules and win over false coverage. Malformed overlays fail routing.
 
+The generator reads its heuristic table from `policy/signals.json`. Distinctive matches emit the mapped signal; common matches emit no `flags` and remove only the mapped flag from `knownFlags`, so that common dimension remains `unknown` and routes High rather than being blanket-escalated to Critical. Overlapping overlay rules are fail-closed: every matching repository rule must establish a flag as known before collection resolves it false.
+
+The name-only security ceiling is measured, not inferred: the expanded heuristic table recognizes 9/13 security PRs at a path-name level, but it cannot detect vulnerabilities whose path names carry no security cue, including `shellexec.go`, `create.go`, and `pathtree.go`. This is an adoption-cost limitation, not a marketing claim.
+
 **Adoption cost:** a repository without overlay coverage remains conservative: each changed path with unresolved sensitive flags routes High. Medium routing requires maintaining narrow `pathRules` as modules evolve, with each `knownFlags` entry representing a reviewed negative claim. A broad rule that clears every flag across most of a repository can erase required review; it is not a substitute for a path-level sensitivity map. Treat this file as safety policy and review it with the affected code.
 
 Measure a fixed first-parent sample against a selected repository rather than the plugin checkout:

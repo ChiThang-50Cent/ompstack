@@ -75,6 +75,21 @@ test("session report parses route, block, skip, evidence, and stale entries", ()
   assert.match(text, /material stale\s+: 1/);
 });
 
+test("session report distinguishes absent activation from legacy unknown source", () => {
+  const absent = parseSessionReport(JSON.stringify({ type: "session", id: "session" }));
+  assert.equal(absent.activation, null);
+  assert.deepEqual(absent.activationSources, []);
+  assert.match(formatSessionReport(absent), /activation\s+: \(không có\)/);
+
+  const legacy = parseSessionReport([
+    JSON.stringify({ type: "session", id: "session" }),
+    custom("route-activation.v1", { workflow: "ompstack" }),
+  ].join("\n"));
+  assert.equal(legacy.activation, "unknown");
+  assert.deepEqual(legacy.activationSources, [null]);
+  assert.match(formatSessionReport(legacy), /activation\s+: \(không rõ source\)/);
+});
+
 test("session report rejects malformed JSONL with its line number", () => {
   assert.throws(() => parseSessionReport('{"type":"session"}\nnot-json'), /session JSONL line 2 is not JSON/);
 });

@@ -33,7 +33,6 @@ export function createRouteDecision({ intent, measurementPurpose, targets, repos
     targets: Object.freeze([...targets]),
     intent,
     risk: classification.risk,
-    declaredRiskFacts: Object.freeze({ ...declaredRiskFacts }),
     requiredPlaybooks: Object.freeze([requiredPlaybook]),
     requiredIndependentEvidence: Object.freeze(classification.risk === "low" ? [] : classification.risk === "medium" ? ["verifier"] : ["reviewer", "verifier", ...(classification.securityReviewRequired ? ["security-reviewer"] : [])]),
     securityReviewRequired: classification.securityReviewRequired,
@@ -42,5 +41,5 @@ export function createRouteDecision({ intent, measurementPurpose, targets, repos
     signals: Object.freeze({ ...signals, graph: Object.freeze({ ...graph }) }),
     reasonCodes: classification.reasonCodes,
   };
-  return Object.freeze({ ...body, decisionId: createHash("sha256").update(stable(body)).digest("hex") });
+  return Object.freeze({ ...body, declaredRiskFacts: Object.freeze({ ...declaredRiskFacts }), decisionId: createHash("sha256").update(stable(body)).digest("hex") });
 }

@@ -161,6 +161,35 @@ test("AgentSession turns a route gate block into a blocked write execution", asy
     });
     assert.deepEqual(extensionsResult.errors, []);
     assert.ok(extensionsResult.extensions.some((extension) => extension.resolvedPath === extensionPath()));
+    const extensionRunner = session.extensionRunner;
+    assert.ok(extensionRunner);
+    extensionRunner.initialize(
+      {
+        sendMessage() {},
+        sendUserMessage() {},
+        appendEntry: (customType, data) => sessionManager.appendCustomEntry(customType, data),
+        setLabel() {},
+        getActiveTools: () => [],
+        getAllTools: () => [],
+        setActiveTools: async () => {},
+        getCommands: () => [],
+        setModel: async () => false,
+        getThinkingLevel: () => undefined,
+        setThinkingLevel() {},
+        getSessionName: () => undefined,
+        setSessionName: async () => {},
+      },
+      {
+        getModel: () => undefined,
+        isIdle: () => true,
+        abort() {},
+        hasPendingMessages: () => false,
+        shutdown() {},
+        getContextUsage: () => undefined,
+        compact: async () => {},
+        getSystemPrompt: () => [],
+      },
+    );
       await sessionManager.flush();
       assert.equal(await session.fork(), true);
     try {
@@ -218,6 +247,11 @@ test("ExtensionRunner records one skip when an unactivated write passes", async 
   await runner.emit({ type: "session_start" });
   assert.equal(
     await runner.emitToolCall({ toolCallId: "unactivated-write", toolName: "write", input: { path: "new.txt", content: "" } }),
+    undefined,
+  );
+  await runner.emit({ type: "session_switch", reason: "resume", previousSessionFile: undefined });
+  assert.equal(
+    await runner.emitToolCall({ toolCallId: "unactivated-write-after-rebuild", toolName: "write", input: { path: "again.txt", content: "" } }),
     undefined,
   );
   const observabilityEntries = sessionManager.getBranch().filter((entry) =>
@@ -374,7 +408,7 @@ test("material routes enforce declared write scope and become stale after mutati
         toolName: "edit",
         reason: "ompstack target is outside the RouteDecision scope: README.md",
         decisionId,
-        path: null,
+        path: "README.md",
       },
     },
     {
@@ -434,15 +468,13 @@ test("fresh routing invalidates and replaces the prior decision", async () => {
     assert.deepEqual(
       runtime.entries.map((entry) => entry.customType),
       [
-        "io.github.chithang-50cent.ompstack.route-activation.v1",
         "io.github.chithang-50cent.ompstack.route-decision.v1",
         "io.github.chithang-50cent.ompstack.route-decision-state.v1",
-        "io.github.chithang-50cent.ompstack.route-activation.v1",
         "io.github.chithang-50cent.ompstack.route-decision.v1",
       ],
     );
-    assert.deepEqual(runtime.entries[0].data, { workflow: "ompstack", source: "route-call" });
-    assert.deepEqual(runtime.entries[2].data, {
+    assert.equal(runtime.entries[0].data.decisionId, first.details.decisionId);
+    assert.deepEqual(runtime.entries[1].data, {
       decisionId: first.details.decisionId,
       state: "invalidated",
       reason: "superseded-by-fresh-route",

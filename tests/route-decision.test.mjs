@@ -31,12 +31,16 @@ test("unknown signals fail closed and decisions are stable", () => {
   const input = { intent: "feature", measurementPurpose: "material", targets: ["src/example.ts"], repositoryRoot: "/repo", changeSetDigest: "1".repeat(64), classification, signals, graph, policyVersion: "1", routeInputDigest: "0".repeat(64), declaredRiskFacts: facts };
   const left = createRouteDecision(input);
   const right = createRouteDecision(input);
+  const changedFacts = { ...facts, consumerFamilies: 99 };
+  const changedFactsDecision = createRouteDecision({ ...input, declaredRiskFacts: changedFacts });
   assert.equal(left.decisionId, right.decisionId);
+  assert.equal(left.decisionId, changedFactsDecision.decisionId);
   assert.equal(left.signalsDigest, right.signalsDigest);
   assert.ok(Object.isFrozen(left));
   assert.deepEqual(left.requiredPlaybooks, ["skill://ompstack/playbooks/feature.md"]);
   assert.equal(left.changeSetDigest, "1".repeat(64));
   assert.deepEqual(left.declaredRiskFacts, facts);
+  assert.deepEqual(changedFactsDecision.declaredRiskFacts, changedFacts);
   assert.equal(left.measurementPurpose, "material");
 });
 

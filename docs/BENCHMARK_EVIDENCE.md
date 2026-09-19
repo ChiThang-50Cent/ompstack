@@ -252,3 +252,45 @@ Arm A was the Ompstack treatment. The blinded judge awarded A `4/4`, B `0/4`, an
 - The evaluator cannot control model sampling seeds.
 - Raw and compacted anonymized `/tmp` transcripts were transient and are removed after this record. The commands, settings, rubric, and result above are retained.
 
+## `sympy__sympy-12489` — corrected flag and skill-gate replay
+
+**Recorded:** 2026-09-19  
+**Verdict:** `INCONCLUSIVE` under the protected-path contract; normalized source outcome favors treatment.
+
+### Scope
+
+This is the requested rerun of the invalid paired replay. It corrects both isolation failures: the treatment retained a successful session-level `read skill://ompstack` preflight, and only the treatment loaded the Ompstack extension.
+
+### Method
+
+Both rollouts used `google-antigravity/gemini-3.8-flash`, `--thinking low`, `--max-time 15m`, `--mode json`, `--auto-approve`, `--no-rules`, `--no-session`, the same task prompt, the same SWE-bench image, and the same image source revision.
+
+The arms intentionally differed as follows:
+
+```text
+bare:      --no-rules --no-skills --no-extensions
+treatment: --no-rules --skills ompstack --plugin-dir /opt/ompstack
+```
+
+The treatment omitted `--no-extensions` because the extension is the behavior under test. Before rollout, a separate actual agent session succeeded on `read skill://ompstack` and replied `PREFLIGHT_OK`; the retained transcript is `skill_preflight.stdout.jsonl`. The bare rollout contained no `skill://ompstack` resolution.
+
+The runtime deviated from the legacy `18.1.13` setup to `18.2.6`. This was mandatory rather than optional because the extension requires the `18.2.0+` API.
+
+### Result
+
+| Arm | Rollout | Oracle after protected-test reset | Scope observation |
+| --- | --- | --- | --- |
+| Baseline oracle | — | Failed `test_Permutation_subclassing` at line 251 | Clean baseline |
+| Bare | Exit `0` | Failed the same assertion | Modified source and protected test |
+| Ompstack treatment | Exit `0` | Passed the hidden subclassing test | Modified source and protected test |
+
+The evaluator restored `sympy/combinatorics/tests/test_permutations.py` before applying its hidden test. Therefore the normalized treatment source passed while the normalized bare source failed. Both agents nevertheless modified that protected test path during rollout, so the contract does not permit an unqualified paired score.
+
+### Evidence retention
+
+The corrected run artifacts are retained under `/home/vmn/.cache/ompstack-eval/paired-sympy-20260919-corrected/`, including `summary.json`, `skill_preflight.stdout.jsonl`, both rollout transcripts, both patches, and baseline/arm oracle logs.
+
+### Limits
+
+- One task and one sample per arm; uncontrolled model sampling cannot establish a causal policy effect.
+- The normalized oracle result is evidence about the produced source patches, not a valid policy promotion because of the protected-path violations.

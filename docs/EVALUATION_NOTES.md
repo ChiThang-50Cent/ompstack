@@ -23,10 +23,10 @@ The recorded resolutions, failures, and empty patches measure bare behavior vers
 
 ```text
 bare:      --no-rules --no-skills --no-extensions
-treatment: --no-rules --no-extensions --skills ompstack --plugin-dir /opt/ompstack
+treatment: --no-rules --skills ompstack --plugin-dir /opt/ompstack
 ```
 
-Never combine `--no-skills` with a plugin treatment. `--skills ompstack` scopes discovery to the plugin skill.
+The asymmetry is intentional: the bare arm has no extension to load, while the treatment must load Ompstack's extension. Never combine `--no-skills` with a plugin treatment. `--skills ompstack` scopes discovery to the plugin skill.
 
 Before scoring, retain a successful treatment `read skill://ompstack` transcript entry; bare must not resolve that skill. Keep all other task, model, tool, timeout, image, and evaluator inputs identical.
 Use an actual agent-session transcript for this gate: `omp read` bypasses `--skills` filtering and is not valid evidence.

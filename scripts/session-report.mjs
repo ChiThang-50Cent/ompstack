@@ -100,7 +100,7 @@ export function parseSessionReport(session) {
   });
   return {
     schemaVersion: 1,
-    activation: activationSources.find((source) => source !== null) ?? null,
+    activation: activationEntries.length === 0 ? null : activationSources[0] ?? "unknown",
     activationSources,
     routeCalls,
     blocks,
@@ -122,8 +122,9 @@ function compactObject(value) {
 }
 
 export function formatSessionReport(report) {
+  const activationText = report.activation === null ? "(không có)" : report.activation === "unknown" ? "(không rõ source)" : report.activation;
   const lines = [
-    `activation      : ${report.activation ?? "(không có)"}`,
+    `activation      : ${activationText}`,
     `route calls     : ${report.routeCalls.length}`,
   ];
   report.routeCalls.forEach((route, index) => {

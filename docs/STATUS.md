@@ -18,7 +18,7 @@ Ompstack now has a persisted runtime routing boundary rather than a prose-only w
 ## Current evidence and adoption contract
 
 - Deterministic repository check: `bun run check`.
-- Test suite at this snapshot: **95 passing tests across 17 files**.
+- Test suite at this snapshot: **96 passing tests across 17 files**.
 - `bun scripts/eval-risk-distribution.mjs --repo <path> --count <N> --output <file>` records a selected repository, sampled HEAD, sample size, and risk-tier distribution. It exits nonzero when the sample is entirely one tier.
 - The evaluator derives `behaviorAffecting` from each sampled change set: it is `false` only when no code file changed and no sensitive signal is observed `true`. It fixes `riskFacts` at bounded values, so its distribution is a lower bound on risk rather than a production expectation.
 - There is **no repository-independent risk distribution claim**. Evaluate a fixed sample for each target repository and retain its JSON record.
@@ -52,6 +52,7 @@ The expanded name-only analysis recognizes **9/13** security PRs at the path lev
 - `v0.3.5`: explicit route-fact guidance, fail-closed code classification, and evaluator task-fact derivation.
 - `v0.3.6`: deterministic file-anchored overlay drafts, optional review metadata, and pinned cross-repository adoption evidence.
 - `v0.3.7`: AACR-Bench routing evaluation, resumable records, labeled-path base validation, and evaluator limitations.
+- `v0.3.8`: AACR-Bench M3b security escalation metric, common-term overlay uncertainty, and fail-closed overlapping repository rules.
 
 See [`CHANGELOG.md`](../CHANGELOG.md) for complete release notes.
 

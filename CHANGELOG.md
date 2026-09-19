@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.8] - 2026-09-19
+
+### Added
+
+- Added M3b to AACR records: security-labeled samples routed above Medium (`high` or `critical`), separate from the Critical-only M3 metric.
+
 ### Changed
 
 - Split repository overlay heuristics into distinctive signal emission and common-term uncertainty coverage. Common terms no longer create blanket Critical flags; they leave the mapped dimension unknown until reviewed.

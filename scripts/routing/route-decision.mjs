@@ -19,7 +19,7 @@ const playbooks = Object.freeze({
 });
 
 /** Creates an immutable decision bound to normalized inputs and a measured working-tree snapshot. */
-export function createRouteDecision({ intent, measurementPurpose, targets, repositoryRoot, changeSetDigest, classification, signals, graph, policyVersion, routeInputDigest }) {
+export function createRouteDecision({ intent, measurementPurpose, targets, repositoryRoot, changeSetDigest, classification, signals, graph, policyVersion, routeInputDigest, declaredRiskFacts = {} }) {
   const requiredPlaybook = playbooks[intent];
   if (typeof intent !== "string" || requiredPlaybook === undefined || !["bootstrap", "material"].includes(measurementPurpose) || !Array.isArray(targets) || targets.length === 0 || !targets.every((target) => typeof target === "string" && target !== "") || typeof repositoryRoot !== "string" || repositoryRoot === "" || !/^[a-f0-9]{64}$/.test(changeSetDigest) || !classification || !signals || !graph || typeof policyVersion !== "string" || policyVersion === "" || !/^[a-f0-9]{64}$/.test(routeInputDigest)) throw new Error("route decision: input has an invalid shape");
   const signalsDigest = createHash("sha256").update(stable({ signals, graph })).digest("hex");
@@ -33,6 +33,7 @@ export function createRouteDecision({ intent, measurementPurpose, targets, repos
     targets: Object.freeze([...targets]),
     intent,
     risk: classification.risk,
+    declaredRiskFacts: Object.freeze({ ...declaredRiskFacts }),
     requiredPlaybooks: Object.freeze([requiredPlaybook]),
     requiredIndependentEvidence: Object.freeze(classification.risk === "low" ? [] : classification.risk === "medium" ? ["verifier"] : ["reviewer", "verifier", ...(classification.securityReviewRequired ? ["security-reviewer"] : [])]),
     securityReviewRequired: classification.securityReviewRequired,

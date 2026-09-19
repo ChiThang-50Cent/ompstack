@@ -32,5 +32,6 @@ export async function routeRepository(input) {
     graph,
     policyVersion: routingPolicy.policyVersion,
     routeInputDigest: routeInput.routeInputDigest,
+    declaredRiskFacts: riskFacts,
   });
 }

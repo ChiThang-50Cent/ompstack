@@ -28,7 +28,7 @@ const knownSignals = {
 test("unknown signals fail closed and decisions are stable", () => {
   const classification = classifyRoute({ signals, graph, taskFacts: { behaviorAffecting: true }, riskFacts: facts, policy });
   assert.equal(classification.risk, "high");
-  const input = { intent: "feature", measurementPurpose: "material", targets: ["src/example.ts"], repositoryRoot: "/repo", changeSetDigest: "1".repeat(64), classification, signals, graph, policyVersion: "1", routeInputDigest: "0".repeat(64) };
+  const input = { intent: "feature", measurementPurpose: "material", targets: ["src/example.ts"], repositoryRoot: "/repo", changeSetDigest: "1".repeat(64), classification, signals, graph, policyVersion: "1", routeInputDigest: "0".repeat(64), declaredRiskFacts: facts };
   const left = createRouteDecision(input);
   const right = createRouteDecision(input);
   assert.equal(left.decisionId, right.decisionId);
@@ -36,6 +36,7 @@ test("unknown signals fail closed and decisions are stable", () => {
   assert.ok(Object.isFrozen(left));
   assert.deepEqual(left.requiredPlaybooks, ["skill://ompstack/playbooks/feature.md"]);
   assert.equal(left.changeSetDigest, "1".repeat(64));
+  assert.deepEqual(left.declaredRiskFacts, facts);
   assert.equal(left.measurementPurpose, "material");
 });
 

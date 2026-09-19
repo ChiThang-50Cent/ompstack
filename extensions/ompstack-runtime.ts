@@ -5,14 +5,20 @@ import type { ExtensionAPI, ToolCallEvent } from "@oh-my-pi/pi-coding-agent";
 
 type RouteInput = Parameters<typeof routeRepository>[0];
 type EvidenceLane = "reviewer" | "verifier" | "security-reviewer";
+type ActivationSource = "input" | "skill-read" | "route-call";
 type ActiveDecision = { decisionId: string; requiredIndependentEvidence?: unknown; measurementPurpose: "bootstrap" | "material"; repositoryRoot: string; targets: readonly string[] };
-type SessionContext = { sessionManager: { getBranch(): Iterable<unknown> } };
+type ActivationState = { workflow: "ompstack"; source?: ActivationSource };
+type RouteSkipState = { reason: "enforcement-inactive"; firstToolName: string };
+type SessionContext = { sessionManager: { getBranch(): Iterable<unknown>; appendCustomEntry?: (customType: string, data?: unknown) => string } };
 
 const DECISION_TYPE = "io.github.chithang-50cent.ompstack.route-decision.v1";
 const DECISION_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-decision-state.v1";
 const ACTIVATION_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-activation.v1";
 const EVIDENCE_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-evidence.v1";
+const BLOCK_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-block.v1";
+const SKIP_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-skip.v1";
 const READ_ONLY_TOOLS: Record<string, true> = { read: true, grep: true, glob: true, web_search: true, ompstack_route: true, ompstack_phase: true };
+const ACTIVATION_SOURCES: Record<ActivationSource, true> = { input: true, "skill-read": true, "route-call": true };
 const EVIDENCE_LANES = new Set<EvidenceLane>(["reviewer", "verifier", "security-reviewer"]);
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -37,8 +43,14 @@ function isDecisionState(value: unknown): value is { decisionId: string; state: 
   return candidate !== null && typeof candidate.decisionId === "string" && /^[a-f0-9]{64}$/.test(candidate.decisionId) && (candidate.state === "invalidated" || candidate.state === "material-stale") && typeof candidate.reason === "string" && candidate.reason !== "";
 }
 
-function isActivationState(value: unknown): value is { workflow: "ompstack" } {
-  return record(value)?.workflow === "ompstack";
+function isActivationState(value: unknown): value is ActivationState {
+  const candidate = record(value);
+  return candidate?.workflow === "ompstack" && (candidate.source === undefined || (typeof candidate.source === "string" && Object.hasOwn(ACTIVATION_SOURCES, candidate.source)));
+}
+
+function isRouteSkipState(value: unknown): value is RouteSkipState {
+  const candidate = record(value);
+  return candidate?.reason === "enforcement-inactive" && typeof candidate.firstToolName === "string" && candidate.firstToolName !== "";
 }
 
 function isEvidenceState(value: unknown): value is { decisionId: string; evidence: EvidenceLane } {
@@ -132,11 +144,35 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   let enforcementActive = false;
   let activeDecision: ActiveDecision | null = null;
   let materialRouteCurrent = false;
+  let routeSkipRecorded = false;
   let observedEvidence = new Set<EvidenceLane>();
   const pendingTaskEvidence = new Map<string, { decisionId: string; evidence: EvidenceLane[] }>();
+  let appendSessionEntry: (customType: string, data: unknown) => void = (customType, data) => {
+    pi.appendEntry(customType, data);
+  };
+  function bindSessionAppender(ctx: SessionContext) {
+    const appendCustomEntry = ctx.sessionManager.appendCustomEntry;
+    appendSessionEntry = typeof appendCustomEntry === "function"
+      ? (customType, data) => {
+        appendCustomEntry.call(ctx.sessionManager, customType, data);
+      }
+      : (customType, data) => {
+        pi.appendEntry(customType, data);
+      };
+  }
+  async function recordBlock(event: ToolCallEvent, reason: string, decisionId: string | null) {
+    const path = record(event.input)?.path;
+    await appendSessionEntry(BLOCK_STATE_TYPE, {
+      toolName: event.toolName,
+      reason,
+      decisionId,
+      path: typeof path === "string" && path !== "" ? path : null,
+    });
+    return { block: true, reason };
+  }
   async function invalidateActiveDecision(reason: string) {
     if (!activeDecision) return;
-    await pi.appendEntry(DECISION_STATE_TYPE, { decisionId: activeDecision.decisionId, state: "invalidated", reason });
+    await appendSessionEntry(DECISION_STATE_TYPE, { decisionId: activeDecision.decisionId, state: "invalidated", reason });
     activeDecision = null;
     materialRouteCurrent = false;
     observedEvidence = new Set();
@@ -144,25 +180,28 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
 
   async function markMaterialRouteStale() {
     if (!activeDecision || !materialRouteCurrent) return;
-    await pi.appendEntry(DECISION_STATE_TYPE, { decisionId: activeDecision.decisionId, state: "material-stale", reason: "workspace-mutation-after-route" });
+    await appendSessionEntry(DECISION_STATE_TYPE, { decisionId: activeDecision.decisionId, state: "material-stale", reason: "workspace-mutation-after-route" });
     materialRouteCurrent = false;
   }
 
   async function observeEvidence(decisionId: string, evidence: EvidenceLane) {
     if (activeDecision?.decisionId !== decisionId || !requiredEvidence(activeDecision).includes(evidence) || observedEvidence.has(evidence)) return;
-    await pi.appendEntry(EVIDENCE_STATE_TYPE, { decisionId, evidence });
+    await appendSessionEntry(EVIDENCE_STATE_TYPE, { decisionId, evidence });
     observedEvidence.add(evidence);
   }
 
   function rebuild(ctx: SessionContext) {
+    bindSessionAppender(ctx);
     enforcementActive = false;
     activeDecision = null;
     materialRouteCurrent = false;
+    routeSkipRecorded = false;
     observedEvidence = new Set();
     pendingTaskEvidence.clear();
     for (const entry of ctx.sessionManager.getBranch()) {
       const item = record(entry);
       if (item?.type !== "custom") continue;
+      if (item.customType === SKIP_STATE_TYPE && isRouteSkipState(item.data)) routeSkipRecorded = true;
       if (item.customType === ACTIVATION_STATE_TYPE && isActivationState(item.data)) enforcementActive = true;
       if (item.customType === DECISION_TYPE && isDecision(item.data)) {
         enforcementActive = true;
@@ -192,7 +231,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   pi.on("session_tree", (_event, ctx) => rebuild(ctx));
   pi.on("input", async (event) => {
     if (!/(?:^|\s)\/(?:skill:)?ompstack(?:\s|$)/.test(event.text) || enforcementActive) return;
-    await pi.appendEntry(ACTIVATION_STATE_TYPE, { workflow: "ompstack" });
+    await appendSessionEntry(ACTIVATION_STATE_TYPE, { workflow: "ompstack", source: "input" });
     enforcementActive = true;
   });
 
@@ -220,7 +259,8 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     async execute(_id, input) {
       const decision = await routeRepository(input as RouteInput);
       await invalidateActiveDecision("superseded-by-fresh-route");
-      await pi.appendEntry(DECISION_TYPE, decision);
+      await appendSessionEntry(ACTIVATION_STATE_TYPE, { workflow: "ompstack", source: "route-call" });
+      await appendSessionEntry(DECISION_TYPE, decision);
       enforcementActive = true;
       activeDecision = decision;
       materialRouteCurrent = decision.measurementPurpose === "material";
@@ -253,14 +293,21 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   });
 
   pi.on("tool_call", async (event) => {
-    if (isReadOnlyTool(event) || !enforcementActive) return;
-    if (!activeDecision) return { block: true, reason: "ompstack requires a valid RouteDecision before mutable or unknown execution" };
+    if (isReadOnlyTool(event)) return;
+    if (!enforcementActive) {
+      if (!routeSkipRecorded) {
+        routeSkipRecorded = true;
+        await appendSessionEntry(SKIP_STATE_TYPE, { reason: "enforcement-inactive", firstToolName: event.toolName });
+      }
+      return;
+    }
+    if (!activeDecision) return recordBlock(event, "ompstack requires a valid RouteDecision before mutable or unknown execution", null);
     const scopeReason = event.toolName === "write" || event.toolName === "edit" ? await outsideDeclaredScope(activeDecision, event) : undefined;
-    if (scopeReason) return { block: true, reason: scopeReason };
+    if (scopeReason) return recordBlock(event, scopeReason, activeDecision.decisionId);
     if (event.toolName !== "task") return;
-    if (!taskBindsDecision(event.input, activeDecision.decisionId)) return { block: true, reason: "task requires an exact Route-Decision header" };
+    if (!taskBindsDecision(event.input, activeDecision.decisionId)) return recordBlock(event, "task requires an exact Route-Decision header", activeDecision.decisionId);
     const evidence = requestedEvidence(event.input).filter((lane) => requiredEvidence(activeDecision).includes(lane));
-    if (evidence.length && !materialRouteCurrent) return { block: true, reason: "task requires a fresh material RouteDecision before independent evidence" };
+    if (evidence.length && !materialRouteCurrent) return recordBlock(event, "task requires a fresh material RouteDecision before independent evidence", activeDecision.decisionId);
     if (evidence.length) pendingTaskEvidence.set(event.toolCallId, { decisionId: activeDecision.decisionId, evidence });
   });
 

@@ -36,7 +36,7 @@ Version 0.3 adds requirement-reconstruction evaluation tooling: strict A/B/B′ 
 
 ### AACR-Bench routing evaluation
 
-`scripts/eval-aacr.mjs` measures the shipped router against positive AACR-Bench samples. It runs each sample against the target commit's detached worktree, generates the same deterministic overlay used by the evaluator, and writes M1–M4 summaries by project language:
+`scripts/eval-aacr.mjs` measures the shipped router against positive AACR-Bench samples. It runs each sample against the target commit's detached worktree, generates the same deterministic overlay used by the evaluator, and writes M1–M4 plus M3b summaries by project language:
 
 ```sh
 bun scripts/eval-aacr.mjs \

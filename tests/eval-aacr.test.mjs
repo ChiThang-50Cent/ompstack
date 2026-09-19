@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { buildRecord, classifySample, labelsForComments, missingLabeledPaths, resumeState } from "../scripts/eval-aacr.mjs";
+import { buildRecord, classifySample, labelsForComments, missingLabeledPaths, resumeState, summarizeLanguage } from "../scripts/eval-aacr.mjs";
 
 test("AACR labels map comment categories and repo context to benchmark groups", () => {
   assert.deepEqual(labelsForComments([
@@ -25,6 +25,24 @@ test("AACR labels map comment categories and repo context to benchmark groups", 
     repoLevel: false,
     softOnly: true,
   });
+});
+
+test("AACR M3b counts security records above Medium", () => {
+  const record = (risk, security) => ({
+    risk,
+    affectedModuleCount: 1,
+    labels: { security, defect: false, repoLevel: false },
+  });
+  const summary = summarizeLanguage([
+    record("medium", true),
+    record("high", true),
+    record("critical", true),
+    record("low", true),
+    record("high", false),
+  ], "Go");
+
+  assert.deepEqual(summary.M3, { escalated: 1, securityLabeled: 4 });
+  assert.deepEqual(summary.M3b, { escalatedAboveMedium: 2, securityLabeled: 4 });
 });
 
 test("AACR labeled paths must be a subset of target-parent changed paths", () => {

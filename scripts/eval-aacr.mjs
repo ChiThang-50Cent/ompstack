@@ -303,6 +303,7 @@ export function summarizeLanguage(records, language) {
   const low = records.filter((record) => record.risk === "low");
   const medium = records.filter((record) => record.risk === "medium");
   const security = records.filter((record) => record.labels.security);
+  const securityAboveMedium = security.filter((record) => record.risk === "high" || record.risk === "critical");
   const serious = (record) => record.labels.security || record.labels.defect;
   const supported = Object.hasOwn(SUPPORTED_LANGUAGES, language);
   const repoLevel = records.filter((record) => record.labels.repoLevel);
@@ -312,6 +313,7 @@ export function summarizeLanguage(records, language) {
     M1: { ...ratio(low.filter(serious).length, low.length), interpretation: "upper-bound-false-negative-rate" },
     M2: ratio(medium.filter(serious).length, medium.length),
     M3: { escalated: security.filter((record) => record.risk === "critical").length, securityLabeled: security.length },
+    M3b: { escalatedAboveMedium: securityAboveMedium.length, securityLabeled: security.length },
     M4: supported ? {
       supportedImportGraphLanguage: true,
       repoLevelCount: repoLevel.length,

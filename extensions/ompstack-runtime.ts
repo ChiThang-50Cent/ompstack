@@ -19,8 +19,10 @@ const EVIDENCE_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-evidence.v
 const BLOCK_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-block.v1";
 const SKIP_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-skip.v1";
 const READ_ONLY_TOOLS: Record<string, true> = { read: true, grep: true, glob: true, web_search: true, ompstack_route: true, ompstack_phase: true };
+const ROUTE_PROTOCOL_PATH = "xd://ompstack_route";
 const ACTIVATION_SOURCES: Record<ActivationSource, true> = { input: true, "skill-read": true, "route-call": true };
-const EVIDENCE_LANES = new Set<EvidenceLane>(["reviewer", "verifier", "security-reviewer"]);
+const EVIDENCE_LANES = ["reviewer", "verifier", "security-reviewer"] as const;
+const EVIDENCE_LANE_SET = new Set<EvidenceLane>(EVIDENCE_LANES);
 
 function record(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -53,16 +55,35 @@ function isRouteSkipState(value: unknown): value is RouteSkipState {
   const candidate = record(value);
   return candidate?.reason === "enforcement-inactive" && typeof candidate.firstToolName === "string" && candidate.firstToolName !== "";
 }
-
-function isEvidenceState(value: unknown): value is { decisionId: string; evidence: EvidenceLane } {
+function isEvidenceState(value: unknown): value is { decisionId: string; evidence: string } {
   const candidate = record(value);
-  return isDecision(value) && typeof candidate?.evidence === "string" && EVIDENCE_LANES.has(candidate.evidence as EvidenceLane);
+  return candidate !== null &&
+    typeof candidate.decisionId === "string" &&
+    /^[a-f0-9]{64}$/.test(candidate.decisionId) &&
+    typeof candidate.evidence === "string" &&
+    canonicalEvidence(candidate.evidence) !== undefined;
+}
+
+function canonicalEvidence(value: unknown): EvidenceLane | undefined {
+  if (value === "ompstack-verifier") return "verifier";
+  return typeof value === "string" && EVIDENCE_LANE_SET.has(value as EvidenceLane) ? value as EvidenceLane : undefined;
+}
+
+function normalizeEvidence(values: unknown): EvidenceLane[] {
+  const requested: Partial<Record<EvidenceLane, true>> = {};
+  if (Array.isArray(values)) {
+    for (const value of values) {
+      const evidence = canonicalEvidence(value);
+      if (evidence !== undefined) requested[evidence] = true;
+    }
+  }
+  return EVIDENCE_LANES.filter((lane) => requested[lane] === true);
 }
 
 function requiredEvidence(decision: ActiveDecision | null): EvidenceLane[] {
-  if (!Array.isArray(decision?.requiredIndependentEvidence)) return [];
-  return decision.requiredIndependentEvidence.filter((item): item is EvidenceLane => typeof item === "string" && EVIDENCE_LANES.has(item as EvidenceLane));
+  return normalizeEvidence(decision?.requiredIndependentEvidence);
 }
+
 
 function taskBindsDecision(input: unknown, decisionId: string) {
   const candidate = record(input);
@@ -74,14 +95,18 @@ function taskBindsDecision(input: unknown, decisionId: string) {
 function requestedEvidence(input: unknown): EvidenceLane[] {
   const candidate = record(input);
   if (!Array.isArray(candidate?.tasks)) return [];
-  return [...new Set(candidate.tasks.flatMap((task) => {
+  return normalizeEvidence(candidate.tasks.flatMap((task) => {
     const agent = record(task)?.agent;
-    return typeof agent === "string" && EVIDENCE_LANES.has(agent as EvidenceLane) ? [agent as EvidenceLane] : [];
-  }))];
+    return typeof agent === "string" ? [agent] : [];
+  }));
 }
 
+
 function isReadOnlyTool(event: ToolCallEvent) {
-  return event.toolName in READ_ONLY_TOOLS || (event.toolName === "todo" && record(event.input)?.op === "view");
+  const path = record(event.input)?.path;
+  return event.toolName in READ_ONLY_TOOLS ||
+    (event.toolName === "todo" && record(event.input)?.op === "view") ||
+    (event.toolName === "write" && path === ROUTE_PROTOCOL_PATH);
 }
 function isProtocolPath(path: string) {
   return /^[a-z][a-z0-9+.-]*:\/\//i.test(path);
@@ -148,6 +173,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   let routeSkipRecorded = false;
   let observedEvidence = new Set<EvidenceLane>();
   const pendingTaskEvidence = new Map<string, { decisionId: string; evidence: EvidenceLane[] }>();
+  const pendingMutations = new Map<string, string>();
   async function recordBlock(event: ToolCallEvent, reason: string, decisionId: string | null, path?: string | null) {
     const inputPath = record(event.input)?.path;
     const blockPath = path === undefined ? (typeof inputPath === "string" && inputPath !== "" ? inputPath : null) : path;
@@ -160,22 +186,29 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     return { block: true, reason };
   }
   async function invalidateActiveDecision(reason: string) {
-    if (!activeDecision) return;
-    await pi.appendEntry(DECISION_STATE_TYPE, { decisionId: activeDecision.decisionId, state: "invalidated", reason });
-    activeDecision = null;
+    if (activeDecision) {
+      await pi.appendEntry(DECISION_STATE_TYPE, { decisionId: activeDecision.decisionId, state: "invalidated", reason });
+      activeDecision = null;
+      materialRouteCurrent = false;
+      observedEvidence = new Set();
+    }
+    pendingTaskEvidence.clear();
+    pendingMutations.clear();
+  }
+
+  async function markMaterialRouteStale(decisionId: string) {
+    if (activeDecision?.decisionId !== decisionId || !materialRouteCurrent) return;
+    await pi.appendEntry(DECISION_STATE_TYPE, { decisionId, state: "material-stale", reason: "workspace-mutation-after-route" });
+    if (activeDecision?.decisionId !== decisionId) return;
     materialRouteCurrent = false;
     observedEvidence = new Set();
+    pendingTaskEvidence.clear();
   }
-
-  async function markMaterialRouteStale() {
-    if (!activeDecision || !materialRouteCurrent) return;
-    await pi.appendEntry(DECISION_STATE_TYPE, { decisionId: activeDecision.decisionId, state: "material-stale", reason: "workspace-mutation-after-route" });
-    materialRouteCurrent = false;
-  }
-
   async function observeEvidence(decisionId: string, evidence: EvidenceLane) {
     if (activeDecision?.decisionId !== decisionId || !requiredEvidence(activeDecision).includes(evidence) || observedEvidence.has(evidence)) return;
+    if (activeDecision.measurementPurpose === "material" && !materialRouteCurrent) return;
     await pi.appendEntry(EVIDENCE_STATE_TYPE, { decisionId, evidence });
+    if (activeDecision?.decisionId !== decisionId) return;
     observedEvidence.add(evidence);
   }
 
@@ -186,6 +219,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     routeSkipRecorded = false;
     observedEvidence = new Set();
     pendingTaskEvidence.clear();
+    pendingMutations.clear();
     for (const entry of ctx.sessionManager.getBranch()) {
       const item = record(entry);
       if (item?.type !== "custom") continue;
@@ -198,7 +232,10 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
         observedEvidence = new Set();
       }
       if (item.customType === EVIDENCE_STATE_TYPE && isEvidenceState(item.data) && activeDecision?.decisionId === item.data.decisionId) {
-        observedEvidence.add(item.data.evidence);
+        const evidence = canonicalEvidence(item.data.evidence);
+        if (evidence !== undefined && (activeDecision.measurementPurpose === "bootstrap" || materialRouteCurrent) && requiredEvidence(activeDecision).includes(evidence)) {
+          observedEvidence.add(evidence);
+        }
       }
       if (item.customType === DECISION_STATE_TYPE && isDecisionState(item.data) && activeDecision?.decisionId === item.data.decisionId) {
         enforcementActive = true;
@@ -208,6 +245,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
           observedEvidence = new Set();
         } else {
           materialRouteCurrent = false;
+          observedEvidence = new Set();
         }
       }
     }
@@ -291,15 +329,23 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     if (!activeDecision) return recordBlock(event, "ompstack requires a valid RouteDecision before mutable or unknown execution", null);
     const scopeViolation = event.toolName === "write" || event.toolName === "edit" ? await outsideDeclaredScope(activeDecision, event) : undefined;
     if (scopeViolation) return recordBlock(event, scopeViolation.reason, activeDecision.decisionId, scopeViolation.path);
+    if (event.toolName === "write" || event.toolName === "edit") {
+      pendingMutations.set(event.toolCallId, activeDecision.decisionId);
+      return;
+    }
     if (event.toolName !== "task") return;
     if (!taskBindsDecision(event.input, activeDecision.decisionId)) return recordBlock(event, "task requires an exact Route-Decision header", activeDecision.decisionId);
     const evidence = requestedEvidence(event.input).filter((lane) => requiredEvidence(activeDecision).includes(lane));
-    if (evidence.length && !materialRouteCurrent) return recordBlock(event, "task requires a fresh material RouteDecision before independent evidence", activeDecision.decisionId);
+    if (evidence.length && activeDecision.measurementPurpose === "material" && !materialRouteCurrent) return recordBlock(event, "task requires a fresh material RouteDecision before independent evidence", activeDecision.decisionId);
     if (evidence.length) pendingTaskEvidence.set(event.toolCallId, { decisionId: activeDecision.decisionId, evidence });
   });
 
   pi.on("tool_execution_end", async (event) => {
-    if ((event.toolName === "write" || event.toolName === "edit") && !event.isError) await markMaterialRouteStale();
+    if (event.toolName === "write" || event.toolName === "edit") {
+      const decisionId = pendingMutations.get(event.toolCallId);
+      pendingMutations.delete(event.toolCallId);
+      if (!event.isError && decisionId !== undefined && decisionId === activeDecision?.decisionId) await markMaterialRouteStale(decisionId);
+    }
     if (event.toolName !== "task") return;
     const pending = pendingTaskEvidence.get(event.toolCallId);
     pendingTaskEvidence.delete(event.toolCallId);

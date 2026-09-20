@@ -24,6 +24,9 @@ function stringOrNull(value) {
 function uniqueStrings(values) {
   return [...new Set(values.filter((value) => typeof value === "string" && value !== ""))];
 }
+function normalizeEvidence(values) {
+  return uniqueStrings(values.map((value) => value === "ompstack-verifier" ? "verifier" : value));
+}
 
 function parseSessionEntries(sessionText) {
   if (typeof sessionText !== "string") throw new TypeError("session JSONL must be a string");
@@ -74,8 +77,8 @@ export function parseSessionReport(session) {
   });
   const latestDecisionId = routeCalls.at(-1)?.decisionId ?? null;
   const latestDecisionData = object(decisionEntries.at(-1)?.data);
-  const requiredEvidence = uniqueStrings(Array.isArray(latestDecisionData?.requiredIndependentEvidence) ? latestDecisionData.requiredIndependentEvidence : []);
-  const observedEvidence = uniqueStrings(
+  const requiredEvidence = normalizeEvidence(Array.isArray(latestDecisionData?.requiredIndependentEvidence) ? latestDecisionData.requiredIndependentEvidence : []);
+  const observedEvidence = normalizeEvidence(
     evidenceEntries
       .map((entry) => object(entry.data))
       .filter((data) => data?.decisionId === latestDecisionId)

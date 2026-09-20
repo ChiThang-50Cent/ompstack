@@ -345,7 +345,7 @@ test("runtime keeps an active decision across mutable calls and Todo inspection"
 test("runtime fails closed after an invalidated persisted decision", async () => {
   const runtime = createRuntime();
   const gate = await restore(runtime, [decision, invalidated]);
-  assert.deepEqual(await gate({ toolName: "write", input: { path: "xd://ompstack_route" } }), {
+  assert.deepEqual(await gate({ toolName: "bash", input: { command: "echo blocked" } }), {
     block: true,
     reason: "ompstack requires a valid RouteDecision before mutable or unknown execution",
   });
@@ -376,6 +376,254 @@ test("runtime records only successfully launched required evidence lanes", async
   assert.deepEqual(runtime.entries, [{
     customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
     data: { decisionId, evidence: "reviewer" },
+  }]);
+});
+
+test("runtime restores only valid evidence for the active decision", async () => {
+  const runtime = createRuntime();
+  const previousDecisionId = "b".repeat(64);
+  const gate = await restore(runtime, [
+    decision,
+    {
+      type: "custom",
+      customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
+      data: { decisionId, evidence: "reviewer" },
+    },
+    {
+      type: "custom",
+      customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
+      data: { decisionId, evidence: "not-a-lane" },
+    },
+    {
+      type: "custom",
+      customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
+      data: { decisionId: previousDecisionId, evidence: "verifier" },
+    },
+  ]);
+  assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
+  const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
+  assert.deepEqual(phase.details, {
+    decisionId,
+    materialRouteCurrent: true,
+    requiredIndependentEvidence: ["reviewer", "verifier"],
+    observedIndependentEvidence: ["reviewer"],
+    missingIndependentEvidence: ["verifier"],
+    runtimeEvidenceCoverage: "partial",
+  });
+});
+
+test("runtime clears restored evidence after a stale decision state", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [
+    decision,
+    {
+      type: "custom",
+      customType: "io.github.chithang-50cent.ompstack.route-decision-state.v1",
+      data: { decisionId, state: "material-stale", reason: "workspace-mutation-after-route" },
+    },
+    {
+      type: "custom",
+      customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
+      data: { decisionId, evidence: "ompstack-verifier" },
+    },
+  ]);
+  assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
+  const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
+  assert.equal(phase.details.materialRouteCurrent, false);
+  assert.deepEqual(phase.details.observedIndependentEvidence, []);
+});
+
+test("runtime normalizes and deduplicates canonical evidence lanes", async () => {
+  const runtime = createRuntime();
+  const normalizedDecision = {
+    ...decision,
+    data: {
+      ...decision.data,
+      requiredIndependentEvidence: ["security-reviewer", "reviewer", "verifier", "reviewer", "unknown"],
+    },
+  };
+  const gate = await restore(runtime, [normalizedDecision]);
+  assert.equal(
+    await gate({
+      toolCallId: "normalized-evidence",
+      toolName: "task",
+      input: {
+        context: `Route-Decision: sha256:${decisionId}`,
+        tasks: [
+          { agent: "security-reviewer" },
+          { agent: "reviewer" },
+          { agent: "verifier" },
+          { agent: "reviewer" },
+          { agent: "scout" },
+        ],
+      },
+    }),
+    undefined,
+  );
+  await runtime.handlers.get("tool_execution_end")({ toolCallId: "normalized-evidence", toolName: "task", isError: false });
+  const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
+  assert.deepEqual(phase.details, {
+    decisionId,
+    materialRouteCurrent: true,
+    requiredIndependentEvidence: ["reviewer", "verifier", "security-reviewer"],
+    observedIndependentEvidence: ["reviewer", "security-reviewer", "verifier"],
+    missingIndependentEvidence: [],
+    runtimeEvidenceCoverage: "partial",
+  });
+});
+
+test("runtime normalizes ompstack-verifier evidence for launch and restoration", async () => {
+  const persisted = createRuntime();
+  const persistedGate = await restore(persisted, [
+    decision,
+    {
+      type: "custom",
+      customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
+      data: { decisionId, evidence: "ompstack-verifier" },
+    },
+  ]);
+  assert.equal(await persistedGate({ toolName: "todo", input: { op: "view" } }), undefined);
+  const persistedPhase = await persisted.tools.get("ompstack_phase").execute("phase", {});
+  assert.deepEqual(persistedPhase.details.observedIndependentEvidence, ["verifier"]);
+
+  const launched = createRuntime();
+  const launchedGate = await restore(launched, [{
+    ...decision,
+    data: { ...decision.data, requiredIndependentEvidence: ["ompstack-verifier"] },
+  }]);
+  assert.equal(
+    await launchedGate({
+      toolCallId: "ompstack-verifier-evidence",
+      toolName: "task",
+      input: {
+        context: `Route-Decision: sha256:${decisionId}`,
+        tasks: [{ agent: "ompstack-verifier" }],
+      },
+    }),
+    undefined,
+  );
+  await launched.handlers.get("tool_execution_end")({ toolCallId: "ompstack-verifier-evidence", toolName: "task", isError: false });
+  const launchedPhase = await launched.tools.get("ompstack_phase").execute("phase", {});
+  assert.deepEqual(launchedPhase.details, {
+    decisionId,
+    materialRouteCurrent: true,
+    requiredIndependentEvidence: ["verifier"],
+    observedIndependentEvidence: ["verifier"],
+    missingIndependentEvidence: [],
+    runtimeEvidenceCoverage: "partial",
+  });
+});
+
+test("route protocol bootstrap is read-only and never stales a route", async () => {
+  const bootstrap = createRuntime();
+  const bootstrapGate = bootstrap.handlers.get("tool_call");
+  assert.equal(
+    await bootstrapGate({ toolCallId: "route-protocol-bootstrap", toolName: "write", input: { path: "xd://ompstack_route", content: "{}" } }),
+    undefined,
+  );
+  assert.deepEqual(bootstrap.entries, []);
+
+  const material = createRuntime();
+  const materialGate = await restore(material, [decision]);
+  assert.equal(
+    await materialGate({ toolCallId: "route-protocol-material", toolName: "write", input: { path: "xd://ompstack_route", content: "{}" } }),
+    undefined,
+  );
+  await material.handlers.get("tool_execution_end")({ toolCallId: "route-protocol-material", toolName: "write", isError: false });
+  const phase = await material.tools.get("ompstack_phase").execute("phase", {});
+  assert.equal(phase.details.materialRouteCurrent, true);
+  assert.deepEqual(material.entries, []);
+});
+
+test("bootstrap routes allow the first declared mutation", async () => {
+  await withRepository(async (root, revision) => {
+    const runtime = createRuntime();
+    const route = runtime.tools.get("ompstack_route");
+    const first = await route.execute("bootstrap", routeInput(root, revision));
+    assert.equal(first.details.measurementPurpose, "bootstrap");
+    const gate = runtime.handlers.get("tool_call");
+    assert.equal(
+      await gate({ toolCallId: "bootstrap-write", toolName: "write", input: { path: "src/example.ts", content: "export {};\n" } }),
+      undefined,
+    );
+    await runtime.handlers.get("tool_execution_end")({ toolCallId: "bootstrap-write", toolName: "write", isError: false });
+    assert.deepEqual(runtime.entries.map((entry) => entry.customType), [
+      "io.github.chithang-50cent.ompstack.route-decision.v1",
+    ]);
+  });
+});
+
+test("bootstrap decisions do not deadlock their first evidence task", async () => {
+  const runtime = createRuntime();
+  const bootstrapDecision = {
+    ...decision,
+    data: {
+      ...decision.data,
+      measurementPurpose: "bootstrap",
+      requiredIndependentEvidence: ["reviewer"],
+    },
+  };
+  const gate = await restore(runtime, [bootstrapDecision]);
+  assert.equal(
+    await gate({
+      toolCallId: "bootstrap-evidence",
+      toolName: "task",
+      input: {
+        context: `Route-Decision: sha256:${decisionId}`,
+        tasks: [{ agent: "reviewer" }],
+      },
+    }),
+    undefined,
+  );
+  await runtime.handlers.get("tool_execution_end")({ toolCallId: "bootstrap-evidence", toolName: "task", isError: false });
+  const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
+  assert.deepEqual(phase.details.observedIndependentEvidence, ["reviewer"]);
+});
+
+
+test("late mutation completion cannot stale a superseding route", async () => {
+  await withRepository(async (root, revision) => {
+    const runtime = createRuntime();
+    const route = runtime.tools.get("ompstack_route");
+    await route.execute("bootstrap", routeInput(root, revision));
+    const gate = runtime.handlers.get("tool_call");
+    assert.equal(
+      await gate({ toolCallId: "late-write", toolName: "write", input: { path: "src/example.ts", content: "export {};\n" } }),
+      undefined,
+    );
+    await mkdir(join(root, "src"));
+    await writeFile(join(root, "src", "example.ts"), "export {};\n");
+    const second = await route.execute("material", routeInput(root, revision));
+    assert.equal(second.details.measurementPurpose, "material");
+    await runtime.handlers.get("tool_execution_end")({ toolCallId: "late-write", toolName: "write", isError: false });
+    assert.equal(runtime.entries.at(-1).customType, "io.github.chithang-50cent.ompstack.route-decision.v1");
+  });
+});
+test("material route drops evidence that completes after mutation", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [decision]);
+  assert.equal(
+    await gate({
+      toolCallId: "late-evidence",
+      toolName: "task",
+      input: {
+        context: `Route-Decision: sha256:${decisionId}`,
+        tasks: [{ agent: "reviewer" }],
+      },
+    }),
+    undefined,
+  );
+  assert.equal(
+    await gate({ toolCallId: "mutation", toolName: "write", input: { path: "tests/new-test-file.mjs" } }),
+    undefined,
+  );
+  await runtime.handlers.get("tool_execution_end")({ toolCallId: "mutation", toolName: "write", isError: false });
+  await runtime.handlers.get("tool_execution_end")({ toolCallId: "late-evidence", toolName: "task", isError: false });
+  const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
+  assert.deepEqual(phase.details.observedIndependentEvidence, []);
+  assert.deepEqual(runtime.entries, [{
+    customType: "io.github.chithang-50cent.ompstack.route-decision-state.v1",
+    data: { decisionId, state: "material-stale", reason: "workspace-mutation-after-route" },
   }]);
 });
 

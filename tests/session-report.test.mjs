@@ -90,6 +90,26 @@ test("session report distinguishes absent activation from legacy unknown source"
   assert.match(formatSessionReport(legacy), /activation\s+: \(không rõ source\)/);
 });
 
+test("session report normalizes the ompstack-verifier alias", () => {
+  const report = parseSessionReport([
+    JSON.stringify({ type: "session", id: "session" }),
+    custom("route-decision.v1", {
+      decisionId,
+      requiredIndependentEvidence: ["ompstack-verifier"],
+    }),
+    custom("route-evidence.v1", { decisionId, evidence: "ompstack-verifier" }),
+  ].join("\n"));
+
+  assert.deepEqual(report.evidence, {
+    decisionId,
+    required: ["verifier"],
+    observed: ["verifier"],
+    missing: [],
+    lanes: ["verifier"],
+  });
+  assert.match(formatSessionReport(report), /evidence\s+: verifier ✓/);
+});
+
 test("session report rejects malformed JSONL with its line number", () => {
   assert.throws(() => parseSessionReport('{"type":"session"}\nnot-json'), /session JSONL line 2 is not JSON/);
 });

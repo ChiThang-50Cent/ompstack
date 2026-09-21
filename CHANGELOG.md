@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.9] - 2026-09-21
+
+### Added
+
+- Added native OMP session telemetry for RouteDecision, tool lifecycle, block, and evidence-attempt events.
+- Added `scripts/session-telemetry.mjs` to correlate JSONL tool calls with route outcomes, evidence lanes, durations, and bounded agent/artifact/history references.
+
+### Changed
+
+- Hardened route evidence replay and bootstrap behavior across session state reconstruction.
+- Expanded session reports with route metadata, tool metrics, evidence attempts, and references.
+
+### Fixed
+
+- Treated the `xd://ompstack_phase` protocol as read-only so phase inspection cannot falsely stale a material RouteDecision.
+
+### Evidence
+
+- `bun run check` passed; `bun test tests` passed with 116 tests across 19 files.
+
+
 ## [0.3.8] - 2026-09-19
 
 ### Added

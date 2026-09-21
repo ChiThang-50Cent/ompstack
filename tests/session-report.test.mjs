@@ -63,6 +63,8 @@ test("session report parses route, block, skip, evidence, and stale entries", ()
     observed: ["reviewer", "verifier"],
     missing: ["security-reviewer"],
     lanes: ["reviewer", "verifier", "security-reviewer"],
+    attempts: [],
+    references: [],
   });
   assert.equal(report.materialStale, 1);
 
@@ -106,9 +108,94 @@ test("session report normalizes the ompstack-verifier alias", () => {
     observed: ["verifier"],
     missing: [],
     lanes: ["verifier"],
+    attempts: [],
+    references: [],
   });
   assert.match(formatSessionReport(report), /evidence\s+: verifier ✓/);
 });
+test("session report preserves route metadata and telemetry outcomes", () => {
+  const report = parseSessionReport([
+    custom("route-decision.v1", {
+      decisionId,
+      intent: "feature",
+      measurementPurpose: "material",
+      repositoryRoot: "/repo",
+      targets: ["src"],
+      risk: "high",
+      policyVersion: "policy-1",
+      routeInputDigest: "input-digest",
+      changeSetDigest: "change-digest",
+      signalsDigest: "signals-digest",
+      requiredPlaybooks: ["skill://ompstack/playbooks/feature.md"],
+      requiredIndependentEvidence: ["reviewer"],
+      reasonCodes: ["shared-contract"],
+      signals: { changedCodeFiles: 1 },
+    }),
+    custom("route-evidence-attempt.v1", {
+      decisionId,
+      evidence: ["reviewer"],
+      toolCallId: "task-1",
+      outcome: "success",
+      references: ["artifact://review", "not-a-reference"],
+    }),
+    custom("route-tool.v1", {
+      phase: "call",
+      toolCallId: "task-1",
+      toolName: "task",
+      decisionId,
+      disposition: "allowed",
+      paths: [],
+    }),
+    custom("route-tool.v1", {
+      phase: "end",
+      toolCallId: "task-1",
+      toolName: "task",
+      decisionId,
+      outcome: "success",
+      references: ["agent://reviewer"],
+    }),
+  ].join("\n"));
+
+  assert.deepEqual(report.routeCalls[0], {
+    decisionId,
+    risk: "high",
+    targets: ["src"],
+    riskFacts: null,
+    measurementPurpose: "material",
+    repositoryRoot: "/repo",
+    intent: "feature",
+    policyVersion: "policy-1",
+    routeInputDigest: "input-digest",
+    changeSetDigest: "change-digest",
+    signalsDigest: "signals-digest",
+    requiredPlaybooks: ["skill://ompstack/playbooks/feature.md"],
+    requiredIndependentEvidence: ["reviewer"],
+    securityReviewRequired: false,
+    verificationRequired: false,
+    reasonCodes: ["shared-contract"],
+    signals: { changedCodeFiles: 1 },
+    state: null,
+    reason: null,
+    stateHistory: [],
+  });
+  assert.deepEqual(report.evidence.attempts, [{
+    decisionId,
+    evidence: "reviewer",
+    toolCallId: "task-1",
+    outcome: "success",
+    references: ["artifact://review"],
+  }]);
+  assert.deepEqual(report.evidence.references, ["artifact://review"]);
+  assert.deepEqual(report.toolMetrics, {
+    calls: 1,
+    ends: 1,
+    allowed: 1,
+    blocked: 0,
+    successes: 1,
+    errors: 0,
+  });
+});
+
 
 test("session report rejects malformed JSONL with its line number", () => {
   assert.throws(() => parseSessionReport('{"type":"session"}\nnot-json'), /session JSONL line 2 is not JSON/);

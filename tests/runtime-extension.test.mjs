@@ -36,6 +36,10 @@ function createRuntime() {
   ompstackRuntime(pi);
   return { entries, handlers, tools };
 }
+function stateEntries(runtime) {
+  return runtime.entries.filter((entry) => !entry.customType.endsWith("route-tool.v1") && !entry.customType.endsWith("route-evidence-attempt.v1"));
+}
+
 
 const decisionId = "a".repeat(64);
 const decision = {
@@ -268,7 +272,7 @@ test("runtime stays inactive until Ompstack records a decision", async () => {
   const gate = runtime.handlers.get("tool_call");
   assert.equal(await gate({ toolName: "write", input: { path: "unrelated.txt" } }), undefined);
   assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
-  assert.deepEqual(runtime.entries, [{
+  assert.deepEqual(stateEntries(runtime), [{
     customType: "io.github.chithang-50cent.ompstack.route-skip.v1",
     data: { reason: "enforcement-inactive", firstToolName: "write" },
   }]);
@@ -279,7 +283,7 @@ test("runtime records at most one inactive-enforcement skip", async () => {
   const gate = runtime.handlers.get("tool_call");
   assert.equal(await gate({ toolName: "write", input: { path: "first.txt" } }), undefined);
   assert.equal(await gate({ toolName: "bash", input: { command: "echo second" } }), undefined);
-  assert.deepEqual(runtime.entries, [{
+  assert.deepEqual(stateEntries(runtime), [{
     customType: "io.github.chithang-50cent.ompstack.route-skip.v1",
     data: { reason: "enforcement-inactive", firstToolName: "write" },
   }]);
@@ -293,7 +297,7 @@ test("interactive Ompstack invocation activates write-before-route enforcement",
     block: true,
     reason: "ompstack requires a valid RouteDecision before mutable or unknown execution",
   });
-  assert.deepEqual(runtime.entries, [
+  assert.deepEqual(stateEntries(runtime), [
     {
       customType: "io.github.chithang-50cent.ompstack.route-activation.v1",
       data: { workflow: "ompstack", source: "input" },
@@ -331,7 +335,7 @@ test("runtime keeps an active decision across mutable calls and Todo inspection"
   assert.equal(await gate({ toolName: "edit", input: { path: "tests/runtime-extension.test.mjs" } }), undefined);
   assert.equal(await gate({ toolName: "bash", input: {} }), undefined);
   assert.equal(await gate({ toolName: "todo", input: { op: "view" } }), undefined);
-  assert.deepEqual(runtime.entries, [{
+  assert.deepEqual(stateEntries(runtime), [{
     customType: "io.github.chithang-50cent.ompstack.route-block.v1",
     data: {
       toolName: "task",
@@ -373,11 +377,72 @@ test("runtime records only successfully launched required evidence lanes", async
     missingIndependentEvidence: ["verifier"],
     runtimeEvidenceCoverage: "partial",
   });
-  assert.deepEqual(runtime.entries, [{
+  assert.deepEqual(stateEntries(runtime), [{
     customType: "io.github.chithang-50cent.ompstack.route-evidence.v1",
     data: { decisionId, evidence: "reviewer" },
   }]);
 });
+test("runtime records tool outcomes and evidence references", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [decision]);
+  await gate({
+    toolCallId: "failed-task",
+    toolName: "task",
+    input: {
+      context: `Route-Decision: sha256:${decisionId}`,
+      tasks: [{ agent: "reviewer" }],
+    },
+  });
+  await runtime.handlers.get("tool_execution_end")({
+    toolCallId: "failed-task",
+    toolName: "task",
+    result: {
+      artifact: "artifact://failed-review",
+      history: "history://failed-task",
+      details: {
+        results: [{ id: "FailedReview", agent: "reviewer" }],
+        progress: [{ id: "PendingReview", agent: "reviewer", status: "running" }],
+      },
+    },
+    isError: true,
+  });
+  assert.deepEqual(runtime.entries, [
+    {
+      customType: "io.github.chithang-50cent.ompstack.route-tool.v1",
+      data: {
+        phase: "call",
+        toolCallId: "failed-task",
+        toolName: "task",
+        decisionId,
+        disposition: "allowed",
+        reason: null,
+        paths: [],
+      },
+    },
+    {
+      customType: "io.github.chithang-50cent.ompstack.route-tool.v1",
+      data: {
+        phase: "end",
+        toolCallId: "failed-task",
+        toolName: "task",
+        decisionId,
+        outcome: "error",
+        references: ["artifact://failed-review", "history://failed-task", "agent://FailedReview", "agent://PendingReview"],
+      },
+    },
+    {
+      customType: "io.github.chithang-50cent.ompstack.route-evidence-attempt.v1",
+      data: {
+        decisionId,
+        evidence: ["reviewer"],
+        toolCallId: "failed-task",
+        outcome: "error",
+        references: ["artifact://failed-review", "history://failed-task", "agent://FailedReview", "agent://PendingReview"],
+      },
+    },
+  ]);
+});
+
 
 test("runtime restores only valid evidence for the active decision", async () => {
   const runtime = createRuntime();
@@ -521,7 +586,7 @@ test("route protocol bootstrap is read-only and never stales a route", async () 
     await bootstrapGate({ toolCallId: "route-protocol-bootstrap", toolName: "write", input: { path: "xd://ompstack_route", content: "{}" } }),
     undefined,
   );
-  assert.deepEqual(bootstrap.entries, []);
+  assert.deepEqual(stateEntries(bootstrap), []);
 
   const material = createRuntime();
   const materialGate = await restore(material, [decision]);
@@ -532,7 +597,19 @@ test("route protocol bootstrap is read-only and never stales a route", async () 
   await material.handlers.get("tool_execution_end")({ toolCallId: "route-protocol-material", toolName: "write", isError: false });
   const phase = await material.tools.get("ompstack_phase").execute("phase", {});
   assert.equal(phase.details.materialRouteCurrent, true);
-  assert.deepEqual(material.entries, []);
+  assert.deepEqual(stateEntries(material), []);
+});
+test("phase protocol is read-only and never stales a route", async () => {
+  const runtime = createRuntime();
+  const gate = await restore(runtime, [decision]);
+  assert.equal(
+    await gate({ toolCallId: "phase-protocol", toolName: "write", input: { path: "xd://ompstack_phase", content: "{}" } }),
+    undefined,
+  );
+  await runtime.handlers.get("tool_execution_end")({ toolCallId: "phase-protocol", toolName: "write", isError: false });
+  const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
+  assert.equal(phase.details.materialRouteCurrent, true);
+  assert.deepEqual(stateEntries(runtime), []);
 });
 
 test("bootstrap routes allow the first declared mutation", async () => {
@@ -547,7 +624,7 @@ test("bootstrap routes allow the first declared mutation", async () => {
       undefined,
     );
     await runtime.handlers.get("tool_execution_end")({ toolCallId: "bootstrap-write", toolName: "write", isError: false });
-    assert.deepEqual(runtime.entries.map((entry) => entry.customType), [
+    assert.deepEqual(stateEntries(runtime).map((entry) => entry.customType), [
       "io.github.chithang-50cent.ompstack.route-decision.v1",
     ]);
   });
@@ -596,7 +673,7 @@ test("late mutation completion cannot stale a superseding route", async () => {
     const second = await route.execute("material", routeInput(root, revision));
     assert.equal(second.details.measurementPurpose, "material");
     await runtime.handlers.get("tool_execution_end")({ toolCallId: "late-write", toolName: "write", isError: false });
-    assert.equal(runtime.entries.at(-1).customType, "io.github.chithang-50cent.ompstack.route-decision.v1");
+    assert.equal(stateEntries(runtime).at(-1).customType, "io.github.chithang-50cent.ompstack.route-decision.v1");
   });
 });
 test("material route drops evidence that completes after mutation", async () => {
@@ -621,7 +698,7 @@ test("material route drops evidence that completes after mutation", async () => 
   await runtime.handlers.get("tool_execution_end")({ toolCallId: "late-evidence", toolName: "task", isError: false });
   const phase = await runtime.tools.get("ompstack_phase").execute("phase", {});
   assert.deepEqual(phase.details.observedIndependentEvidence, []);
-  assert.deepEqual(runtime.entries, [{
+  assert.deepEqual(stateEntries(runtime), [{
     customType: "io.github.chithang-50cent.ompstack.route-decision-state.v1",
     data: { decisionId, state: "material-stale", reason: "workspace-mutation-after-route" },
   }]);
@@ -640,7 +717,7 @@ test("material routes enforce declared write scope and become stale after mutati
     { block: true, reason: "ompstack target is outside the RouteDecision scope: README.md" },
   );
   await runtime.handlers.get("tool_execution_end")({ toolCallId: "in-scope-write", toolName: "write", isError: false });
-  assert.deepEqual(runtime.entries, [
+  assert.deepEqual(stateEntries(runtime), [
     {
       customType: "io.github.chithang-50cent.ompstack.route-block.v1",
       data: {
@@ -672,7 +749,7 @@ test("material routes enforce declared write scope and become stale after mutati
     }),
     { block: true, reason: "task requires a fresh material RouteDecision before independent evidence" },
   );
-  assert.deepEqual(runtime.entries.at(-1), {
+  assert.deepEqual(stateEntries(runtime).at(-1), {
     customType: "io.github.chithang-50cent.ompstack.route-block.v1",
     data: {
       toolName: "task",
@@ -714,15 +791,15 @@ test("fresh routing invalidates and replaces the prior decision", async () => {
     assert.equal(second.details.measurementPurpose, "material");
     assert.notEqual(first.details.decisionId, second.details.decisionId);
     assert.deepEqual(
-      runtime.entries.map((entry) => entry.customType),
+      stateEntries(runtime).map((entry) => entry.customType),
       [
         "io.github.chithang-50cent.ompstack.route-decision.v1",
         "io.github.chithang-50cent.ompstack.route-decision-state.v1",
         "io.github.chithang-50cent.ompstack.route-decision.v1",
       ],
     );
-    assert.equal(runtime.entries[0].data.decisionId, first.details.decisionId);
-    assert.deepEqual(runtime.entries[1].data, {
+    assert.equal(stateEntries(runtime)[0].data.decisionId, first.details.decisionId);
+    assert.deepEqual(stateEntries(runtime)[1].data, {
       decisionId: first.details.decisionId,
       state: "invalidated",
       reason: "superseded-by-fresh-route",

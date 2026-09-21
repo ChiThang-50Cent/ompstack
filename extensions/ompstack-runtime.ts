@@ -18,8 +18,12 @@ const ACTIVATION_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-activati
 const EVIDENCE_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-evidence.v1";
 const BLOCK_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-block.v1";
 const SKIP_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-skip.v1";
+const TOOL_EVENT_TYPE = "io.github.chithang-50cent.ompstack.route-tool.v1";
+const EVIDENCE_ATTEMPT_TYPE = "io.github.chithang-50cent.ompstack.route-evidence-attempt.v1";
 const READ_ONLY_TOOLS: Record<string, true> = { read: true, grep: true, glob: true, web_search: true, ompstack_route: true, ompstack_phase: true };
 const ROUTE_PROTOCOL_PATH = "xd://ompstack_route";
+const PHASE_PROTOCOL_PATH = "xd://ompstack_phase";
+const TELEMETRY_REFERENCE = /^(?:agent|artifact|history):\/\/\S+$/;
 const ACTIVATION_SOURCES: Record<ActivationSource, true> = { input: true, "skill-read": true, "route-call": true };
 const EVIDENCE_LANES = ["reviewer", "verifier", "security-reviewer"] as const;
 const EVIDENCE_LANE_SET = new Set<EvidenceLane>(EVIDENCE_LANES);
@@ -106,7 +110,7 @@ function isReadOnlyTool(event: ToolCallEvent) {
   const path = record(event.input)?.path;
   return event.toolName in READ_ONLY_TOOLS ||
     (event.toolName === "todo" && record(event.input)?.op === "view") ||
-    (event.toolName === "write" && path === ROUTE_PROTOCOL_PATH);
+    (event.toolName === "write" && (path === ROUTE_PROTOCOL_PATH || path === PHASE_PROTOCOL_PATH));
 }
 function isProtocolPath(path: string) {
   return /^[a-z][a-z0-9+.-]*:\/\//i.test(path);
@@ -140,6 +144,45 @@ function mutationPaths(event: ToolCallEvent) {
   if (Array.isArray(input?.paths)) return input.paths.every((path) => typeof path === "string" && path !== "") ? input.paths : null;
   return typeof input?.path === "string" && input.path !== "" ? [input.path] : null;
 }
+function collectReferences(value: unknown, references: string[] = [], seen = new Set<object>(), depth = 0): string[] {
+  if (references.length >= 8 || depth > 5) return references;
+  if (typeof value === "string") {
+    if (TELEMETRY_REFERENCE.test(value) && !references.includes(value)) references.push(value);
+    return references;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectReferences(item, references, seen, depth + 1);
+    return references;
+  }
+  const candidate = record(value);
+  if (candidate === null || seen.has(candidate)) return references;
+  seen.add(candidate);
+  for (const item of Object.values(candidate)) collectReferences(item, references, seen, depth + 1);
+  return references;
+}
+function collectTaskReferences(value: unknown, references: string[] = []): string[] {
+  if (references.length >= 8) return references;
+  const candidate = record(value);
+  const details = record(candidate?.details);
+  const metadata = [
+    ...(Array.isArray(details?.results) ? details.results : []),
+    ...(Array.isArray(details?.progress) ? details.progress : []),
+  ];
+  for (const result of metadata) {
+    if (references.length >= 8) break;
+    const id = record(result)?.id;
+    if (typeof id !== "string" || id === "") continue;
+    const reference = `agent://${id}`;
+    if (TELEMETRY_REFERENCE.test(reference) && !references.includes(reference)) references.push(reference);
+  }
+  return references;
+}
+function resultReferences(toolName: string, value: unknown): string[] {
+  const references = collectReferences(value);
+  return toolName === "task" ? collectTaskReferences(value, references) : references;
+}
+
+
 
 async function outsideDeclaredScope(decision: ActiveDecision, event: ToolCallEvent): Promise<ScopeViolation | undefined> {
   const paths = mutationPaths(event);
@@ -174,6 +217,32 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   let observedEvidence = new Set<EvidenceLane>();
   const pendingTaskEvidence = new Map<string, { decisionId: string; evidence: EvidenceLane[] }>();
   const pendingMutations = new Map<string, string>();
+  const pendingToolTelemetry = new Map<string, { decisionId: string | null; toolName: string }>();
+  async function recordToolCall(event: ToolCallEvent, decisionId: string | null, disposition: "allowed" | "blocked", reason?: string) {
+    await pi.appendEntry(TOOL_EVENT_TYPE, {
+      phase: "call",
+      toolCallId: event.toolCallId,
+      toolName: event.toolName,
+      decisionId,
+      disposition,
+      reason: reason ?? null,
+      paths: mutationPaths(event),
+    });
+    if (disposition === "allowed") pendingToolTelemetry.set(event.toolCallId, { decisionId, toolName: event.toolName });
+  }
+  async function recordToolEnd(event: { toolCallId: string; toolName: string; result: unknown; isError: boolean }) {
+    const pending = pendingToolTelemetry.get(event.toolCallId);
+    pendingToolTelemetry.delete(event.toolCallId);
+    if (!pending) return;
+    await pi.appendEntry(TOOL_EVENT_TYPE, {
+      phase: "end",
+      toolCallId: event.toolCallId,
+      toolName: event.toolName,
+      decisionId: pending.decisionId,
+      outcome: event.isError ? "error" : "success",
+      references: resultReferences(event.toolName, event.result),
+    });
+  }
   async function recordBlock(event: ToolCallEvent, reason: string, decisionId: string | null, path?: string | null) {
     const inputPath = record(event.input)?.path;
     const blockPath = path === undefined ? (typeof inputPath === "string" && inputPath !== "" ? inputPath : null) : path;
@@ -220,6 +289,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     observedEvidence = new Set();
     pendingTaskEvidence.clear();
     pendingMutations.clear();
+    pendingToolTelemetry.clear();
     for (const entry of ctx.sessionManager.getBranch()) {
       const item = record(entry);
       if (item?.type !== "custom") continue;
@@ -318,7 +388,11 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   });
 
   pi.on("tool_call", async (event) => {
-    if (isReadOnlyTool(event)) return;
+    const decisionId = activeDecision?.decisionId ?? null;
+    if (isReadOnlyTool(event)) {
+      if (enforcementActive) await recordToolCall(event, decisionId, "allowed");
+      return;
+    }
     if (!enforcementActive) {
       if (!routeSkipRecorded) {
         routeSkipRecorded = true;
@@ -326,21 +400,42 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
       }
       return;
     }
-    if (!activeDecision) return recordBlock(event, "ompstack requires a valid RouteDecision before mutable or unknown execution", null);
+    if (!activeDecision) {
+      const reason = "ompstack requires a valid RouteDecision before mutable or unknown execution";
+      await recordToolCall(event, null, "blocked", reason);
+      return recordBlock(event, reason, null);
+    }
     const scopeViolation = event.toolName === "write" || event.toolName === "edit" ? await outsideDeclaredScope(activeDecision, event) : undefined;
-    if (scopeViolation) return recordBlock(event, scopeViolation.reason, activeDecision.decisionId, scopeViolation.path);
+    if (scopeViolation) {
+      await recordToolCall(event, activeDecision.decisionId, "blocked", scopeViolation.reason);
+      return recordBlock(event, scopeViolation.reason, activeDecision.decisionId, scopeViolation.path);
+    }
     if (event.toolName === "write" || event.toolName === "edit") {
+      await recordToolCall(event, activeDecision.decisionId, "allowed");
       pendingMutations.set(event.toolCallId, activeDecision.decisionId);
       return;
     }
-    if (event.toolName !== "task") return;
-    if (!taskBindsDecision(event.input, activeDecision.decisionId)) return recordBlock(event, "task requires an exact Route-Decision header", activeDecision.decisionId);
+    if (event.toolName !== "task") {
+      await recordToolCall(event, activeDecision.decisionId, "allowed");
+      return;
+    }
+    if (!taskBindsDecision(event.input, activeDecision.decisionId)) {
+      const reason = "task requires an exact Route-Decision header";
+      await recordToolCall(event, activeDecision.decisionId, "blocked", reason);
+      return recordBlock(event, reason, activeDecision.decisionId);
+    }
     const evidence = requestedEvidence(event.input).filter((lane) => requiredEvidence(activeDecision).includes(lane));
-    if (evidence.length && activeDecision.measurementPurpose === "material" && !materialRouteCurrent) return recordBlock(event, "task requires a fresh material RouteDecision before independent evidence", activeDecision.decisionId);
+    if (evidence.length && activeDecision.measurementPurpose === "material" && !materialRouteCurrent) {
+      const reason = "task requires a fresh material RouteDecision before independent evidence";
+      await recordToolCall(event, activeDecision.decisionId, "blocked", reason);
+      return recordBlock(event, reason, activeDecision.decisionId);
+    }
+    await recordToolCall(event, activeDecision.decisionId, "allowed");
     if (evidence.length) pendingTaskEvidence.set(event.toolCallId, { decisionId: activeDecision.decisionId, evidence });
   });
 
   pi.on("tool_execution_end", async (event) => {
+    await recordToolEnd(event);
     if (event.toolName === "write" || event.toolName === "edit") {
       const decisionId = pendingMutations.get(event.toolCallId);
       pendingMutations.delete(event.toolCallId);
@@ -349,7 +444,16 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     if (event.toolName !== "task") return;
     const pending = pendingTaskEvidence.get(event.toolCallId);
     pendingTaskEvidence.delete(event.toolCallId);
-    if (!pending || event.isError) return;
+    if (!pending) return;
+    await pi.appendEntry(EVIDENCE_ATTEMPT_TYPE, {
+      decisionId: pending.decisionId,
+      evidence: pending.evidence,
+      toolCallId: event.toolCallId,
+      outcome: event.isError ? "error" : "success",
+      references: resultReferences(event.toolName, event.result),
+    });
+    if (event.isError) return;
     for (const evidence of pending.evidence) await observeEvidence(pending.decisionId, evidence);
   });
+
 }

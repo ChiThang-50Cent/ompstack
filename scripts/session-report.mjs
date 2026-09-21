@@ -8,8 +8,10 @@ const ENTRY_TYPES = Object.freeze({
   decision: `${CUSTOM_TYPE_PREFIX}route-decision.v1`,
   decisionState: `${CUSTOM_TYPE_PREFIX}route-decision-state.v1`,
   evidence: `${CUSTOM_TYPE_PREFIX}route-evidence.v1`,
+  evidenceAttempt: `${CUSTOM_TYPE_PREFIX}route-evidence-attempt.v1`,
   block: `${CUSTOM_TYPE_PREFIX}route-block.v1`,
   skip: `${CUSTOM_TYPE_PREFIX}route-skip.v1`,
+  tool: `${CUSTOM_TYPE_PREFIX}route-tool.v1`,
 });
 const EVIDENCE_LANES = Object.freeze(["reviewer", "verifier", "security-reviewer"]);
 
@@ -24,6 +26,14 @@ function stringOrNull(value) {
 function uniqueStrings(values) {
   return [...new Set(values.filter((value) => typeof value === "string" && value !== ""))];
 }
+function stringArray(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item !== "") : [];
+}
+
+function normalizeReferences(value) {
+  return uniqueStrings(stringArray(value).filter((item) => /^(?:agent|artifact|history):\/\/\S+$/.test(item)));
+}
+
 function normalizeEvidence(values) {
   return uniqueStrings(values.map((value) => value === "ompstack-verifier" ? "verifier" : value));
 }
@@ -54,25 +64,44 @@ export function parseSessionReport(session) {
   const decisionEntries = byType(ENTRY_TYPES.decision);
   const stateEntries = byType(ENTRY_TYPES.decisionState);
   const evidenceEntries = byType(ENTRY_TYPES.evidence);
+  const evidenceAttemptEntries = byType(ENTRY_TYPES.evidenceAttempt);
   const blockEntries = byType(ENTRY_TYPES.block);
   const skipEntries = byType(ENTRY_TYPES.skip);
+  const toolEntries = byType(ENTRY_TYPES.tool);
   const activationSources = activationEntries.map((entry) => stringOrNull(object(entry.data)?.source));
   const routeCalls = decisionEntries.map((entry) => {
     const data = object(entry.data) ?? {};
     const decisionId = stringOrNull(data.decisionId);
     const states = stateEntries
       .map((stateEntry) => object(stateEntry.data))
-      .filter((state) => state?.decisionId === decisionId);
+      .filter((state) => state?.decisionId === decisionId)
+      .map((state) => ({
+        state: stringOrNull(state?.state),
+        reason: stringOrNull(state?.reason),
+      }));
     const latestState = states.at(-1) ?? null;
     const declaredRiskFacts = object(data.declaredRiskFacts) ?? object(data.riskFacts);
     return {
       decisionId,
       risk: stringOrNull(data.risk),
-      targets: Array.isArray(data.targets) ? data.targets.filter((target) => typeof target === "string") : [],
+      targets: stringArray(data.targets),
       riskFacts: declaredRiskFacts,
       measurementPurpose: stringOrNull(data.measurementPurpose),
-      state: stringOrNull(latestState?.state),
-      reason: stringOrNull(latestState?.reason),
+      repositoryRoot: stringOrNull(data.repositoryRoot),
+      intent: stringOrNull(data.intent),
+      policyVersion: stringOrNull(data.policyVersion),
+      routeInputDigest: stringOrNull(data.routeInputDigest),
+      changeSetDigest: stringOrNull(data.changeSetDigest),
+      signalsDigest: stringOrNull(data.signalsDigest),
+      requiredPlaybooks: stringArray(data.requiredPlaybooks),
+      requiredIndependentEvidence: normalizeEvidence(Array.isArray(data.requiredIndependentEvidence) ? data.requiredIndependentEvidence : []),
+      securityReviewRequired: data.securityReviewRequired === true,
+      verificationRequired: data.verificationRequired === true,
+      reasonCodes: stringArray(data.reasonCodes),
+      signals: object(data.signals),
+      state: latestState?.state ?? null,
+      reason: latestState?.reason ?? null,
+      stateHistory: states,
     };
   });
   const latestDecisionId = routeCalls.at(-1)?.decisionId ?? null;
@@ -84,6 +113,20 @@ export function parseSessionReport(session) {
       .filter((data) => data?.decisionId === latestDecisionId)
       .map((data) => data?.evidence),
   );
+  const evidenceAttempts = evidenceAttemptEntries.flatMap((entry) => {
+    const data = object(entry.data) ?? {};
+    const decisionId = stringOrNull(data.decisionId);
+    const evidence = normalizeEvidence(Array.isArray(data.evidence) ? data.evidence : [data.evidence]);
+    return evidence.map((lane) => ({
+      decisionId,
+      evidence: lane,
+      toolCallId: stringOrNull(data.toolCallId),
+      outcome: stringOrNull(data.outcome),
+      references: normalizeReferences(data.references),
+    }));
+  });
+  const latestEvidenceAttempts = evidenceAttempts.filter((attempt) => attempt.decisionId === latestDecisionId);
+  const evidenceReferences = uniqueStrings(latestEvidenceAttempts.flatMap((attempt) => attempt.references));
   const evidenceLanes = EVIDENCE_LANES.filter((lane) => requiredEvidence.includes(lane) || observedEvidence.includes(lane));
   const blocks = blockEntries.map((entry) => {
     const data = object(entry.data) ?? {};
@@ -101,6 +144,28 @@ export function parseSessionReport(session) {
       firstToolName: stringOrNull(data.firstToolName),
     };
   });
+  const toolTelemetry = toolEntries.map((entry) => {
+    const data = object(entry.data) ?? {};
+    return {
+      phase: stringOrNull(data.phase),
+      toolCallId: stringOrNull(data.toolCallId),
+      toolName: stringOrNull(data.toolName),
+      decisionId: stringOrNull(data.decisionId),
+      disposition: stringOrNull(data.disposition),
+      outcome: stringOrNull(data.outcome),
+      reason: stringOrNull(data.reason),
+      paths: stringArray(data.paths),
+      references: normalizeReferences(data.references),
+    };
+  });
+  const toolMetrics = {
+    calls: toolTelemetry.filter((event) => event.phase === "call").length,
+    ends: toolTelemetry.filter((event) => event.phase === "end").length,
+    allowed: toolTelemetry.filter((event) => event.disposition === "allowed").length,
+    blocked: toolTelemetry.filter((event) => event.disposition === "blocked").length,
+    successes: toolTelemetry.filter((event) => event.outcome === "success").length,
+    errors: toolTelemetry.filter((event) => event.outcome === "error").length,
+  };
   return {
     schemaVersion: 1,
     activation: activationEntries.length === 0 ? null : activationSources[0] ?? "unknown",
@@ -108,12 +173,17 @@ export function parseSessionReport(session) {
     routeCalls,
     blocks,
     skips,
+    toolTelemetry,
+    toolMetrics,
+    evidenceAttempts,
     evidence: {
       decisionId: latestDecisionId,
       required: requiredEvidence,
       observed: observedEvidence,
       missing: requiredEvidence.filter((lane) => !observedEvidence.includes(lane)),
       lanes: evidenceLanes,
+      attempts: latestEvidenceAttempts,
+      references: evidenceReferences,
     },
     materialStale: stateEntries.filter((entry) => object(entry.data)?.state === "material-stale").length,
   };
@@ -133,6 +203,7 @@ export function formatSessionReport(report) {
   report.routeCalls.forEach((route, index) => {
     let line = `  #${index + 1} risk=${route.risk ?? "unknown"} targets=[${route.targets.join(", ")}]`;
     if (route.riskFacts) line += ` riskFacts=${compactObject(route.riskFacts)}`;
+    if (route.reasonCodes.length > 0) line += ` reasons=[${route.reasonCodes.join(", ")}]`;
     if (route.reason) line += ` reason=${route.reason}`;
     lines.push(line);
   });
@@ -147,6 +218,8 @@ export function formatSessionReport(report) {
     ? "none"
     : report.evidence.lanes.map((lane) => `${lane} ${report.evidence.observed.includes(lane) ? "✓" : "✗"}`).join(" ");
   lines.push(`evidence        : ${evidenceSummary}`);
+  lines.push(`evidence tries  : ${report.evidence.attempts.length}`);
+  lines.push(`tool events     : calls=${report.toolMetrics.calls} ends=${report.toolMetrics.ends} allowed=${report.toolMetrics.allowed} blocked=${report.toolMetrics.blocked} successes=${report.toolMetrics.successes} errors=${report.toolMetrics.errors}`);
   lines.push(`material stale  : ${report.materialStale}`);
   return lines.join("\n");
 }

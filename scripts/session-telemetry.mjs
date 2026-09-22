@@ -97,6 +97,75 @@ function timestamp(value) {
   }
   return null;
 }
+const DEFAULT_TEST_COMMAND_PATTERN = "\\b(?:pytest|tox|nox|unittest|mvn|gradle|go\\s+test|cargo\\s+test)\\b";
+
+function finiteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function textBytes(content) {
+  if (!Array.isArray(content)) return 0;
+  return content.reduce((total, item) => total + (typeof item?.text === "string" ? Buffer.byteLength(item.text) : 0), 0);
+}
+
+export function collectCostTelemetry(entries, testCommandPattern = DEFAULT_TEST_COMMAND_PATTERN) {
+  const testPattern = new RegExp(testCommandPattern);
+  const tokens = { input: 0, output: 0, cache_read: 0, cache_write: 0, total: 0 };
+  const byTool = {};
+  let modelTurns = 0;
+  let capturedOutputBytes = 0;
+  let testCommandReinvocations = 0;
+  let compactionEvents = 0;
+  let pruningEvents = 0;
+  const timestamps = [];
+
+  for (const entry of entries) {
+    const eventTimestamp = timestamp(entry?.timestamp);
+    if (eventTimestamp !== null) timestamps.push(eventTimestamp);
+    if (entry?.type === "message" && entry.message?.role === "assistant") {
+      const usage = object(entry.message.usage);
+      if (usage !== null) {
+        modelTurns += 1;
+        tokens.input += finiteNumber(usage.input);
+        tokens.output += finiteNumber(usage.output);
+        tokens.cache_read += finiteNumber(usage.cacheRead);
+        tokens.cache_write += finiteNumber(usage.cacheWrite);
+        tokens.total += typeof usage.totalTokens === "number" && Number.isFinite(usage.totalTokens)
+          ? usage.totalTokens
+          : finiteNumber(usage.input) + finiteNumber(usage.output) + finiteNumber(usage.cacheRead) + finiteNumber(usage.cacheWrite);
+      }
+      for (const item of entry.message.content ?? []) {
+        if (item?.type !== "toolCall") continue;
+        const name = stringOrNull(item.name) ?? "unknown";
+        byTool[name] = (byTool[name] ?? 0) + 1;
+      }
+    }
+    if (entry?.type === "message" && entry.message?.role === "toolResult") {
+      capturedOutputBytes += textBytes(entry.message.content);
+    }
+    if (entry?.type === "custom" && entry.customType === TOOL_START_TYPE && entry.data?.toolName === "bash") {
+      testPattern.lastIndex = 0;
+      if (testPattern.test(entry.data.args?.command ?? "")) testCommandReinvocations += 1;
+    }
+    if (entry?.type === "custom" && /compact/i.test(entry.customType ?? "")) compactionEvents += 1;
+    if ((entry?.type === "custom" && /prun/i.test(entry.customType ?? "")) || entry?.prunedAt) pruningEvents += 1;
+  }
+
+  return {
+    model_turns: modelTurns,
+    tokens,
+    tool_invocations: {
+      total: Object.values(byTool).reduce((sum, count) => sum + count, 0),
+      by_tool: byTool,
+      captured_output_bytes: capturedOutputBytes,
+    },
+    test_command_reinvocations: testCommandReinvocations,
+    compaction_events: compactionEvents,
+    pruning_events: pruningEvents,
+    wall_time_ms: timestamps.length > 1 ? Math.max(...timestamps) - Math.min(...timestamps) : null,
+  };
+}
+
 
 function toolCallFromAssistant(entry, sequence) {
   const message = object(entry.message);
@@ -121,7 +190,7 @@ function toolResultFromMessage(entry) {
   };
 }
 
-export function parseSessionTelemetry(session) {
+export function parseSessionTelemetry(session, { testCommandPattern = DEFAULT_TEST_COMMAND_PATTERN } = {}) {
   const entries = Array.isArray(session) ? session : parseSessionEntries(session);
   const starts = new Map();
   const assistantCalls = new Map();
@@ -234,6 +303,7 @@ export function parseSessionTelemetry(session) {
     if (tool.outcome === "incomplete") metric.incomplete += 1;
     if (tool.disposition === "blocked") metric.blocked += 1;
   }
+  const cost = collectCostTelemetry(entries, testCommandPattern);
   return {
     schemaVersion: 1,
     tools,
@@ -245,6 +315,7 @@ export function parseSessionTelemetry(session) {
       blocked: tools.filter((tool) => tool.disposition === "blocked").length,
       byTool,
     },
+    cost,
     evidenceAttempts,
     ompstack,
   };
@@ -253,13 +324,14 @@ export function parseSessionTelemetry(session) {
 function usage() {
   return [
     "Usage:",
-    "  bun scripts/session-telemetry.mjs --session <path/to/session.jsonl> [--json]",
+    "  bun scripts/session-telemetry.mjs --session <path/to/session.jsonl> [--test-command-pattern <regex>] [--json]",
   ].join("\n");
 }
 
 function parseArguments(args) {
   let session;
   let json = false;
+  let testCommandPattern = DEFAULT_TEST_COMMAND_PATTERN;
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
     if (argument === "--json") {
@@ -274,16 +346,24 @@ function parseArguments(args) {
       session = argument.slice("--session=".length);
       continue;
     }
+    if (argument === "--test-command-pattern") {
+      testCommandPattern = args[++index];
+      continue;
+    }
+    if (argument.startsWith("--test-command-pattern=")) {
+      testCommandPattern = argument.slice("--test-command-pattern=".length);
+      continue;
+    }
     throw new Error(`unknown argument: ${argument}`);
   }
   if (!session) throw new Error(usage());
-  return { session, json };
+  return { session, json, testCommandPattern };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     const options = parseArguments(process.argv.slice(2));
-    const telemetry = parseSessionTelemetry(await readFile(options.session, "utf8"));
+    const telemetry = parseSessionTelemetry(await readFile(options.session, "utf8"), { testCommandPattern: options.testCommandPattern });
     if (options.json) {
       console.log(JSON.stringify(telemetry, null, 2));
     } else {
@@ -295,6 +375,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.log(`blocked         : ${metrics.blocked}`);
       console.log(`route calls     : ${ompstack.routeCalls.length}`);
       console.log(`evidence tries  : ${ompstack.evidence.attempts.length}`);
+      console.log(`model turns     : ${telemetry.cost.model_turns}`);
+      console.log(`total tokens    : ${telemetry.cost.tokens.total}`);
+      console.log(`wall time (ms)  : ${telemetry.cost.wall_time_ms ?? "unknown"}`);
     }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

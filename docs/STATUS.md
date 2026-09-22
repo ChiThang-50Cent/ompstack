@@ -18,8 +18,8 @@ Ompstack now has a persisted runtime routing boundary rather than a prose-only w
 ## Current evidence and adoption contract
 
 - Deterministic repository check: `bun run check`.
-- Test suite at this snapshot: **116 passing tests across 19 files**.
-- `bun scripts/session-telemetry.mjs --session <path/to/session.jsonl> [--json]` correlates native OMP tool lifecycle entries with Ompstack RouteDecision, block, tool, and evidence-attempt entries. It reports outcomes and bounded `agent://`, `artifact://`, and `history://` references; it does not promote a launched task into accepted proof.
+- Test suite at this snapshot: **117 passing tests across 19 files**.
+- `bun scripts/session-telemetry.mjs --session <path/to/session.jsonl> [--json]` correlates native OMP tool lifecycle entries with Ompstack RouteDecision, block, tool, and evidence-attempt entries. It reports outcomes, bounded `agent://`, `artifact://`, and `history://` references, and cost fields for model turns, token buckets, tool output bytes, test-command reinvocations, compaction/pruning events, and wall time; it does not promote a launched task into accepted proof.
 - `bun scripts/eval-risk-distribution.mjs --repo <path> --count <N> --output <file>` records a selected repository, sampled HEAD, sample size, and risk-tier distribution. It exits nonzero when the sample is entirely one tier.
 - The evaluator derives `behaviorAffecting` from each sampled change set: it is `false` only when no code file changed and no sensitive signal is observed `true`. It fixes `riskFacts` at bounded values, so its distribution is a lower bound on risk rather than a production expectation.
 - There is **no repository-independent risk distribution claim**. Evaluate a fixed sample for each target repository and retain its JSON record.

@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Added cost telemetry aggregation for model turns, token buckets, tool output bytes, test-command reinvocations, compaction/pruning events, and wall time in `scripts/session-telemetry.mjs`.
+
 ## [0.3.9] - 2026-09-21
 
 ### Added

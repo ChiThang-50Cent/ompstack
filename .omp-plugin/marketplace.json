@@ -5,19 +5,19 @@
   },
   "metadata": {
     "description": "Official marketplace catalog for the pstack-omp engineering workflow plugin",
-    "version": "0.2.0"
+    "version": "0.4.0"
   },
   "plugins": [
     {
       "name": "pstack-omp",
       "description": "Evidence-first engineering workflows, bounded agents, and independent verification for OMP",
-      "version": "0.2.0",
+      "version": "0.4.0",
       "category": "development",
       "source": {
         "source": "github",
         "repo": "ChiThang-50Cent/ompstack",
-        "ref": "v0.2.0",
-        "sha": "882aea1f09ac073931ff3dac1e96548f171c0fc8"
+        "ref": "v0.4.0",
+        "sha": "e6a67294afb9e9f01f1b9d91544a5d0cd7db8ce6"
       }
     }
   ]

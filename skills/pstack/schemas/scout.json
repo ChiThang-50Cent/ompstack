@@ -1,0 +1,75 @@
+{
+  "properties": {
+    "question": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "architecture": {
+      "type": "string"
+    },
+    "confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "facts": {
+      "elements": {
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "files": {
+      "elements": {
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "relevance": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "optionalProperties": {
+    "inferences": {
+      "elements": {
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "basis": {
+            "type": "string"
+          },
+          "confidence": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          }
+        }
+      }
+    },
+    "unknowns": {
+      "elements": {
+        "type": "string"
+      }
+    },
+    "blast_radius": {
+      "elements": {
+        "type": "string"
+      }
+    }
+  }
+}

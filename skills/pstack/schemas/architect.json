@@ -1,0 +1,116 @@
+{
+  "properties": {
+    "problem_frame": {
+      "type": "string"
+    },
+    "recommended_design": {
+      "type": "string"
+    },
+    "data_shape": {
+      "elements": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "representation": {
+            "type": "string"
+          },
+          "invariants": {
+            "elements": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "boundaries": {
+      "elements": {
+        "properties": {
+          "boundary": {
+            "type": "string"
+          },
+          "input_contract": {
+            "type": "string"
+          },
+          "output_contract": {
+            "type": "string"
+          },
+          "failure_policy": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "alternatives": {
+      "elements": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "strengths": {
+            "elements": {
+              "type": "string"
+            }
+          },
+          "weaknesses": {
+            "elements": {
+              "type": "string"
+            }
+          },
+          "disposition": {
+            "enum": [
+              "select",
+              "reject",
+              "prototype"
+            ]
+          }
+        }
+      }
+    },
+    "implementation_slices": {
+      "elements": {
+        "properties": {
+          "artifact": {
+            "type": "string"
+          },
+          "ownership": {
+            "type": "string"
+          },
+          "done_predicate": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "verification_plan": {
+      "elements": {
+        "properties": {
+          "acceptance": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "optionalProperties": {
+    "open_questions": {
+      "elements": {
+        "type": "string"
+      }
+    },
+    "migration_plan": {
+      "elements": {
+        "type": "string"
+      }
+    }
+  }
+}

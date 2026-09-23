@@ -1,0 +1,69 @@
+{
+  "properties": {
+    "rubric": {
+      "elements": {
+        "properties": {
+          "criterion": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "evaluations": {
+      "elements": {
+        "properties": {
+          "candidate": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "risks": {
+            "elements": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "base_candidate": {
+      "type": "string"
+    },
+    "selection_reason": {
+      "type": "string"
+    },
+    "graft_plan": {
+      "elements": {
+        "properties": {
+          "from_candidate": {
+            "type": "string"
+          },
+          "element": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    }
+  },
+  "optionalProperties": {
+    "no_selection_reason": {
+      "type": "string"
+    }
+  }
+}

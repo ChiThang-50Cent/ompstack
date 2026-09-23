@@ -1,34 +1,71 @@
 {
-  "name": "ompstack",
-  "version": "0.3.9",
-  "description": "Risk-routed engineering workflow for OhMyPi",
+  "name": "pstack-omp",
+  "version": "0.2.0",
+  "description": "Evidence-first engineering workflows, bounded subagents, and independent verification for Oh My Pi.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Pstack OMP contributors",
+  "engines": {
+    "node": ">=20"
+  },
   "files": [
+    "src",
+    "dist",
     "agents",
-    "commands",
-    "docs",
-    "extensions",
-    "examples",
-    "scripts",
-    "policy",
     "skills",
+    "docs",
+    "examples",
+    "eval",
+    ".omp-plugin",
+    "README.md",
+    "LICENSE",
     "NOTICE.md",
-    "third_party/PSTACK_LICENSE"
+    "CHANGELOG.md",
+    "scripts",
+    "test",
+    "types",
+    "tsconfig.json",
+    "tsconfig.test.json",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "BUILD_REPORT.md"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "check": "bun scripts/validate-plugin.mjs && tsc --project tsconfig.plugin.json",
-    "test": "bun test tests",
-    "prepublishOnly": "bun run check && bun test tests && npm pack --dry-run"
-  },
-  "devDependencies": {
-    "@oh-my-pi/pi-coding-agent": "^18.2.0",
-    "typescript": "^5.9.3"
-  },
   "omp": {
     "extensions": [
-      "./extensions/ompstack-runtime.ts"
+      "./src/index.ts"
     ]
-  }
+  },
+  "peerDependencies": {
+    "@oh-my-pi/pi-coding-agent": ">=18.2.11"
+  },
+  "peerDependenciesMeta": {
+    "@oh-my-pi/pi-coding-agent": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@oh-my-pi/pi-coding-agent": "18.2.11",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && npm run test:run",
+    "validate": "node scripts/validate-assets.mjs",
+    "check": "npm run clean && npm run build && npm run test:run && npm run eval:router && npm run validate",
+    "pack:local": "npm pack --ignore-scripts",
+    "verify:omp": "bash scripts/verify-with-omp.sh",
+    "eval:router": "node eval/score-router.mjs",
+    "install:local": "bash scripts/install-local.sh",
+    "uninstall:local": "bash scripts/uninstall-local.sh",
+    "test:run": "node --test test/*.test.mjs"
+  },
+  "keywords": [
+    "oh-my-pi",
+    "omp",
+    "coding-agent",
+    "pstack",
+    "verification",
+    "multi-agent"
+  ]
 }

@@ -1,0 +1,98 @@
+{
+  "properties": {
+    "artifact": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "changed_files": {
+      "elements": {
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "change": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commands": {
+      "elements": {
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence": {
+      "elements": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "command",
+              "test",
+              "benchmark",
+              "screenshot",
+              "trace",
+              "diff",
+              "observation",
+              "document",
+              "reproduction"
+            ]
+          },
+          "claim": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "implemented",
+        "blocked",
+        "failed"
+      ]
+    }
+  },
+  "optionalProperties": {
+    "evidence_refs": {
+      "elements": {
+        "type": "string"
+      }
+    },
+    "deviations": {
+      "elements": {
+        "properties": {
+          "expected": {
+            "type": "string"
+          },
+          "actual": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "risks": {
+      "elements": {
+        "type": "string"
+      }
+    },
+    "followups": {
+      "elements": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "properties": {
+    "base": {
+      "type": "string"
+    },
+    "applied_grafts": {
+      "elements": {
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "element": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "changed_files": {
+      "elements": {
+        "type": "string"
+      }
+    },
+    "commands": {
+      "elements": {
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence": {
+      "elements": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "command",
+              "test",
+              "benchmark",
+              "screenshot",
+              "trace",
+              "diff",
+              "observation",
+              "document",
+              "reproduction"
+            ]
+          },
+          "claim": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "synthesized",
+        "blocked",
+        "failed"
+      ]
+    }
+  },
+  "optionalProperties": {
+    "evidence_refs": {
+      "elements": {
+        "type": "string"
+      }
+    },
+    "rejected_grafts": {
+      "elements": {
+        "properties": {
+          "element": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

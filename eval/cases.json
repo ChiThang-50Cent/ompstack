@@ -1,0 +1,299 @@
+[
+  {
+    "id": "direct-typo",
+    "title": "Local typo",
+    "prompt": "Fix a typo in this local comment only.",
+    "expectedPlaybook": "feature",
+    "expectedCeremony": "direct",
+    "expectedVerificationRequired": false,
+    "class": "trivial"
+  },
+  {
+    "id": "direct-rename",
+    "title": "Local rename",
+    "prompt": "Rename a local variable without changing behavior.",
+    "expectedPlaybook": "feature",
+    "expectedCeremony": "direct",
+    "expectedVerificationRequired": false,
+    "class": "trivial"
+  },
+  {
+    "id": "direct-docs",
+    "title": "Docs-only edit",
+    "prompt": "Docs only: write docs for the renamed CLI flag.",
+    "expectedPlaybook": "documentation",
+    "expectedCeremony": "direct",
+    "expectedVerificationRequired": false,
+    "class": "trivial"
+  },
+  {
+    "id": "direct-label",
+    "title": "One-line label",
+    "prompt": "One-line change to a UI label string.",
+    "expectedPlaybook": "feature",
+    "expectedCeremony": "direct",
+    "expectedVerificationRequired": false,
+    "class": "trivial"
+  },
+  {
+    "id": "bug-basic",
+    "title": "Bounded defect",
+    "prompt": "Fix the bug where the date parser returns an error for valid input.",
+    "expectedPlaybook": "bug-fix",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "bug"
+  },
+  {
+    "id": "bug-regression",
+    "title": "Regression",
+    "prompt": "A regression makes CSV export fail; reproduce and repair it.",
+    "expectedPlaybook": "bug-fix",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "bug"
+  },
+  {
+    "id": "bug-race",
+    "title": "Concurrent bug",
+    "prompt": "Fix the race condition causing duplicate jobs and find the root cause.",
+    "expectedPlaybook": "bug-fix",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "bug"
+  },
+  {
+    "id": "security-bypass",
+    "title": "Authentication bypass",
+    "prompt": "Fix an authentication bypass vulnerability in the token flow.",
+    "expectedPlaybook": "security",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "security"
+  },
+  {
+    "id": "security-threat",
+    "title": "Threat model",
+    "prompt": "Create a threat model and implement the authorization boundary change.",
+    "expectedPlaybook": "security",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "security"
+  },
+  {
+    "id": "performance-latency",
+    "title": "Latency",
+    "prompt": "Measure and reduce endpoint latency under the existing workload.",
+    "expectedPlaybook": "performance",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "empirical"
+  },
+  {
+    "id": "performance-program",
+    "title": "System benchmark",
+    "prompt": "Benchmark performance across the whole system and improve throughput.",
+    "expectedPlaybook": "performance",
+    "expectedCeremony": "program",
+    "expectedVerificationRequired": true,
+    "class": "program"
+  },
+  {
+    "id": "migration-schema",
+    "title": "Schema migration",
+    "prompt": "Implement a schema migration with a data backfill and rollback.",
+    "expectedPlaybook": "migration",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "migration"
+  },
+  {
+    "id": "migration-large",
+    "title": "Large migration",
+    "prompt": "Plan and execute a large migration across services.",
+    "expectedPlaybook": "migration",
+    "expectedCeremony": "program",
+    "expectedVerificationRequired": true,
+    "class": "program"
+  },
+  {
+    "id": "incident-outage",
+    "title": "Production outage",
+    "prompt": "Production is down; diagnose the incident and restore service safely.",
+    "expectedPlaybook": "incident",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "incident"
+  },
+  {
+    "id": "incident-program",
+    "title": "Multi-workstream incident",
+    "prompt": "Handle a sev-1 incident with multiple workstreams and coordinated recovery.",
+    "expectedPlaybook": "incident",
+    "expectedCeremony": "program",
+    "expectedVerificationRequired": true,
+    "class": "program"
+  },
+  {
+    "id": "review-diff",
+    "title": "Patch review",
+    "prompt": "Code review this diff for correctness defects.",
+    "expectedPlaybook": "review",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "review"
+  },
+  {
+    "id": "arena-candidates",
+    "title": "Competing candidates",
+    "prompt": "Use an arena to compare multiple candidates for the parser implementation.",
+    "expectedPlaybook": "arena",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "arena"
+  },
+  {
+    "id": "shipping-stack",
+    "title": "Stacked PR",
+    "prompt": "Verify and land the stacked PR safely.",
+    "expectedPlaybook": "shipping",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "shipping"
+  },
+  {
+    "id": "prototype-choice",
+    "title": "Empirical choice",
+    "prompt": "Prototype and measure which approach is better for this cache.",
+    "expectedPlaybook": "empirical-prototype",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "empirical"
+  },
+  {
+    "id": "investigation-how",
+    "title": "Explain behavior",
+    "prompt": "Investigate and explain how request ownership flows through the service.",
+    "expectedPlaybook": "investigation",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": false,
+    "class": "investigation"
+  },
+  {
+    "id": "investigation-why",
+    "title": "Research rationale",
+    "prompt": "Research why this adapter exists and trace the history.",
+    "expectedPlaybook": "investigation",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": false,
+    "class": "investigation"
+  },
+  {
+    "id": "multi-phase",
+    "title": "Several phases",
+    "prompt": "Run this as a multi-phase implementation with several phases.",
+    "expectedPlaybook": "multi-phase",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "program"
+  },
+  {
+    "id": "feature-endpoint",
+    "title": "Endpoint feature",
+    "prompt": "Add an endpoint for exporting account data.",
+    "expectedPlaybook": "feature",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "feature"
+  },
+  {
+    "id": "feature-public-api",
+    "title": "Public API",
+    "prompt": "Implement a public API capability across a module boundary.",
+    "expectedPlaybook": "feature",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "feature"
+  },
+  {
+    "id": "feature-program",
+    "title": "Whole-codebase feature",
+    "prompt": "Build a new capability across the whole codebase.",
+    "expectedPlaybook": "feature",
+    "expectedCeremony": "program",
+    "expectedVerificationRequired": true,
+    "class": "program"
+  },
+  {
+    "id": "feature-payment",
+    "title": "Payment flow",
+    "prompt": "Implement a payment flow endpoint.",
+    "expectedPlaybook": "feature",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "feature"
+  },
+  {
+    "id": "refactor-local",
+    "title": "Refactor",
+    "prompt": "Refactor the parser to remove duplication while preserving behavior.",
+    "expectedPlaybook": "refactor",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "refactor"
+  },
+  {
+    "id": "refactor-program",
+    "title": "Repository refactor",
+    "prompt": "Refactor the whole repository to simplify module ownership.",
+    "expectedPlaybook": "refactor",
+    "expectedCeremony": "program",
+    "expectedVerificationRequired": true,
+    "class": "program"
+  },
+  {
+    "id": "dependency-major",
+    "title": "Major dependency",
+    "prompt": "Upgrade dependency Foo to a major version and handle compatibility.",
+    "expectedPlaybook": "dependency-upgrade",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "dependency"
+  },
+  {
+    "id": "test-flaky",
+    "title": "Flaky tests",
+    "prompt": "Fix tests that are flaky in the test suite.",
+    "expectedPlaybook": "test-repair",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "test"
+  },
+  {
+    "id": "docs-runbook",
+    "title": "Runbook",
+    "prompt": "Write documentation and a runbook for local recovery.",
+    "expectedPlaybook": "documentation",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": false,
+    "class": "documentation"
+  },
+  {
+    "id": "docs-architecture",
+    "title": "Complex docs",
+    "prompt": "Write documentation for an unknown architecture redesign across modules.",
+    "expectedPlaybook": "documentation",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "documentation"
+  },
+  {
+    "id": "dependency-public-api",
+    "title": "Risky dependency upgrade",
+    "prompt": "Upgrade dependency Foo to a major version while preserving public API backward compatibility.",
+    "expectedPlaybook": "dependency-upgrade",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "dependency"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {"id":"pass-without-evidence","layer":"runtime-gate","expected":"PASS_WITHOUT_EVIDENCE"},
+  {"id":"stale-verdict","layer":"runtime-gate","expected":"VERDICT_STALE"},
+  {"id":"writer-is-verifier","layer":"runtime-gate","expected":"ACTOR_COLLISION"},
+  {"id":"verifier-can-edit","layer":"asset-validation","expected":"read-only verifier"},
+  {"id":"arena-auto-applies","layer":"workflow-policy","expected":"no automatic apply"},
+  {"id":"reviewer-sees-summary-only","layer":"task-contract","expected":"actual diff/artifact"},
+  {"id":"asks-human-measurable-fact","layer":"policy","expected":"empirical decision"},
+  {"id":"trivial-six-agent-panel","layer":"router","expected":"direct ceremony"},
+  {"id":"inconclusive-treated-as-pass","layer":"runtime-gate","expected":"VERDICT_INCONCLUSIVE"},
+  {"id":"waiver-without-reason","layer":"runtime-gate","expected":"SKIP_REASON_MISSING"},
+  {"id":"pending-verifier-on-stop","layer":"runtime-gate","expected":"AGENT_PENDING"},
+  {"id":"finding-without-evidence","layer":"review-schema","expected":"evidence field"}
+]

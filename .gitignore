@@ -1,18 +1,9 @@
-# Local dependency and evaluation artifacts
 node_modules/
+dist/
+.test-dist/
+*.tgz
+.omp/pstack/runs/
+.omp/audit/
 bun.lock
 logs/
-.omp/audit/
-
-# Unintegrated local research and proof experiments
-docs/CODE_MAP_PLAN.html
-docs/OMP_TODO_INTEGRATION_RESEARCH_PLAN.html
-docs/ompstack-research-2026-09-05.html
-research-implementation.html
-scripts/policy-anchors.json
-scripts/proof-boundary-validation.mjs
-skills/ompstack/schemas/proof-boundary-output-schemas.json
-tests/fixtures/routing-invalid-cases.json
-tests/proof-boundary-validation.test.mjs
-tsconfig.json
-types/
+.DS_Store

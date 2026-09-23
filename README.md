@@ -1,222 +1,297 @@
-# ompstack for OhMyPi
+# pstack-omp
 
-A small pstack-inspired workflow built around OhMyPi's native skill, task/subagent, custom-agent, and slash-command primitives.
+`pstack-omp` ports the workflow semantics of Cursor's pstack into the Oh My Pi (OMP) harness. It is not a prompt dump and it is not a replacement coding agent. It is a policy and enforcement layer over OMP's existing skills, custom agents, task worktrees, model roles, extension hooks, and session persistence.
 
-It intentionally does **not** recreate OhMyPi's bundled `task`, `scout`, `reviewer`, or `security-reviewer` agents. The plugin adds:
+The central contract is simple:
 
-- `skills/ompstack/` — risk routing, preflight contract, workflow evaluation, and real-surface playbooks
-- `skills/ompstack-create-verification/` — creates project-native `verify-<surface>` skills and feature maps
-- `skills/ompstack-maintain-verification/` — maintains a verification capability without changing product code
-- `skills/ompstack-decision-trail/` — proportional append-only evidence trails for long-running work
-- `agents/ompstack-architect.md` — read-only design advisor
-- `agents/ompstack-verifier.md` — trusted runtime/behavior verifier instructed not to edit; execution tools are not a write sandbox
-- `commands/ompstack.md` and `commands/ompstack-maintain-verification.md` — convenience entry points
+> A model may be wrong with confidence. Keep work bounded, persist state outside the chat, verify the real behavior through an independent context, and bind every final verdict to the exact artifact that was tested.
 
-For the current shipped behavior, evidence, adoption cost, and open work, read [`docs/STATUS.md`](docs/STATUS.md).
+## What is included
 
-## Install from the marketplace
+- A sticky `off`, `auto`, or `strict` session mode.
+- Sixteen task playbooks, twelve reusable operators, and twenty-three engineering principles.
+- Seven custom agents with separated capabilities:
+  - read-only scout and architect;
+  - isolated builder and synthesizer;
+  - read-only reviewer and arena judge;
+  - blocking, read-only final verifier (writers are blocking too, so their structured evidence reaches the parent);
+- A TypeScript OMP extension that:
+  - injects a compact workflow policy;
+  - routes role-specific model patterns;
+  - forces builder/synthesizer isolation;
+  - attaches frozen review and verification contracts;
+  - tracks synchronous, concurrent, and background task lifecycles;
+  - detects OMP child-agent sessions and keeps parent run state authoritative;
+  - blocks parent-state `pstack_*` tools and `hub` inside pstack child sessions (OMP owns all other tool admission);
+  - ingests strict child structured output into evidence, acceptance, and verdict records;
+  - persists run state in OMP session entries;
+  - writes human-readable audit snapshots;
+  - fingerprints Git or non-Git workspaces;
+  - rejects stale verdicts and writer/verifier collisions;
+  - blocks session completion while required gates remain open.
+- Project-verification skill guidance and concrete Go API / browser app examples.
+- Unit, integration, negative-topology, asset-validation, and router-evaluation fixtures.
 
-```sh
-omp plugin marketplace add ChiThang-50Cent/ompstack
-omp plugin install ompstack@ompstack
+## Runtime target
+
+- OMP `>= 18.2.11`.
+- Node.js `>= 20` for the repository's offline build/test scripts.
+- OMP itself runs the TypeScript extension through its Bun-based extension loader.
+
+OMP 18.2.11 is the minimum because the implementation relies on `before_subagent_spawn` to apply role/model policy and capture provenance before a worker starts.
+
+## Install for local development
+
+```bash
+unzip pstack-omp.zip
+cd pstack-omp
+npm install
+npm run check
+./scripts/install-local.sh
 ```
 
-Upgrade after a marketplace release:
+Equivalent OMP command:
 
-```sh
-omp plugin marketplace update ompstack
-omp plugin upgrade ompstack@ompstack
+```bash
+omp plugin link /absolute/path/to/pstack-omp
 ```
 
-## Release 0.3
+Restart OMP after linking so extension modules, agents, and tools are rebuilt. During development, direct loading is also useful:
 
-Version 0.3 adds requirement-reconstruction evaluation tooling: strict A/B/B′ artifacts, session telemetry, and a deterministic scorer. It is for evaluating that policy; it does **not** gate ordinary Ompstack use and no Phase-0 empirical result is claimed by the synthetic evaluator fixture.
-
-`scripts/run-reconstruction-arm.mjs` requires the evaluation plugin checkout's `HEAD` to match the declared evaluation SHA and rejects staged or unstaged tracked changes. B/B′ runs also retain session-level proof that `skill://ompstack` resolved. B′ freezes its R1 map before a separate R2 review.
-
-### AACR-Bench routing evaluation
-
-`scripts/eval-aacr.mjs` measures the shipped router against positive AACR-Bench samples. It runs each sample against the target commit's detached worktree, generates the same deterministic overlay used by the evaluator, and writes M1–M4 plus M3b summaries by project language:
-
-```sh
-bun scripts/eval-aacr.mjs \
-  --dataset /path/to/aacr-bench \
-  --workdir /tmp/ompstack-aacr \
-  --limit 13 \
-  --language Go,Python \
-  --output /tmp/aacr-record.json
+```bash
+omp --extension /absolute/path/to/pstack-omp/src/index.ts
 ```
 
-Use `--resume` to continue an interrupted record. The evaluator validates that labeled comment paths are present in the resolved diff, records unavailable commits and base-validation exclusions, and marks the record `invalid-base-design` when more than 15% of fetchable samples fail that check.
+See [docs/installation.md](docs/installation.md) for project/user scope, marketplace installation, upgrade, smoke-test, and removal procedures.
 
-AACR-Bench has no clean-PR control group, so its output cannot measure or infer over-triage. The evaluator uses neutral fixed risk facts to minimize assigned risk; M1 is an upper bound on the real false-negative rate. These records are evaluation evidence, not a runtime routing gate.
+## First run
 
-[Read the current AACR evidence contract and limitations in `docs/STATUS.md`](docs/STATUS.md).
-
-## Install from npm
-
-The npm package remains available as an alternative distribution channel:
-
-```sh
-omp plugin install npm:ompstack
-```
-
-## Install unreleased source from GitHub
-
-Use a GitHub source install only when testing an unreleased commit:
-
-```sh
-omp plugin install github:ChiThang-50Cent/ompstack
-```
-
-## Develop locally
-
-Link the checkout without copying files into an OMP configuration directory:
-
-```sh
-omp plugin link .
-```
-
-Restart OMP, or run `/reload-plugins` in the active interactive session, before invoking the installed skill or command.
-
-OMP discovery is first-wins when multiple plugins or configuration roots define the same skill, command, or agent name. If an update is not visible, confirm which plugin path won discovery, reload plugins, and spawn a fresh custom agent before diagnosing the new contract.
-
-The same plugin layout is used for local links and direct GitHub installs:
+Inside OMP:
 
 ```text
-.
-├── package.json
-├── skills/ompstack/
-├── agents/
-└── commands/
+/pstack doctor
+/pstack auto
 ```
 
-## Invoke
-
-Use the slash command:
+Then ask for normal engineering work. For an explicit strict run:
 
 ```text
-/ompstack Fix the intermittent session-expiration regression. Reproduce it first.
+/pstack strict
+/goal Fix password-reset tokens remaining valid after use
+/pstack init bug-fix
 ```
 
-Or invoke the skill directly:
+`/pstack init` binds the run to the active OMP goal; `goal op=complete` is then refused until every gate passes. Without goal mode (for example `omp -p`), `/pstack init bug-fix <objective>` opens a gate-only run.
+
+The model should then:
+
+1. load `skill://pstack`;
+2. choose and load one playbook;
+3. create explicit acceptance criteria;
+4. ground the current system before changing it;
+5. delegate bounded work to pstack agents where proportional;
+6. record reproducible evidence;
+7. run an independent verifier when required;
+8. finish with `goal op=complete` (refused until gates pass) or, without goal mode, `pstack_gate action=check` / `/pstack check`.
+
+Useful commands:
 
 ```text
-/skill:ompstack Add idempotent webhook handling and verify duplicate delivery behavior.
+/pstack                  # current status
+/pstack auto|strict|off  # sticky mode
+/pstack check            # evaluate gates; closes a gate-only run when they pass
+/pstack abandon <reason> # mark the run failed
+/pstack doctor           # runtime/config/model-role diagnostics
+/pstack export           # export state to .omp/pstack/export.json
 ```
 
-Ompstack is intended for explicit invocation through `/ompstack` or `/skill:ompstack`; it is not the default workflow for every coding task.
+## Modes
 
-The runtime gate is opt-in at session level. The command and skill inject an inert `<!-- ompstack:activate -->` marker, so `before_agent_start` activates the persisted gate before headless tools run; interactive input remains a fallback, and reading `skill://ompstack` or calling `ompstack_route` also activates it. Writes before the initial route are blocked. A route over an empty candidate is bootstrap and unlocks declared parent `write`/`edit` targets; any staged, unstaged, or untracked change derives a material route. A successful parent mutation makes that material route stale, so required independent evidence needs a fresh material route.
+### `off`
 
-The route preserves measured risk separately from a deterministic target risk budget; its effective risk is the higher of the two, so a later working-tree measurement cannot understate the declared scope. Targets may use documented `file:symbol` syntax; enforcement scopes the physical file. Intermediate artifacts belong under declared `repository.scratchPaths` using `local://...`, which is session-scoped and is not part of the repository change set. The returned `Route-Decision: sha256:<id>` is a task-binding header, not an `artifact://` locator; output also names required evidence and the detected verification capability or repository fallback.
+No policy injection, task rewriting, provenance tracking, or completion blocking. Registered tools remain present, but normal OMP behavior is otherwise untouched.
 
-`session_stop` records a closeout entry and blocks normal completion until the current route and all required independent evidence lanes are present. `ompstack_phase` reports which required reviewer/verifier/security-reviewer task lanes OMP successfully launched; it is session-local, partial coverage—not a sandbox or a conformance verdict.
+### `auto`
 
-### Repository routing overlay
+The router estimates playbook and ceremony from the task. Tiny local changes can remain direct. Cross-boundary, risky, empirical, or program-scale work escalates.
 
-Generate a deterministic draft with `bun scripts/init-overlay.mjs --repo /absolute/path/to/repository`; every generated rule is marked `reviewed: false` until a human confirms it.
+### `strict`
 
-To mark repository-local ordinary paths as known, add `.omp/ompstack-routing.json`:
+Pstack agents require an active run. Independent artifact-bound verification is expected for nontrivial implementation, and completion gates are enforced.
+
+## Ceremony levels
+
+| Level | Intended use | Typical topology |
+|---|---|---|
+| `direct` | obvious, local, reversible edit | coordinator + proportional check |
+| `standard` | bounded defect or feature | scout → isolated builder → verify |
+| `strict` | cross-boundary, security/data, uncertain root cause | scout/architect → builder → reviewer → independent verifier |
+| `program` | multiple workstreams, phases, or PRs | durable brief + queue/ledger + bounded workers |
+
+`program` in version 0.2.0 means orchestration while an OMP session/runtime remains available. It does not claim to be an always-on multi-day daemon; see [docs/limitations.md](docs/limitations.md).
+
+## Completion gates
+
+A required run cannot complete while any of the following is true:
+
+- a required acceptance criterion is open or failed;
+- a passed criterion lacks evidence when evidence is required;
+- a task worker is still spawned, running, or unresolved;
+- final verification is missing;
+- the latest final verdict is `FAIL` or `INCONCLUSIVE`;
+- the verifier is also listed as a writer;
+- a `PASS` lacks evidence;
+- the tested fingerprint differs from the current artifact;
+- a skipped or waived required step lacks a reason.
+
+The gate is intentionally evidence-oriented. Compilation, a green helper test, CI status, or a builder saying “done” can support a claim, but does not automatically constitute product-surface verification.
+
+## Artifact fingerprints
+
+For a Git workspace, the fingerprint includes:
+
+- `HEAD`;
+- tracked changes;
+- staged changes;
+- untracked file paths and content, subject to configured limits.
+
+For a non-Git workspace, it hashes the bounded file tree. Audit output and common generated/dependency directories are ignored by default. If scanning exceeds configured limits, the fingerprint is marked `partial`; the verifier must expose that limitation rather than treating it as full coverage.
+
+Any post-verification artifact mutation makes the verdict stale.
+
+## Model roles
+
+The agents request role aliases rather than hard-coded providers:
+
+```text
+@pstack_fast
+@pstack_code
+@pstack_reason
+@pstack_review
+@pstack_verify
+```
+
+Each agent also declares a built-in fallback such as `@smol`, `@task`, or `@slow`. Configure these aliases to match the models and budgets available in your OMP profile. OMP resolves the model; for verifier spawns the extension only reorders OMP's candidates to prefer a family different from the latest writer. When only one model is available, independence comes from a fresh context, frozen acceptance criteria, restricted tools, and runtime evidence—not from pretending the model is independent from itself.
+
+See [docs/model-routing.md](docs/model-routing.md).
+
+## Configuration
+
+Create `.omp/pstack.json` in the target project:
 
 ```json
 {
-  "schemaVersion": 1,
-  "knownPathPatterns": ["^src/", "^lib/"],
-  "pathRules": [
-    {
-      "id": "auth-module",
-      "pathPattern": "^src/auth/",
-      "flags": ["touchesAuth"],
-      "knownFlags": ["touchesAuthorization", "touchesCryptoOrSecrets", "touchesTenantIsolation", "touchesMoneyMovement", "touchesMigration", "destructiveMigration", "touchesRuntimeConfig", "touchesPublicAPI", "touchesPersistence", "touchesConcurrency", "touchesGeneratedCode", "touchesExposedParser"]
-    }
-  ]
+  "defaultMode": "auto",
+  "writeAuditFiles": true,
+  "enforceIndependentVerifier": true,
+  "preferCrossFamilyVerifier": true,
+  "requireEvidenceForPass": true,
+  "requireArtifactFingerprint": true,
+  "auditDirectory": ".omp/pstack/runs",
+  "fingerprintIgnore": [
+    ".git",
+    ".omp/pstack",
+    "node_modules",
+    "dist",
+    "target",
+    "vendor"
+  ],
+  "maxWorkspaceFiles": 20000,
+  "maxHashedFileBytes": 26214400,
+  "maxPolicyCharacters": 8000,
+  "maxStopGateBlocks": 0
 }
 ```
 
-`knownPathPatterns` only removes `unclassified-changes`; it does not turn sensitive flags false. An overlay `pathRule` may add true `flags` and explicitly establish false `knownFlags` for the matched path. Shipped sensitive rules always union with overlay rules and win over false coverage. Malformed overlays fail routing.
+Invalid fields fall back conservatively to defaults and are shown by `/pstack doctor`. Full reference: [docs/configuration.md](docs/configuration.md).
 
-The generator reads its heuristic table from `policy/signals.json`. Distinctive matches emit the mapped signal; common matches emit no `flags` and remove only the mapped flag from `knownFlags`, so that common dimension remains `unknown` and routes High rather than being blanket-escalated to Critical. Overlapping overlay rules are fail-closed: every matching repository rule must establish a flag as known before collection resolves it false.
+## Project-specific verification
 
-The name-only security ceiling is measured, not inferred: the expanded heuristic table recognizes 9/13 security PRs at a path-name level, but it cannot detect vulnerabilities whose path names carry no security cue, including `shellexec.go`, `create.go`, and `pathtree.go`. This is an adoption-cost limitation, not a marketing claim.
-
-**Adoption cost:** a repository without overlay coverage remains conservative: each changed path with unresolved sensitive flags routes High. Medium routing requires maintaining narrow `pathRules` as modules evolve, with each `knownFlags` entry representing a reviewed negative claim. A broad rule that clears every flag across most of a repository can erase required review; it is not a substitute for a path-level sensitivity map. Treat this file as safety policy and review it with the affected code.
-
-Measure a fixed first-parent sample against a selected repository rather than the plugin checkout:
-
-```sh
-bun scripts/eval-risk-distribution.mjs --repo /path/to/repository --count 24 --output /tmp/risk-distribution.json
-```
-
-The JSON record identifies the repository, sampled `HEAD`, sample size, and tier distribution. A single-tier distribution exits nonzero after writing the record.
-
-## Design goal
-
-Keep the pstack ideas that transfer cleanly to OMP:
+Generic “run tests” logic is not enough for a real application. Create a local skill:
 
 ```text
-risk route
-   ↓
-resolve project verification capability
-   ↓
-minimal discovery/design
-   ↓
-conditional native Todo progress state (parent-owned)
-   ↓
-one owner per write lane
-   ↓
-fan-in
-   ↓
-doctor + deterministic gates + real-surface drive
-   ↓
-independent review / behavior verification
-   ↓
-fresh affected proof + maintained feature map
+.omp/skills/verify-<project>/SKILL.md
 ```
 
-Native Todo is conditional parent progress state for genuinely multi-phase, fan-in, blocked, explicit-progress, or handoff work. It is neither the task scheduler nor an audit log: Task/Hub owns worker lifecycle, while session artifacts and the decision trail retain durable evidence. The parent checks the native list before mutation and never overwrites a non-empty unrelated Todo list.
+It should describe exact startup, readiness, fixture setup, product surfaces, assertions, evidence locations, fingerprint discipline, cleanup, and limitations. Use the bundled `pstack-create-verification` skill or adapt:
 
-Avoid copying Cursor-specific cloud-agent, overnight-loop, PR-auto-merge, and Graphite machinery into a local OMP skill without a native equivalent. Reuse OMP-native project skills, task artifacts, transcripts, and Agent Hub instead.
+- [examples/verify-go-api/SKILL.md](examples/verify-go-api/SKILL.md)
+- [examples/verify-web-app/SKILL.md](examples/verify-web-app/SKILL.md)
 
-Project-specific verification belongs at `.omp/skills/verify-<surface>/SKILL.md`. A matching skill names how to launch, Doctor-check, drive, observe, and clean up the real surface; its `features/` directory records user-POV coverage. Create one explicitly with `/skill:ompstack-create-verification`; audit an existing one with `/ompstack-maintain-verification`.
+## Development and checks
 
-When no matching project capability exists, the verification phase selects the closest proof driver: Browser through Eval for web interaction, live command interaction for CLI/TUI, an existing consumer drive for API/service behavior, DAP debugger observations for live-state mechanisms, and LSP plus an existing behavior pin for symbol refactors. Static checks support these surfaces; they do not replace them.
-
-For autonomous, multi-phase, high-risk, or handoff work, `ompstack-decision-trail` keeps material decisions in `.omp/audit/<task-slug>.tsv` while linking to native `history://`, `agent://`, and artifact evidence.
-
-Prewalk, Advisor, session handoff/export, and Memory are opt-in OMP operator facilities. Ompstack never enables or configures them: Prewalk cannot become a route requirement; Advisor remains inspection-only concern coverage rather than a completion gate; persisted session artifacts remain primary handoff evidence; and any `memory://` context must be cited and revalidated against the current repository. Never share an export or capture a lesson without explicit authorization.
-
-See [the design](docs/DESIGN.md), [benchmark evidence](docs/BENCHMARK_EVIDENCE.md), and [usage examples](examples/usage.md).
-
-## Validate
-
-Run the deterministic plugin contract checks before changing routing, custom agents, or playbooks:
-
-```sh
-bun run check
+```bash
+npm run check          # clean, TypeScript build, tests, asset validation
+npm test               # build + node:test suite
+npm run validate       # manifests, agents, corpus, schemas, docs
+npm run verify:omp     # installed-OMP preflight
+PSTACK_LIVE_SMOKE=1 npm run verify:omp
+npm pack --ignore-scripts
 ```
 
-The check validates primary-route versus overlay/phase/progress-tracking wiring, structured custom-agent capabilities (`tools`, `model`, and `blocking`), preflight rules, self-contained task examples, and complete golden routing coverage. It remains a static contract check; the Eval playbook defines the separate blinded paired behavioral evaluation required for a workflow-policy change.
+The tests cover:
 
-## Optional unattended evidence adapter
+- task classification and proportional ceremony;
+- state reduction and completion gates;
+- workspace/Git fingerprint behavior;
+- model-family routing;
+- builder isolation and contract injection;
+- end-to-end mock extension flow;
+- parent/child extension-instance isolation;
+- child-session guards against leaked `pstack_*`, `write`, `edit`, `hub`, and nested `task` calls;
+- idempotent structured result ingestion;
+- stale verifier PASS downgrade to `INCONCLUSIVE`;
+- concurrent task correlation by `toolCallId`;
+- background-task state remaining pending until OMP reports terminal completion;
+- twelve seeded negative topology classes;
+- agent/skill/schema/package integrity.
 
-`scripts/run-verification-contract.mjs` executes a versioned verification contract and emits one immutable evidence file per attempt. A v2 contract binds command identity, candidate and protected snapshots, timeout, output cap, oracle result schema, minimum executed tests, and a declared trust level.
+## Architecture
 
-`scripts/run-orchestrated-task.mjs` is an optional external controller. It runs an initial worker, evaluates the candidate, permits at most one configured repair worker after a valid `NOT_VERIFIED` result, and appends lifecycle events to a JSONL journal. It accepts completion only from a fresh `VERIFIED` candidate snapshot:
-
-```sh
-bun scripts/run-orchestrated-task.mjs --spec /trusted/orchestration.json
-bun scripts/run-orchestrated-task.mjs --check /trusted/state/<run-id>/run.json
+```text
+user task
+   │
+   ▼
+pstack router + active run state
+   │
+   ├── compact policy injected before main-agent turns
+   ├── playbook/operator/principle assets loaded lazily
+   └── explicit acceptance + durable decision/evidence ledger
+          │
+          ▼
+OMP task/eval substrate
+   ├── scout / architect       (read only)
+   ├── builder / synthesizer   (isolated writer)
+   ├── reviewer / judge        (read only)
+   └── verifier                (read only, blocking structured report)
+          │
+          ▼
+parent result ingestion + artifact fingerprint + real-surface evidence
+          │
+          ▼
+completion gates / PASS | FAIL | INCONCLUSIVE
 ```
 
-The controller is not an OMP extension and does not turn local execution into a security boundary. It records a caller-declared trust level; only a separately owned executor, oracle, and artifact store can make `isolated` or `ci-attested` meaningful.
+Read [docs/architecture.md](docs/architecture.md) for the runtime event sequence, state schema, async lifecycle reconciliation, and trust boundaries.
 
-Run the behavioral tests for the runner and controller with:
+## Scope and limitations
 
-```sh
-bun test tests
-```
+This is a complete session-level implementation, not a claim that every pstack feature is mechanically identical to Cursor's runtime. Important limitations include:
+
+- OMP re-binds extensions inside child-agent sessions; pstack therefore keeps authoritative state in the parent and ingests child structured output instead of letting workers call parent-state tools.
+- OMP's `before_subagent_spawn` event does not expose the parent task `toolCallId`; the extension correlates the spawn to the oldest matching expected agent occurrence, then replaces that provisional relationship with runtime agent IDs from task progress.
+- Multi-day execution after the OMP host exits needs an external durable queue/daemon, which is not bundled in 0.2.0.
+- OMP agent allowlists are not treated as a sandbox. OMP enforces each agent's `tools` list and pstack blocks only parent-state tools and `hub`, so reviewer/verifier Bash and external product surfaces still require a safe test environment.
+- Tool restrictions reduce accidental mutation but cannot prove semantic independence between models trained on correlated data.
+- Product verification is only as good as the project-local verification skill and available environment.
+- This build was compiled and exercised through an offline mock harness in the delivery environment; run `npm run verify:omp` on the target OMP installation for the final host-level smoke.
+
+See [docs/limitations.md](docs/limitations.md) and [docs/security-model.md](docs/security-model.md).
 
 ## Attribution
 
-`ompstack` adapts selected pstack workflow concepts to OMP-native primitives. See `NOTICE.md` and `third_party/PSTACK_LICENSE`.
+This repository is an independent OMP implementation inspired by the MIT-licensed Cursor pstack plugin and built against the public OMP extension/agent interfaces. It is not an official Cursor or Oh My Pi product. See [NOTICE.md](NOTICE.md).
+
+## License
+
+MIT.

@@ -1,0 +1,23 @@
+{
+  "defaultMode": "auto",
+  "writeAuditFiles": true,
+  "enforceIndependentVerifier": true,
+  "preferCrossFamilyVerifier": true,
+  "requireEvidenceForPass": true,
+  "requireArtifactFingerprint": true,
+  "maxPolicyCharacters": 8000,
+  "maxStopGateBlocks": 0,
+  "auditDirectory": ".omp/pstack/runs",
+  "fingerprintIgnore": [
+    ".git",
+    ".omp/pstack",
+    "node_modules",
+    "dist",
+    ".test-dist",
+    "target",
+    "vendor",
+    ".venv"
+  ],
+  "maxWorkspaceFiles": 20000,
+  "maxHashedFileBytes": 26214400
+}

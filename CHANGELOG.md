@@ -1,183 +1,49 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+## 0.2.0 - 2026-09-23
 
-## [Unreleased]
+OMP now owns lifecycle, planning, orchestration, model routing, tool admission, and isolation. Pstack keeps only proof state and completion gates. Compatibility was probed against OMP 18.2.11 (`test/fixtures/omp-probe-18.2.11`).
 
-### Added
-- Added cost telemetry aggregation for model turns, token buckets, tool output bytes, test-command reinvocations, compaction/pruning events, and wall time in `scripts/session-telemetry.mjs`.
+### Breaking
 
-### Changed
-- Activated runtime enforcement before headless tool calls through the command/skill marker, while retaining interactive, exact skill-read, and route-call fallbacks.
-- Added physical-file handling for `file:symbol` targets, declared session-local `local://` scratch roots, stable measured/reserved risk budgets, verification capability/fallback output, and persisted closeout gating.
-
-### Fixed
-- Prevented undeclared absolute/protocol writes from bypassing scope enforcement and prevented route hashes from being mistaken for artifact references.
-
-## [0.3.9] - 2026-09-21
+- `pstack_run` is replaced by `pstack_gate` with `init`, `check`, and `abandon`. Phase, pause, resume, and skip-step actions are removed; plan with OMP and record skips as `pstack_decision`.
+- `/pstack init|check|abandon` replace `/pstack start|phase|pause|resume|complete|fail|reset|gate`.
+- Run status is `active | done | failed`. Session state moved to `pstack-omp/state-v2`; version 1 state is not restored.
+- `enforceBuilderIsolation` is removed. Pstack never rewrites `isolated`; it warns when a builder/synthesizer ran without OMP task isolation.
+- Model routing no longer injects `@pstack_*` patterns. Only verifier spawns are reordered, within OMP's own candidates, to prefer a family different from the latest writer.
 
 ### Added
 
-- Added native OMP session telemetry for RouteDecision, tool lifecycle, block, and evidence-attempt events.
-- Added `scripts/session-telemetry.mjs` to correlate JSONL tool calls with route outcomes, evidence lanes, durations, and bounded agent/artifact/history references.
+- OMP goal gating: `goal op=complete` is refused while gates are open. The run binds to `Goal.id`; goal `complete` closes the run and `dropped` fails it. While the bound goal is live, `session_stop` defers to OMP's goal continuation instead of double-blocking.
+- `maxStopGateBlocks` (default `0`): a run that cannot pass its gates no longer loops on `session_stop`; the session ends with a warning and the run stays `active`.
+- Gate-only fallback when goal mode is off (for example `omp -p`): `pstack_gate action=check` closes the run.
+- Asset tests: no pstack agent declares `task` or `spawns`, and proof-producing agents are blocking.
 
 ### Changed
 
-- Hardened route evidence replay and bootstrap behavior across session state reconstruction.
-- Expanded session reports with route metadata, tool metrics, evidence attempts, and references.
-
-### Fixed
-
-- Treated the `xd://ompstack_phase` protocol as read-only so phase inspection cannot falsely stale a material RouteDecision.
-
-### Evidence
-
-- `bun run check` passed; `bun test tests` passed with 116 tests across 19 files.
-
-
-## [0.3.8] - 2026-09-19
-
-### Added
-
-- Added M3b to AACR records: security-labeled samples routed above Medium (`high` or `critical`), separate from the Critical-only M3 metric.
-
-### Changed
-
-- Split repository overlay heuristics into distinctive signal emission and common-term uncertainty coverage. Common terms no longer create blanket Critical flags; they leave the mapped dimension unknown until reviewed.
-- Made overlapping repository rules fail closed: omitted `knownFlags` in a more-specific rule cannot be masked by a broader rule.
-
-### Evidence
-
-- On 12 first-parent commits at each pinned `requests`, `flask`, `cobra`, and `got` revision, every distribution retained Medium and no repository was degenerate. Critical-flag file coverage was 32/130 (24.6%), 9/236 (3.8%), 8/66 (12.1%), and 4/127 (3.1%), respectively.
-- On the 13 supported-language security PRs selected from AACR-Bench, the tiered overlay raised M3 from 2/13 to 3/13 and reached **M3b 9/13** for security PRs routed above Medium; path-name heuristics recognized 9/13 while remaining blind to content-only names such as `shellexec.go` and `create.go`.
-
-## [0.3.7] - 2026-09-18
-
-### Added
-
-- Added `scripts/eval-aacr.mjs` to evaluate shipped routing behavior against positive AACR-Bench samples with M1–M4 summaries by project language.
-- Added resumable AACR records with commit-availability tracking, labeled-path base validation, detached target worktrees, and explicit invalid-base-design status.
-
-### Changed
-
-- Documented AACR-Bench's missing clean-PR control group and the fixed-neutral-risk limitation that makes M1 an upper bound on the real false-negative rate.
-
-## [0.3.6] - 2026-09-17
-
-### Added
-
-- Added `scripts/init-overlay.mjs` to generate deterministic, file-anchored repository overlay drafts with explicit paths requiring review.
-- Added optional `reviewed` metadata to repository `pathRules`. Existing overlays that omit the field remain valid and retain their previous behavior; generated rules use `reviewed: false` to mark an unreviewed draft without affecting signal collection or routing. No runtime consumer enforces this metadata yet: linting unreviewed rules remains tracked in issue #2. Unlike detached advisory state, the field is accepted by the runtime overlay schema so that later lint or routing enforcement has a live integration path.
-
-## [0.3.5] - 2026-09-17
-### Added
-
-- Added `docs/STATUS.md` as the release-maintained map of shipped behavior, current evidence, adoption cost, and open work.
-- Added `.describe()` guidance for all six route facts and matching `skill://ompstack` input guidance.
-- Added evaluator derivation of `behaviorAffecting` from every sampled change set.
-
-### Changed
-
-- **Breaking:** Removed `plannedWriteLanes` and `proofSurface` from `taskFacts`. Route input now rejects either retired field.
-- Removed stale numbered gap references; unresolved work now has descriptive release notes or a linked issue.
-
-### Fixed
-
-- Added change-set `behaviorAffecting` derivation and, in the same release, made code classification fail closed for `.mjs`, `.js`, and unknown file types. The fail-open path never shipped to users.
-
-## [0.3.4] - 2026-09-17
-
-### Added
-
-- Added a repository-selected risk-distribution evaluator with persisted JSON records and a non-degenerate distribution guard.
-- Added repository routing overlays for path-level signal coverage, including explicit true flags and reviewed false coverage per sensitive dimension.
-- Added overlay-adoption guidance.
-
-### Changed
-
-- Calibrated routing so partial import graphs limit blast-radius confidence without independently escalating risk; threshold warnings retain Medium routing.
-- Raised the Medium affected-module threshold from one to two.
-
-### Fixed
-
-- Prevented `knownPathPatterns` from silently resolving sensitive signals to false. Overlay paths now require explicit per-flag coverage; shipped sensitive rules remain authoritative.
-
-## [0.3.3] - 2026-09-16
-
-### Added
-
-- Added persisted runtime RouteDecisions bound to the checked-out working-tree snapshot, declared targets, and a change-set content digest.
-- Added opt-in route-before-write enforcement, declared write-scope checks, material-route staleness after mutation, and session-state reconstruction across OMP session changes.
-- Added deterministic routing inputs, tri-state signal collection, conservative import-graph analysis, and runtime integration coverage through OMP's extension loader and AgentSession.
-
-### Fixed
-
-- Blocked target-scope escapes through in-repository symlinks.
-- Derived bootstrap versus material measurement purpose from the measured change set rather than trusting caller input.
-
-
-## [0.3.2] - 2026-09-15
-
-### Changed
-
-- Included the README-linked design, benchmark evidence, and usage documents in the npm artifact.
-- Clarified the README's reconstruction-runner checkout requirements.
-
-## [0.3.1] - 2026-09-14
-
-### Added
-
-- Documented the 0.3 release and marketplace upgrade path in the README.
-- Added native project guidance at `.omp/AGENTS.md`; marketplace plugin discovery does not inject it into consumer project context.
-- Added ignore coverage and a pre-push cleanup requirement for local evaluation artifacts and unintegrated experiments.
-
-## [0.3.0] - 2026-09-14
-
-### Added
-
-- Added strict requirement-reconstruction evaluation artifacts, deterministic SORR scoring, and the A/B/B′ arm runner with session telemetry.
-
-### Fixed
-
-- Bound evaluation artifacts to a clean, exact plugin checkout; constrained A baseline output; and froze B′ R1 state before R2 scoring.
-
-## [0.2.3] - 2026-09-09
-
-### Changed
-
-- Finalize non-Low write-task risk from a direct mutation-target scan; unresolved material uncertainty now escalates to High and requires reviewer plus verifier evidence.
-
-## [0.2.2] - 2026-09-09
-
-### Changed
-
-- Made the Ompstack workflow explicit-invocation only rather than the default for every coding task.
-
-
-## [0.2.0] - 2026-09-08
-
-### Added
-
-- Added a workflow-evaluation playbook, deterministic plugin validator, and golden routing scenarios.
-- Added measurement-first playbooks for performance issues, live runtime forensics, and captured trace analysis.
-- Added route/overlay/phase coverage and custom-agent capability checks to the deterministic validator.
-
-- Added native project verification capabilities: creation and maintenance skills, feature-map template, Doctor/Drive contract, and append-only decision-trail helper.
-- Added a benchmark evidence record for the verified `psf__requests-2931` rerun.
-
-### Changed
-
-- Added a structured preflight contract for Medium, High, and Critical write work.
-- Defined explicit write ownership, shared-contract ownership, integration order, and fan-in gates for parallel task batches.
-- Separated blocking architecture comparison from implementation batches to match OhMyPi task execution semantics.
-- Documented conditional OhMyPi task isolation and full Critical-risk review coverage.
-- Corrected verifier Browser access to use the OMP Eval prelude and documented that no-edit behavior is a trusted policy rather than a sandbox.
-- Separated primary workflow routing from the queue overlay and verification phase.
-- Made task examples self-contained across dependent batches and explicit about asynchronous fan-in.
-- Hardened workflow evaluation with neutral arm identifiers, one blinded judge, and transcript/artifact inspection.
-- Routed verification through matching project-native `verify-<surface>` skills or repository proof surfaces, with Doctor blockers distinct from product failures.
-- Added historical-rationale evidence guidance to read-only investigations.
-
-### Fixed
-
-- Restricted the npm artifact to runtime files so plugin upgrades do not package local logs, benchmark candidates, or research artifacts.
+- Plugin manifest moved to `.omp-plugin/plugin.json` (OMP-native, takes precedence); `.claude-plugin/` and `.github/` removed.
+
+- Built against the real `@oh-my-pi/pi-coding-agent@18.2.11` types (exact devDependency); the hand-written shim is gone. This fixes 0.1.0 failing to load in OMP (`Type.Object is not a function`).
+- Session kind is tri-state (`main | subagent | unknown`) from `session_init` only; unreadable sessions cannot touch parent state.
+- The child guard blocks only `pstack_*` and `hub`; OMP enforces each agent's `tools` list.
+- Builder and synthesizer are `blocking: true`, because OMP delivers structured output only for blocking tasks.
+- Result ingestion accepts only valid structured output whose schema `source` is `agent`.
+- The fingerprint always excludes `.omp/pstack` and `auditDirectory`; a custom `fingerprintIgnore` previously let audit writes make every verdict stale.
+- Fingerprints run git through the injected OMP `exec` (`ExecRunner`) instead of `node:child_process`.
+
+## 0.1.0 - 2026-09-23
+
+- Initial session-level OMP port of pstack workflow semantics.
+- Added sticky `off`, `auto`, and `strict` modes with proportional ceremony routing.
+- Added parent-owned, session-persisted run state plus human-readable audit snapshots.
+- Added scout, architect, builder, reviewer, judge, synthesizer, and verifier agents with strict structured output.
+- Added child-session detection and parent-side ingestion of evidence, acceptance outcomes, and verdicts; child extension instances never mutate parent state.
+- Added defensive child runtime guards for leaked `pstack_*`, direct mutation, Hub, nested-task, and shell capabilities according to role.
+- Added forced worktree isolation for builders/synthesizers and frozen contracts for review/verification.
+- Added Git and bounded non-Git artifact fingerprints, stale-verdict rejection, and partial-fingerprint disclosure.
+- Added synchronous, concurrent, and background task lifecycle correlation and reconciliation.
+- Added writer/verifier provenance, verifier-completion checks, cross-family model preference, and `PASS` / `FAIL` / `INCONCLUSIVE` semantics.
+- Added completion gates for acceptance, evidence, active workers, actor separation, current fingerprints, verdicts, and skip/waiver reasons.
+- Added sixteen playbooks, twelve reusable operators, twenty-three engineering principles, and eight strict schemas.
+- Added Go API and browser-app verification-skill examples.
+- Added unit/integration tests, twelve negative topology fixtures, a thirty-three-case routing corpus, package/asset validation, and target-host smoke scripts.

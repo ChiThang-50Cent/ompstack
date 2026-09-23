@@ -53,14 +53,14 @@ This validates the runtime extension, but package discovery of bundled agents an
 
 ## Official marketplace
 
-The repository contains `.omp-plugin/marketplace.json`. Add its directory as a marketplace and install the official plugin entry:
+The repository-backed marketplace is published from `ChiThang-50Cent/ompstack`:
 
 ```bash
-omp plugin marketplace add /absolute/path/to/pstack-omp
+omp plugin marketplace add ChiThang-50Cent/ompstack
 omp plugin install pstack-omp@pstack-omp
 ```
 
-After installation, restart OMP. Marketplace installation creates and cache-manages a plugin copy; use `omp plugin link` during development when edits should remain live.
+After installation, restart OMP. Use `omp plugin link` or a local marketplace path during development when edits should remain live.
 
 ## Build and validate source
 

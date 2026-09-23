@@ -1,5 +1,5 @@
 {
-  "defaultMode": "auto",
+  "defaultMode": "off",
   "writeAuditFiles": true,
   "enforceIndependentVerifier": true,
   "preferCrossFamilyVerifier": true,

@@ -9,7 +9,7 @@ const at = '2026-09-23T00:00:00.000Z';
 const fp = digest => ({ kind: 'git', digest, generatedAt: at, headSha: 'abc', dirtyHash: digest, clean: false, partial: false, notes: [] });
 
 function startedRun() {
-  let state = createInitialState(DEFAULT_CONFIG);
+  let state = createInitialState({ ...DEFAULT_CONFIG, defaultMode: 'auto' });
   const run = createRun({
     objective: 'repair behavior',
     playbook: 'bug-fix',

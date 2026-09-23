@@ -82,12 +82,14 @@ test('extension registers complete surface and enforces an end-to-end run', asyn
   t.after(() => rm(cwd, { recursive: true, force: true }));
   const mock = createMock(cwd);
   pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'auto');
   assert.equal(mock.tools.size, 7);
   assert.ok(mock.commands.has('pstack'));
   assert.ok(mock.hooks.has('before_subagent_spawn'));
   assert.ok(mock.hooks.has('session_stop'));
 
   await mock.emit('session_start');
+  assert.equal(mock.statuses.size, 0, 'pstack does not publish a raw hook-status row');
   const runTool = mock.tools.get('pstack_gate');
   const start = await execute(runTool, {
     action: 'init', objective: 'Fix the reset flow bug', playbook: 'bug-fix', ceremony: 'strict', verificationRequired: true,
@@ -151,6 +153,45 @@ test('extension registers complete surface and enforces an end-to-end run', asyn
   assert.equal(finalStop, undefined);
 });
 
+test('pstack defaults off and restores explicit mode from session entries', async t => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-mode-'));
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+
+  const first = createMock(cwd);
+  pstackExtension(first.api);
+  await first.emit('session_start');
+
+  const initial = await execute(first.tools.get('pstack_status'), {}, first.ctx);
+  assert.equal(initial.details.state.mode, 'off');
+  assert.equal(await first.emit('before_agent_start', { prompt: 'normal work', systemPrompt: ['base'] }), undefined);
+
+  await first.commands.get('pstack').handler('auto', first.ctx);
+  const selected = await execute(first.tools.get('pstack_status'), {}, first.ctx);
+  assert.equal(selected.details.state.mode, 'auto');
+
+  await first.commands.get('pstack').handler('', first.ctx);
+  assert.ok(first.notices.some(notice => /Pstack mode: auto/.test(notice.message)));
+  assert.equal(first.statuses.size, 0);
+
+  await first.emit('session_shutdown');
+  await first.emit('session_start');
+  const resumed = await execute(first.tools.get('pstack_status'), {}, first.ctx);
+  assert.equal(resumed.details.state.mode, 'auto');
+
+  const restored = createMock(cwd);
+  restored.branch.push(...first.branch);
+  pstackExtension(restored.api);
+  await restored.emit('session_start');
+  const restoredStatus = await execute(restored.tools.get('pstack_status'), {}, restored.ctx);
+  assert.equal(restoredStatus.details.state.mode, 'auto');
+
+  const fresh = createMock(cwd);
+  pstackExtension(fresh.api);
+  await fresh.emit('session_start');
+  const freshStatus = await execute(fresh.tools.get('pstack_status'), {}, fresh.ctx);
+  assert.equal(freshStatus.details.state.mode, 'off');
+});
+
 test('subagent-bound extension instance does not inject or mutate parent pstack policy', async t => {
   const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-child-'));
   t.after(() => rm(cwd, { recursive: true, force: true }));
@@ -173,6 +214,7 @@ test('a PASS for a stale fingerprint is ingested as INCONCLUSIVE and cannot pass
   await writeFile(path.join(cwd, 'artifact.txt'), 'before\n');
   const mock = createMock(cwd);
   pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'auto');
   await mock.emit('session_start');
   await execute(mock.tools.get('pstack_gate'), {
     action: 'init', objective: 'Verify an artifact-bound change', playbook: 'feature', ceremony: 'strict', verificationRequired: true,
@@ -226,6 +268,7 @@ test('async task remains pending until the OMP job snapshot reports a terminal s
   t.after(() => rm(cwd, { recursive: true, force: true }));
   const mock = createMock(cwd);
   pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'auto');
   await mock.emit('session_start');
   const runTool = mock.tools.get('pstack_gate');
   await execute(runTool, {
@@ -264,6 +307,7 @@ test('concurrent task calls are correlated by toolCallId and agent occurrence', 
   t.after(() => rm(cwd, { recursive: true, force: true }));
   const mock = createMock(cwd);
   pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'auto');
   await mock.emit('session_start');
   const runTool = mock.tools.get('pstack_gate');
   await execute(runTool, {
@@ -307,6 +351,7 @@ test('goal op=complete is refused while gates are open; OMP goal outcome drives 
   const mock = createMock(cwd);
   mock.branch.push(goalEntry('goal', 'active'));
   pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'auto');
   await mock.emit('session_start');
   await execute(mock.tools.get('pstack_gate'), {
     action: 'init', objective: 'Fix reset', playbook: 'bug-fix', ceremony: 'standard', verificationRequired: false,
@@ -342,6 +387,7 @@ test('dropping the bound OMP goal fails the run', async t => {
   t.after(() => rm(cwd, { recursive: true, force: true }));
   const mock = createMock(cwd);
   pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'auto');
   await mock.emit('session_start');
   await execute(mock.tools.get('pstack_gate'), { action: 'init', objective: 'Fix reset', playbook: 'bug-fix', ceremony: 'standard' }, mock.ctx);
   assert.equal(latestRun(mock).goalRef, undefined);
@@ -357,6 +403,7 @@ test('maxStopGateBlocks bounds session_stop blocks, then lets the session end', 
   await writeFile(path.join(cwd, 'pstack.json'), JSON.stringify({ maxStopGateBlocks: 1 }));
   const mock = createMock(cwd);
   pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'auto');
   await mock.emit('session_start');
   await execute(mock.tools.get('pstack_gate'), {
     action: 'init', objective: 'Fix reset', playbook: 'bug-fix', ceremony: 'standard', verificationRequired: false,

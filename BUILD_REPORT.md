@@ -2,10 +2,10 @@
 
 ## Release identity
 
-- Package: `pstack-omp` 0.1.0
-- Delivery date: 2026-09-23
+- Package: `pstack-omp` 0.4.0
+- Delivery date: 2026-09-24
 - Minimum supported OMP: 18.2.11
-- State schema: version 1
+- State schema: version 2
 - License: MIT; upstream pstack attribution is recorded in `NOTICE.md`
 
 ## Implemented scope
@@ -30,7 +30,7 @@ npm run check
 Results:
 
 - TypeScript compilation: PASS (`tsc` 5.8.3)
-- Node test suite: PASS, 34/34 tests
+- Node test suite: PASS, 42/42 tests
 - Router corpus: PASS, 33/33 cases
 - Asset validation: PASS
   - 7 agents
@@ -68,11 +68,7 @@ Archive hashes are delivered separately in `pstack-omp-SHA256SUMS.txt`, avoiding
 
 ## Runtime verification boundary
 
-The delivery environment does not have an installed OMP CLI, Bun runtime, configured provider, or model credentials. Consequently, no live OMP/model-backed session was claimed as tested here. The attempted host preflight correctly returned:
-
-```text
-ERROR: omp is not installed or not on PATH.
-```
+The target environment has OMP 18.2.11. An isolated no-session sandbox loaded `src/index.ts` directly and verified `/pstack` renders `Pstack mode: off` with no `pstack:auto` status row. No model-backed provider smoke was required; the registered `pstack_status` behavior is covered by the extension regression and the command-surface smoke.
 
 Run these checks on the target machine:
 
@@ -89,4 +85,4 @@ The offline suite verifies state reduction, routing, task rewriting, parent/chil
 
 It does not turn OMP child agents into an operating-system sandbox. In particular, reviewer/verifier Bash commands, browser automation, network access, and external services must still be constrained by the host environment. The plugin provides workflow enforcement and defensive tool guards, not process/container isolation.
 
-Version 0.1.0 implements durable orchestration within a live OMP runtime. It intentionally does not include an always-on daemon that survives host shutdown for multi-day autonomous execution.
+Version 0.4.0 implements durable orchestration within a live OMP runtime. It intentionally does not include an always-on daemon that survives host shutdown for multi-day autonomous execution.

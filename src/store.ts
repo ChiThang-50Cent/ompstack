@@ -65,7 +65,6 @@ export class PstackStore {
       ...(loaded.warning !== undefined ? { configWarning: loaded.warning } : {}),
     };
     this.#sessions.set(id, bucket);
-    this.updateStatus(ctx);
     return bucket;
   }
 
@@ -85,7 +84,6 @@ export class PstackStore {
     } catch (error) {
       this.#api.logger.warn("pstack: failed to write audit snapshot", { error: String(error) });
     }
-    this.updateStatus(ctx);
     return bucket;
   }
 
@@ -104,21 +102,8 @@ export class PstackStore {
 
   clearSession(ctx: ExtensionContext): void {
     this.#sessions.delete(sessionId(ctx));
-    ctx.ui.setStatus("pstack", undefined);
   }
 
-  updateStatus(ctx: ExtensionContext): void {
-    const bucket = this.#sessions.get(sessionId(ctx));
-    if (!bucket || bucket.state.mode === "off") {
-      ctx.ui.setStatus("pstack", bucket ? "pstack:off" : undefined);
-      return;
-    }
-    const run = bucket.state.activeRun;
-    const value = run
-      ? `pstack:${bucket.state.mode} ${run.playbook} [${run.status}]`
-      : `pstack:${bucket.state.mode}`;
-    ctx.ui.setStatus("pstack", value);
-  }
 }
 
 export type { SessionBucket };

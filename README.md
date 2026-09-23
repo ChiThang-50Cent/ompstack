@@ -128,7 +128,7 @@ Pstack agents require an active run. Independent artifact-bound verification is 
 | `strict` | cross-boundary, security/data, uncertain root cause | scout/architect → builder → reviewer → independent verifier |
 | `program` | multiple workstreams, phases, or PRs | durable brief + queue/ledger + bounded workers |
 
-`program` in version 0.2.0 means orchestration while an OMP session/runtime remains available. It does not claim to be an always-on multi-day daemon; see [docs/limitations.md](docs/limitations.md).
+`program` in version 0.4.0 means orchestration while an OMP session/runtime remains available. It does not claim to be an always-on multi-day daemon; see [docs/limitations.md](docs/limitations.md).
 
 ## Completion gates
 
@@ -177,11 +177,11 @@ See [docs/model-routing.md](docs/model-routing.md).
 
 ## Configuration
 
-Create `.omp/pstack.json` in the target project:
+Create `.omp/pstack.json` in the target project. If the file is absent, pstack starts in `off` mode:
 
 ```json
 {
-  "defaultMode": "auto",
+  "defaultMode": "off",
   "writeAuditFiles": true,
   "enforceIndependentVerifier": true,
   "preferCrossFamilyVerifier": true,
@@ -280,7 +280,7 @@ This is a complete session-level implementation, not a claim that every pstack f
 
 - OMP re-binds extensions inside child-agent sessions; pstack therefore keeps authoritative state in the parent and ingests child structured output instead of letting workers call parent-state tools.
 - OMP's `before_subagent_spawn` event does not expose the parent task `toolCallId`; the extension correlates the spawn to the oldest matching expected agent occurrence, then replaces that provisional relationship with runtime agent IDs from task progress.
-- Multi-day execution after the OMP host exits needs an external durable queue/daemon, which is not bundled in 0.2.0.
+- Multi-day execution after the OMP host exits needs an external durable queue/daemon, which is not bundled in 0.4.0.
 - OMP agent allowlists are not treated as a sandbox. OMP enforces each agent's `tools` list and pstack blocks only parent-state tools and `hub`, so reviewer/verifier Bash and external product surfaces still require a safe test environment.
 - Tool restrictions reduce accidental mutation but cannot prove semantic independence between models trained on correlated data.
 - Product verification is only as good as the project-local verification skill and available environment.

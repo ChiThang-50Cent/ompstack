@@ -12,7 +12,7 @@ Malformed JSON or invalid value types do not crash the extension. Defaults are u
 
 ```json
 {
-  "defaultMode": "auto",
+  "defaultMode": "off",
   "writeAuditFiles": true,
   "enforceIndependentVerifier": true,
   "preferCrossFamilyVerifier": true,
@@ -43,6 +43,8 @@ The JSON schema is bundled at `skills/pstack/schemas/config.schema.json`.
 ### `defaultMode`
 
 One of `off`, `auto`, or `strict`. A CLI `--pstack-mode` value overrides this for the current session.
+
+The built-in default is `off`. A mode selected with `/pstack auto`, `/pstack strict`, or `/pstack off` is stored in the current OMP session entry and restored when that session is reopened; it does not become a workspace-global default.
 
 ### `writeAuditFiles`
 

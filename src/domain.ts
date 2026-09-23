@@ -79,7 +79,7 @@ export interface PstackConfig {
 }
 
 export const DEFAULT_CONFIG: PstackConfig = {
-  defaultMode: "auto",
+  defaultMode: "off",
   writeAuditFiles: true,
   enforceIndependentVerifier: true,
   preferCrossFamilyVerifier: true,

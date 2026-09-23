@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.2.0 - 2026-09-23
+## 0.4.0 - 2026-09-24
+
+This release continues the pre-migration 0.3.9 line as the `pstack-omp` 0.4.0 release.
 
 OMP now owns lifecycle, planning, orchestration, model routing, tool admission, and isolation. Pstack keeps only proof state and completion gates. Compatibility was probed against OMP 18.2.11 (`test/fixtures/omp-probe-18.2.11`).
 
@@ -22,6 +24,8 @@ OMP now owns lifecycle, planning, orchestration, model routing, tool admission, 
 ### Changed
 
 - Plugin manifest moved to `.omp-plugin/plugin.json` (OMP-native, takes precedence); `.claude-plugin/` and `.github/` removed.
+- Removed the automatic `pstack:auto` hook-status row from the default OMP UI; status remains available through `/pstack` and `pstack_status`.
+- Pstack now defaults to `off` for new sessions; explicit `/pstack` mode changes remain session-persisted and are restored from OMP session entries.
 - The official marketplace and plugin identity is now `pstack-omp`; remove legacy `ompstack` marketplace registrations before reinstalling.
 
 - Built against the real `@oh-my-pi/pi-coding-agent@18.2.11` types (exact devDependency); the hand-written shim is gone. This fixes 0.1.0 failing to load in OMP (`Type.Object is not a function`).

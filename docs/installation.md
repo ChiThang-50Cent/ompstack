@@ -137,7 +137,7 @@ Restart OMP. Re-run:
 /pstack doctor
 ```
 
-Persisted session state is versioned. Version 0.2.0 writes state version 2 (`pstack-omp/state-v2`); version 1 state from 0.1.0 is not restored. A future incompatible state migration must increment that version and provide explicit restoration logic rather than silently interpreting old state.
+Persisted session state is versioned. Version 0.4.0 writes state version 2 (`pstack-omp/state-v2`); version 1 state from 0.1.0 is not restored. A future incompatible state migration must increment that version and provide explicit restoration logic rather than silently interpreting old state.
 
 ## Removal
 

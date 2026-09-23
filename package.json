@@ -1,6 +1,6 @@
 {
   "name": "pstack-omp",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Evidence-first engineering workflows, bounded subagents, and independent verification for Oh My Pi.",
   "type": "module",
   "license": "MIT",

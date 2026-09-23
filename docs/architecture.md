@@ -76,7 +76,7 @@ session_start / session_switch / session_branch / session_tree
   → reject child-session execution
   → load .omp/pstack.json or pstack.json
   → scan the active parent branch for the latest pstack state snapshot
-  → restore state and status-line indicator
+  → restore state; expose status through /pstack and pstack_status
   → apply --pstack-mode override, if supplied
 ```
 

@@ -26,7 +26,7 @@ A future OMP hook field carrying parent `toolCallId` should replace this heurist
 
 ## Multi-day autonomy
 
-Session state is durable in OMP session entries, and agent/job history can be reconciled while exposed by the runtime. Version 0.2.0 does not include:
+Session state is durable in OMP session entries, and agent/job history can be reconciled while exposed by the runtime. Version 0.4.0 does not include:
 
 - an external SQLite job queue;
 - an always-on worker daemon;

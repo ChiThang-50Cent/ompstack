@@ -1,10 +1,10 @@
 {
-  "name": "pstack-omp-local",
+  "name": "pstack-omp",
   "owner": {
     "name": "Pstack OMP contributors"
   },
   "metadata": {
-    "description": "Local catalog for the pstack-omp engineering workflow plugin",
+    "description": "Official marketplace catalog for the pstack-omp engineering workflow plugin",
     "version": "0.2.0"
   },
   "plugins": [

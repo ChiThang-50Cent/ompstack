@@ -51,16 +51,16 @@ omp --extension /absolute/path/to/pstack-omp/src/index.ts
 
 This validates the runtime extension, but package discovery of bundled agents and skills depends on the plugin/package being discoverable. For full behavior, use `omp plugin link` or a marketplace install.
 
-## Local marketplace
+## Official marketplace
 
-The repository contains `.omp-plugin/marketplace.json`. Add its directory as a marketplace and install the plugin entry:
+The repository contains `.omp-plugin/marketplace.json`. Add its directory as a marketplace and install the official plugin entry:
 
 ```bash
 omp plugin marketplace add /absolute/path/to/pstack-omp
-omp plugin install pstack-omp@pstack-omp-local
+omp plugin install pstack-omp@pstack-omp
 ```
 
-After installation, restart OMP. The local-link path is simpler during development because edits remain live through the symlink; marketplace installation creates/cache-manages a plugin copy.
+After installation, restart OMP. Marketplace installation creates and cache-manages a plugin copy; use `omp plugin link` during development when edits should remain live.
 
 ## Build and validate source
 

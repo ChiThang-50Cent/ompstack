@@ -22,6 +22,7 @@ OMP now owns lifecycle, planning, orchestration, model routing, tool admission, 
 ### Changed
 
 - Plugin manifest moved to `.omp-plugin/plugin.json` (OMP-native, takes precedence); `.claude-plugin/` and `.github/` removed.
+- The official marketplace and plugin identity is now `pstack-omp`; remove legacy `ompstack` marketplace registrations before reinstalling.
 
 - Built against the real `@oh-my-pi/pi-coding-agent@18.2.11` types (exact devDependency); the hand-written shim is gone. This fixes 0.1.0 failing to load in OMP (`Type.Object is not a function`).
 - Session kind is tri-state (`main | subagent | unknown`) from `session_init` only; unreadable sessions cannot touch parent state.

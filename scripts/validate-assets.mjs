@@ -30,7 +30,7 @@ for (const required of ["src", "dist", "agents", "skills", "scripts", "test", "t
 }
 
 const marketplace = await json(".omp-plugin/marketplace.json");
-assert(typeof marketplace?.name === "string", ".omp-plugin/marketplace.json: name is required");
+assert(marketplace?.name === "pstack-omp", ".omp-plugin/marketplace.json: name must be pstack-omp");
 assert(typeof marketplace?.owner?.name === "string", ".omp-plugin/marketplace.json: owner.name is required");
 assert(Array.isArray(marketplace?.plugins) && marketplace.plugins.some(plugin => plugin.name === "pstack-omp"), ".omp-plugin/marketplace.json: pstack-omp entry missing");
 

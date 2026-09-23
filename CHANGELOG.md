@@ -7,6 +7,13 @@ All notable changes to this project are documented in this file.
 ### Added
 - Added cost telemetry aggregation for model turns, token buckets, tool output bytes, test-command reinvocations, compaction/pruning events, and wall time in `scripts/session-telemetry.mjs`.
 
+### Changed
+- Activated runtime enforcement before headless tool calls through the command/skill marker, while retaining interactive, exact skill-read, and route-call fallbacks.
+- Added physical-file handling for `file:symbol` targets, declared session-local `local://` scratch roots, stable measured/reserved risk budgets, verification capability/fallback output, and persisted closeout gating.
+
+### Fixed
+- Prevented undeclared absolute/protocol writes from bypassing scope enforcement and prevented route hashes from being mistaken for artifact references.
+
 ## [0.3.9] - 2026-09-21
 
 ### Added

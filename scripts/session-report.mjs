@@ -9,6 +9,7 @@ const ENTRY_TYPES = Object.freeze({
   decisionState: `${CUSTOM_TYPE_PREFIX}route-decision-state.v1`,
   evidence: `${CUSTOM_TYPE_PREFIX}route-evidence.v1`,
   evidenceAttempt: `${CUSTOM_TYPE_PREFIX}route-evidence-attempt.v1`,
+  closeout: `${CUSTOM_TYPE_PREFIX}route-closeout.v1`,
   block: `${CUSTOM_TYPE_PREFIX}route-block.v1`,
   skip: `${CUSTOM_TYPE_PREFIX}route-skip.v1`,
   tool: `${CUSTOM_TYPE_PREFIX}route-tool.v1`,
@@ -65,6 +66,7 @@ export function parseSessionReport(session) {
   const stateEntries = byType(ENTRY_TYPES.decisionState);
   const evidenceEntries = byType(ENTRY_TYPES.evidence);
   const evidenceAttemptEntries = byType(ENTRY_TYPES.evidenceAttempt);
+  const closeoutEntries = byType(ENTRY_TYPES.closeout);
   const blockEntries = byType(ENTRY_TYPES.block);
   const skipEntries = byType(ENTRY_TYPES.skip);
   const toolEntries = byType(ENTRY_TYPES.tool);
@@ -81,7 +83,7 @@ export function parseSessionReport(session) {
       }));
     const latestState = states.at(-1) ?? null;
     const declaredRiskFacts = object(data.declaredRiskFacts) ?? object(data.riskFacts);
-    return {
+    const route = {
       decisionId,
       risk: stringOrNull(data.risk),
       targets: stringArray(data.targets),
@@ -103,6 +105,10 @@ export function parseSessionReport(session) {
       reason: latestState?.reason ?? null,
       stateHistory: states,
     };
+    if (typeof data.measuredRisk === "string") route.measuredRisk = data.measuredRisk;
+    if (object(data.riskBudget)) route.riskBudget = data.riskBudget;
+    if (Array.isArray(data.scratchPaths)) route.scratchPaths = stringArray(data.scratchPaths);
+    return route;
   });
   const latestDecisionId = routeCalls.at(-1)?.decisionId ?? null;
   const latestDecisionData = object(decisionEntries.at(-1)?.data);
@@ -166,6 +172,18 @@ export function parseSessionReport(session) {
     successes: toolTelemetry.filter((event) => event.outcome === "success").length,
     errors: toolTelemetry.filter((event) => event.outcome === "error").length,
   };
+  const closeout = closeoutEntries.map((entry) => {
+    const data = object(entry.data) ?? {};
+    return {
+      status: stringOrNull(data.status),
+      decisionId: stringOrNull(data.decisionId),
+      routeCurrent: data.routeCurrent === true,
+      requiredEvidence: normalizeEvidence(Array.isArray(data.requiredEvidence) ? data.requiredEvidence : []),
+      observedEvidence: normalizeEvidence(Array.isArray(data.observedEvidence) ? data.observedEvidence : []),
+      missingEvidence: normalizeEvidence(Array.isArray(data.missingEvidence) ? data.missingEvidence : []),
+      reason: stringOrNull(data.reason),
+    };
+  });
   return {
     schemaVersion: 1,
     activation: activationEntries.length === 0 ? null : activationSources[0] ?? "unknown",
@@ -173,7 +191,7 @@ export function parseSessionReport(session) {
     routeCalls,
     blocks,
     skips,
-    toolTelemetry,
+    closeout,
     toolMetrics,
     evidenceAttempts,
     evidence: {
@@ -202,6 +220,8 @@ export function formatSessionReport(report) {
   ];
   report.routeCalls.forEach((route, index) => {
     let line = `  #${index + 1} risk=${route.risk ?? "unknown"} targets=[${route.targets.join(", ")}]`;
+    if (route.riskBudget) line += ` riskBudget=${compactObject(route.riskBudget)}`;
+    if (route.scratchPaths) line += ` scratch=[${route.scratchPaths.join(", ")}]`;
     if (route.riskFacts) line += ` riskFacts=${compactObject(route.riskFacts)}`;
     if (route.reasonCodes.length > 0) line += ` reasons=[${route.reasonCodes.join(", ")}]`;
     if (route.reason) line += ` reason=${route.reason}`;
@@ -221,6 +241,10 @@ export function formatSessionReport(report) {
   lines.push(`evidence tries  : ${report.evidence.attempts.length}`);
   lines.push(`tool events     : calls=${report.toolMetrics.calls} ends=${report.toolMetrics.ends} allowed=${report.toolMetrics.allowed} blocked=${report.toolMetrics.blocked} successes=${report.toolMetrics.successes} errors=${report.toolMetrics.errors}`);
   lines.push(`material stale  : ${report.materialStale}`);
+  if (report.closeout?.length) {
+    const latest = report.closeout.at(-1);
+    lines.push(`closeout        : ${latest.status ?? "unknown"} routeCurrent=${latest.routeCurrent ? "yes" : "no"} missing=${latest.missingEvidence.join(", ") || "none"}`);
+  }
   return lines.join("\n");
 }
 

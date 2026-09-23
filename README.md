@@ -107,9 +107,11 @@ Or invoke the skill directly:
 
 Ompstack is intended for explicit invocation through `/ompstack` or `/skill:ompstack`; it is not the default workflow for every coding task.
 
-The runtime gate is opt-in at session level. On OMP's current interactive input path, it activates persistently when the user submits `/ompstack` or `/skill:ompstack`, so writes before the initial route are blocked. A route over an empty candidate is bootstrap and unlocks declared parent `write`/`edit` targets; any staged, unstaged, or untracked change derives a material route. A successful parent mutation makes that material route stale, so required independent evidence needs a fresh material route. The extension does not establish runtime activation coverage for non-interactive entry points; explicit invocation and route-before-write remain their skill contract.
+The runtime gate is opt-in at session level. The command and skill inject an inert `<!-- ompstack:activate -->` marker, so `before_agent_start` activates the persisted gate before headless tools run; interactive input remains a fallback, and reading `skill://ompstack` or calling `ompstack_route` also activates it. Writes before the initial route are blocked. A route over an empty candidate is bootstrap and unlocks declared parent `write`/`edit` targets; any staged, unstaged, or untracked change derives a material route. A successful parent mutation makes that material route stale, so required independent evidence needs a fresh material route.
 
-`ompstack_phase` reports which required reviewer/verifier/security-reviewer task lanes OMP successfully launched. This is session-local, partial coverage—not a sandbox or a conformance verdict.
+The route preserves measured risk separately from a deterministic target risk budget; its effective risk is the higher of the two, so a later working-tree measurement cannot understate the declared scope. Targets may use documented `file:symbol` syntax; enforcement scopes the physical file. Intermediate artifacts belong under declared `repository.scratchPaths` using `local://...`, which is session-scoped and is not part of the repository change set. The returned `Route-Decision: sha256:<id>` is a task-binding header, not an `artifact://` locator; output also names required evidence and the detected verification capability or repository fallback.
+
+`session_stop` records a closeout entry and blocks normal completion until the current route and all required independent evidence lanes are present. `ompstack_phase` reports which required reviewer/verifier/security-reviewer task lanes OMP successfully launched; it is session-local, partial coverage—not a sandbox or a conformance verdict.
 
 ### Repository routing overlay
 

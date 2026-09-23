@@ -4,6 +4,7 @@ description: Explicitly invoked Ompstack risk-routed engineering workflow. Use o
 ---
 
 # ompstack
+<!-- ompstack:activate -->
 
 Treat this skill as the control plane for engineering work. Reuse OhMyPi primitives instead of recreating them.
 
@@ -35,7 +36,9 @@ Todo state is deliberately separate from Hub/task lifecycle, feature maps, sessi
 
 ## Runtime bootstrap and route facts
 
-After an explicit Ompstack invocation, before any mutable or unknown tool, the parent MUST establish a bootstrap RouteDecision:
+After an explicit Ompstack invocation, before any mutable or unknown tool, the parent MUST establish a bootstrap RouteDecision.
+
+The command and skill carry the inert `<!-- ompstack:activate -->` marker. The runtime observes it in `before_agent_start`, before headless print/RPC tool calls; interactive `/ompstack` input, an exact `read` of `skill://ompstack`, and a direct route call are persisted activation fallbacks.
 
 1. Resolve the route intent and declared mutation targets.
 2. For every non-Low write task, inspect the mutation target directly. Record the target, semantic boundary, consumer families, execution modes, invariants, graph/reference behavior, and material unknowns. A final Medium route requires source evidence that this surface is bounded and local; unresolved material uncertainty escalates to High. Use `scout` only when direct mapping is genuinely broad or the target remains unknown.
@@ -44,10 +47,14 @@ After an explicit Ompstack invocation, before any mutable or unknown tool, the p
 5. Copy the returned exact `Route-Decision: sha256:<decisionId>` line into the shared `context` of every mutable `task` batch. A task may carry it in its task body, but `context` is the canonical batch-preflight location.
 6. Use `ompstack_phase` only to inspect session-local, partial observation of launched evidence lanes. It does not establish closeout or sandbox conformance.
 7. After any successful parent `write` or `edit`, before launching required independent evidence, call `ompstack_route` again. The changed candidate derives a material RouteDecision, which is stale after the next successful parent mutation.
+8. Treat the route's `Route-Decision: sha256:<id>` as a task-binding header, never as an `artifact://` locator. Its output names the effective/measured/reserved risk, required evidence, declared `local://` scratch paths, and a detected `verify-*` capability or repository-native fallback.
 
 ### Route inputs
 
 - `repository.root` MUST be the absolute repository root. `base` is the resolved merge-base baseline against the selected integration target; `head` is the checked-out candidate `HEAD`, supplied as its resolved SHA. The route rejects a `head` that is not the checked-out `HEAD`.
+- `repository.scratchPaths`, when present, MUST contain only declared relative `local://...` roots. Those session-scoped artifacts are outside the Git change set; arbitrary absolute paths and other protocol schemes are rejected.
+- Targets MAY use `file:symbol` syntax. The route preserves the full target for audit, while runtime write scope resolves the physical file portion before the first `:`.
+- The decision preserves the measured classifier and a deterministic target reservation; effective risk is `max(measured, reserved)`, and independent evidence is derived from the effective tier.
 - The route measures the checked-out working tree relative to that merge base, including staged, unstaged, and untracked files. It binds the resulting file content through `changeSetDigest`; it is not a claim about a future diff.
 - `graphPolicy.sourceRoots` MUST include `go`, `python`, `typescript`, and `java`. Use repository-relative roots and `[]` for unused languages; do not guess roots from a task prompt.
 - `taskFacts.behaviorAffecting` declares whether the change alters observable product behavior. Use `false` only for documentation, changelogs, CI configuration, or formatting-only changes; when uncertain, use `true`.
@@ -87,6 +94,7 @@ For behavior-affecting work, resolve the proof surface after selecting the prima
 - Create a verification capability only when the user explicitly asks, or when no real proof surface can be named and the user extends scope for that infrastructure. Read `skill://ompstack-create-verification`.
 - Maintain an existing project verification skill only on an explicit audit/drift request. Read `skill://ompstack-maintain-verification`.
 An unavailable Doctor or runtime surface is `BLOCKED` evidence with its exact prerequisite. `INCONCLUSIVE` belongs only to an optional external evidence adapter that cannot establish its declared predicate. Neither state is a product `FAIL`.
+At `session_stop`, the runtime records `route-closeout.v1` and blocks normal completion until a current RouteDecision and every required independent evidence lane are present. `session_shutdown` records unresolved closeout telemetry when the host is terminating without a ready closeout.
 
 When no matching project capability exists, select the closest driver and name its observation and evidence using `skill://ompstack/playbooks/verification.md`'s proof-surface matrix. Do not substitute a static check for an available real surface; an unavailable required surface is `BLOCKED`.
 

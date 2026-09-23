@@ -196,6 +196,33 @@ test("session report preserves route metadata and telemetry outcomes", () => {
   });
 });
 
+test("session report parses additive risk budget, scratch paths, and closeout entries", () => {
+  const report = parseSessionReport([
+    custom("route-decision.v1", {
+      decisionId,
+      risk: "medium",
+      measuredRisk: "low",
+      riskBudget: { measured: "low", reserved: "medium", effective: "medium", reservationReasons: ["declared-code-target:src/a.ts"] },
+      scratchPaths: ["local://session/work"],
+      requiredIndependentEvidence: ["verifier"],
+    }),
+    custom("route-closeout.v1", {
+      status: "blocked",
+      decisionId,
+      routeCurrent: false,
+      requiredEvidence: ["verifier"],
+      observedEvidence: [],
+      missingEvidence: ["verifier"],
+      reason: "current RouteDecision is stale; missing independent evidence: verifier",
+    }),
+  ].join("\n"));
+  assert.equal(report.routeCalls[0].measuredRisk, "low");
+  assert.deepEqual(report.routeCalls[0].riskBudget, { measured: "low", reserved: "medium", effective: "medium", reservationReasons: ["declared-code-target:src/a.ts"] });
+  assert.deepEqual(report.routeCalls[0].scratchPaths, ["local://session/work"]);
+  assert.deepEqual(report.closeout[0].missingEvidence, ["verifier"]);
+  assert.match(formatSessionReport(report), /closeout\s+: blocked routeCurrent=no missing=verifier/);
+});
+
 
 test("session report rejects malformed JSONL with its line number", () => {
   assert.throws(() => parseSessionReport('{"type":"session"}\nnot-json'), /session JSONL line 2 is not JSON/);

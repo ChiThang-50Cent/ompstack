@@ -1,13 +1,13 @@
-import { dirname, resolve, sep } from "node:path";
-import { realpath } from "node:fs/promises";
+import { dirname, join, resolve, sep } from "node:path";
+import { readdir, realpath } from "node:fs/promises";
 import { routeRepository } from "../scripts/routing/route-repository.mjs";
 import type { ExtensionAPI, ToolCallEvent } from "@oh-my-pi/pi-coding-agent";
 
 type RouteInput = Parameters<typeof routeRepository>[0];
 type EvidenceLane = "reviewer" | "verifier" | "security-reviewer";
-type ActivationSource = "input" | "skill-read" | "route-call";
-type ActiveDecision = { decisionId: string; requiredIndependentEvidence?: unknown; measurementPurpose: "bootstrap" | "material"; repositoryRoot: string; targets: readonly string[] };
-type ActivationState = { workflow: "ompstack"; source?: ActivationSource };
+type ActivationSource = "input" | "skill-read" | "route-call" | "marker";
+type ActiveDecision = { decisionId: string; requiredIndependentEvidence?: unknown; measurementPurpose: "bootstrap" | "material"; repositoryRoot: string; targets: readonly string[]; scratchPaths?: readonly string[]; risk?: string; measuredRisk?: string; riskBudget?: { measured?: string; reserved?: string; effective?: string; reservationReasons?: readonly string[] } };
+type ActivationState = { workflow: "ompstack"; source?: string };
 type RouteSkipState = { reason: "enforcement-inactive"; firstToolName: string };
 type SessionContext = { sessionManager: { getBranch(): Iterable<unknown> } };
 type ScopeViolation = { reason: string; path: string | null };
@@ -20,18 +20,30 @@ const BLOCK_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-block.v1";
 const SKIP_STATE_TYPE = "io.github.chithang-50cent.ompstack.route-skip.v1";
 const TOOL_EVENT_TYPE = "io.github.chithang-50cent.ompstack.route-tool.v1";
 const EVIDENCE_ATTEMPT_TYPE = "io.github.chithang-50cent.ompstack.route-evidence-attempt.v1";
+const CLOSEOUT_TYPE = "io.github.chithang-50cent.ompstack.route-closeout.v1";
 const READ_ONLY_TOOLS: Record<string, true> = { read: true, grep: true, glob: true, web_search: true, ompstack_route: true, ompstack_phase: true };
 const ROUTE_PROTOCOL_PATH = "xd://ompstack_route";
 const PHASE_PROTOCOL_PATH = "xd://ompstack_phase";
 const TELEMETRY_REFERENCE = /^(?:agent|artifact|history):\/\/\S+$/;
-const ACTIVATION_SOURCES: Record<ActivationSource, true> = { input: true, "skill-read": true, "route-call": true };
+const ACTIVATION_MARKER = "<!-- ompstack:activate -->";
+const ACTIVATION_SOURCES: Record<ActivationSource, true> = { input: true, "skill-read": true, "route-call": true, marker: true };
 const EVIDENCE_LANES = ["reviewer", "verifier", "security-reviewer"] as const;
 const EVIDENCE_LANE_SET = new Set<EvidenceLane>(EVIDENCE_LANES);
 
 function record(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
-
+function targetPhysicalPath(target: string) {
+  const separator = target.indexOf(":");
+  return separator < 0 ? target : target.slice(0, separator);
+}
+function validDeclaredTarget(target: unknown) {
+  if (typeof target !== "string" || target === "") return false;
+  const separator = target.indexOf(":");
+  const physical = separator < 0 ? target : target.slice(0, separator);
+  const symbol = separator < 0 ? null : target.slice(separator + 1);
+  return physical !== "." && !physical.startsWith("/") && !physical.startsWith("./") && !physical.endsWith("/") && !physical.includes("//") && !physical.split("/").includes("..") && (symbol === null || (symbol !== "" && symbol.trim() === symbol && !symbol.includes(":") && !symbol.includes("/") && !symbol.includes("\\")));
+}
 function isDecision(value: unknown): value is ActiveDecision {
   const candidate = record(value);
   return candidate !== null &&
@@ -42,19 +54,21 @@ function isDecision(value: unknown): value is ActiveDecision {
     candidate.repositoryRoot !== "" &&
     Array.isArray(candidate.targets) &&
     candidate.targets.length > 0 &&
-    candidate.targets.every((target) => typeof target === "string" && target !== "");
+    candidate.targets.every(validDeclaredTarget) &&
+    (candidate.scratchPaths === undefined || (Array.isArray(candidate.scratchPaths) && candidate.scratchPaths.every((path) => typeof path === "string" && validLocalMutationPath(path))));
 }
-
 function isDecisionState(value: unknown): value is { decisionId: string; state: "invalidated" | "material-stale"; reason: string } {
   const candidate = record(value);
   return candidate !== null && typeof candidate.decisionId === "string" && /^[a-f0-9]{64}$/.test(candidate.decisionId) && (candidate.state === "invalidated" || candidate.state === "material-stale") && typeof candidate.reason === "string" && candidate.reason !== "";
 }
-
 function isActivationState(value: unknown): value is ActivationState {
   const candidate = record(value);
-  return candidate?.workflow === "ompstack" && (candidate.source === undefined || (typeof candidate.source === "string" && Object.hasOwn(ACTIVATION_SOURCES, candidate.source)));
+  return candidate?.workflow === "ompstack" && (candidate.source === undefined || (typeof candidate.source === "string" && candidate.source !== "" && (Object.hasOwn(ACTIVATION_SOURCES, candidate.source) || candidate.source.length > 0)));
 }
-
+function validLocalMutationPath(path: string) {
+  const relative = path.slice("local://".length);
+  return relative !== "" && !relative.startsWith("/") && !relative.endsWith("/") && !relative.includes("//") && !relative.split("/").includes("..") && !relative.split("/").includes(".");
+}
 function isRouteSkipState(value: unknown): value is RouteSkipState {
   const candidate = record(value);
   return candidate?.reason === "enforcement-inactive" && typeof candidate.firstToolName === "string" && candidate.firstToolName !== "";
@@ -67,12 +81,10 @@ function isEvidenceState(value: unknown): value is { decisionId: string; evidenc
     typeof candidate.evidence === "string" &&
     canonicalEvidence(candidate.evidence) !== undefined;
 }
-
 function canonicalEvidence(value: unknown): EvidenceLane | undefined {
   if (value === "ompstack-verifier") return "verifier";
   return typeof value === "string" && EVIDENCE_LANE_SET.has(value as EvidenceLane) ? value as EvidenceLane : undefined;
 }
-
 function normalizeEvidence(values: unknown): EvidenceLane[] {
   const requested: Partial<Record<EvidenceLane, true>> = {};
   if (Array.isArray(values)) {
@@ -83,10 +95,10 @@ function normalizeEvidence(values: unknown): EvidenceLane[] {
   }
   return EVIDENCE_LANES.filter((lane) => requested[lane] === true);
 }
-
 function requiredEvidence(decision: ActiveDecision | null): EvidenceLane[] {
   return normalizeEvidence(decision?.requiredIndependentEvidence);
 }
+
 
 
 function taskBindsDecision(input: unknown, decisionId: string) {
@@ -190,11 +202,18 @@ async function outsideDeclaredScope(decision: ActiveDecision, event: ToolCallEve
   const repositoryRoot = resolve(decision.repositoryRoot);
   const realRepositoryRoot = await realpath(repositoryRoot);
   const targets = await Promise.all(decision.targets.map(async (target) => {
-    const path = resolve(repositoryRoot, target);
+    const path = resolve(repositoryRoot, targetPhysicalPath(target));
     return { path, realPath: await nearestExistingRealPath(path) };
   }));
+  const scratchPaths = decision.scratchPaths ?? [];
   for (const path of paths) {
-    if (isProtocolPath(path)) continue;
+    if (path === ROUTE_PROTOCOL_PATH || path === PHASE_PROTOCOL_PATH) continue;
+    if (path.startsWith("local://")) {
+      if (!validLocalMutationPath(path)) return { reason: `ompstack local scratch path is malformed: ${path}`, path };
+      if (scratchPaths.some((scratch) => path === scratch || path.startsWith(`${scratch}/`))) continue;
+      return { reason: `ompstack local scratch path is not declared: ${path}`, path };
+    }
+    if (isProtocolPath(path)) return { reason: `ompstack protocol write is not allowed: ${path}`, path };
     const candidate = resolve(repositoryRoot, path);
     if (!isDescendant(repositoryRoot, candidate)) return { reason: `ompstack target is outside the declared repository: ${path}`, path };
     const target = targets.find(({ path: targetPath }) => candidate === targetPath || candidate.startsWith(`${targetPath}${sep}`));
@@ -204,6 +223,23 @@ async function outsideDeclaredScope(decision: ActiveDecision, event: ToolCallEve
     if (!isDescendant(target.realPath, realCandidate)) return { reason: `ompstack target escapes the RouteDecision scope through a symlink: ${path}`, path };
   }
   return undefined;
+}
+async function verificationCapabilities(repositoryRoot: string): Promise<string[]> {
+  try {
+    const entries = await readdir(join(repositoryRoot, ".omp", "skills"), { withFileTypes: true });
+    return entries.filter((entry) => entry.isDirectory() && entry.name.startsWith("verify-")).map((entry) => `.omp/skills/${entry.name}`).sort();
+  } catch {
+    return [];
+  }
+}
+function mutationChangesRepository(decision: ActiveDecision, event: ToolCallEvent) {
+  const paths = mutationPaths(event) ?? [];
+  const scratchPaths = decision.scratchPaths ?? [];
+  return paths.some((path) =>
+    path !== ROUTE_PROTOCOL_PATH &&
+    path !== PHASE_PROTOCOL_PATH &&
+    !(path.startsWith("local://") && validLocalMutationPath(path) && scratchPaths.some((scratch) => path === scratch || path.startsWith(`${scratch}/`))),
+  );
 }
 
 
@@ -215,9 +251,16 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   let materialRouteCurrent = false;
   let routeSkipRecorded = false;
   let observedEvidence = new Set<EvidenceLane>();
+  let lastCloseoutPassed = false;
+  let shutdownTelemetryRecorded = false;
   const pendingTaskEvidence = new Map<string, { decisionId: string; evidence: EvidenceLane[] }>();
   const pendingMutations = new Map<string, string>();
   const pendingToolTelemetry = new Map<string, { decisionId: string | null; toolName: string }>();
+  async function activate(source: ActivationSource) {
+    if (enforcementActive) return;
+    await pi.appendEntry(ACTIVATION_STATE_TYPE, { workflow: "ompstack", source });
+    enforcementActive = true;
+  }
   async function recordToolCall(event: ToolCallEvent, decisionId: string | null, disposition: "allowed" | "blocked", reason?: string) {
     await pi.appendEntry(TOOL_EVENT_TYPE, {
       phase: "call",
@@ -287,6 +330,8 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     materialRouteCurrent = false;
     routeSkipRecorded = false;
     observedEvidence = new Set();
+    lastCloseoutPassed = false;
+    shutdownTelemetryRecorded = false;
     pendingTaskEvidence.clear();
     pendingMutations.clear();
     pendingToolTelemetry.clear();
@@ -300,12 +345,11 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
         activeDecision = item.data;
         materialRouteCurrent = item.data.measurementPurpose === "material";
         observedEvidence = new Set();
+        lastCloseoutPassed = false;
       }
       if (item.customType === EVIDENCE_STATE_TYPE && isEvidenceState(item.data) && activeDecision?.decisionId === item.data.decisionId) {
         const evidence = canonicalEvidence(item.data.evidence);
-        if (evidence !== undefined && (activeDecision.measurementPurpose === "bootstrap" || materialRouteCurrent) && requiredEvidence(activeDecision).includes(evidence)) {
-          observedEvidence.add(evidence);
-        }
+        if (evidence !== undefined && (activeDecision.measurementPurpose === "bootstrap" || materialRouteCurrent) && requiredEvidence(activeDecision).includes(evidence)) observedEvidence.add(evidence);
       }
       if (item.customType === DECISION_STATE_TYPE && isDecisionState(item.data) && activeDecision?.decisionId === item.data.decisionId) {
         enforcementActive = true;
@@ -313,11 +357,15 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
           activeDecision = null;
           materialRouteCurrent = false;
           observedEvidence = new Set();
+          lastCloseoutPassed = false;
         } else {
           materialRouteCurrent = false;
           observedEvidence = new Set();
-        }
+          lastCloseoutPassed = false;
       }
+      }
+      const closeout = record(item.data);
+      if (item.customType === CLOSEOUT_TYPE && closeout?.status === "ready" && activeDecision !== null && closeout.decisionId === activeDecision.decisionId) lastCloseoutPassed = true;
     }
   }
 
@@ -325,11 +373,22 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
   pi.on("session_switch", (_event, ctx) => rebuild(ctx));
   pi.on("session_branch", (_event, ctx) => rebuild(ctx));
   pi.on("session_tree", (_event, ctx) => rebuild(ctx));
-  pi.on("input", async (event) => {
-    if (!/(?:^|\s)\/(?:skill:)?ompstack(?:\s|$)/.test(event.text) || enforcementActive) return;
-    await pi.appendEntry(ACTIVATION_STATE_TYPE, { workflow: "ompstack", source: "input" });
-    enforcementActive = true;
+  pi.on("before_agent_start", async (event) => {
+    const slashToken = /(?:^|\s)\/(?:skill:)?ompstack(?:\s|$)/.test(event.prompt);
+    const markerPresent = event.prompt.includes(ACTIVATION_MARKER) || (Array.isArray(event.systemPrompt) && event.systemPrompt.some((prompt) => prompt.includes(ACTIVATION_MARKER)));
+    if (markerPresent) await activate("marker");
+    else if (slashToken) await activate("input");
   });
+  pi.on("input", async (event) => {
+    if (/(?:^|\s)\/(?:skill:)?ompstack(?:\s|$)/.test(event.text)) await activate("input");
+  });
+
+  const repositorySchema = z.object({
+    root: z.string().min(1),
+    base: z.string().min(1),
+    head: z.string().min(1),
+    scratchPaths: z.array(z.string()).optional(),
+  }).strict();
 
   pi.registerTool({
     name: "ompstack_route",
@@ -342,7 +401,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
       taskFacts: z.object({
         behaviorAffecting: z.boolean().describe("Whether the change alters observable product behavior. Use false only for documentation, changelogs, CI configuration, or formatting-only changes; when uncertain, use true."),
       }).strict(),
-      repository: z.object({ root: z.string().min(1), base: z.string().min(1), head: z.string().min(1) }).strict(),
+      repository: repositorySchema,
       riskFacts: z.object({
         sharedSemanticBoundary: z.boolean().describe("Whether the change touches a contract relied on by multiple callers, such as a schema, wire format, or public signature."),
         consumerFamilies: z.number().int().nonnegative().describe("Number of independent caller families for the changed surface, not call sites. Ten calls from one module count as one; use materialUnknown when not directly inspected."),
@@ -353,6 +412,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
       graphPolicy: z.object({ sourceRoots: z.object({ go: z.array(z.string()), python: z.array(z.string()), typescript: z.array(z.string()), java: z.array(z.string()) }).strict() }).strict(),
     }).strict(),
     async execute(_id, input) {
+      await activate("route-call");
       const decision = await routeRepository(input as RouteInput);
       await invalidateActiveDecision("superseded-by-fresh-route");
       await pi.appendEntry(DECISION_TYPE, decision);
@@ -360,7 +420,21 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
       activeDecision = decision;
       materialRouteCurrent = decision.measurementPurpose === "material";
       observedEvidence = new Set();
-      return { content: [{ type: "text", text: `Route-Decision: sha256:${decision.decisionId}` }], details: decision };
+      lastCloseoutPassed = false;
+      shutdownTelemetryRecorded = false;
+      const capabilities = await verificationCapabilities(decision.repositoryRoot);
+      const required = requiredEvidence(decision);
+      const scratch = decision.scratchPaths ?? [];
+      const verificationText = capabilities.length > 0 ? `detected capabilities: ${capabilities.join(", ")}` : "fallback surface: repository-native original reproduction or narrowest relevant regression command";
+      const text = [
+        `Route-Decision: sha256:${decision.decisionId}`,
+        "Decision hash is not an artifact URI; use it only as the exact task-binding header.",
+        `Risk budget: effective=${decision.riskBudget?.effective ?? decision.risk ?? "unknown"} measured=${decision.riskBudget?.measured ?? decision.measuredRisk ?? decision.risk ?? "unknown"} reserved=${decision.riskBudget?.reserved ?? "unknown"}`,
+        `Required evidence: ${required.join(", ") || "none"}`,
+        `Scratch paths: ${scratch.join(", ") || "none"}`,
+        `Verification: ${verificationText}`,
+      ].join("\n");
+      return { content: [{ type: "text", text }], details: { ...decision, verificationCapabilities: capabilities, verificationFallback: capabilities.length === 0 ? "repository-native original reproduction or narrowest relevant regression command" : null } };
     },
   });
 
@@ -387,7 +461,56 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     },
   });
 
+  function closeoutState() {
+    const routeCurrent = activeDecision !== null && (activeDecision.measurementPurpose === "bootstrap" || materialRouteCurrent);
+    const required = requiredEvidence(activeDecision);
+    const observed = [...observedEvidence].sort();
+    const missing = required.filter((evidence) => !observed.includes(evidence));
+    const reasons: string[] = [];
+    if (!routeCurrent) reasons.push(activeDecision === null ? "missing current RouteDecision" : "current RouteDecision is stale");
+    if (missing.length > 0) reasons.push(`missing independent evidence: ${missing.join(", ")}`);
+    return { routeCurrent, required, observed, missing, reason: reasons.join("; ") || "closeout ready" };
+  }
+  pi.on("session_stop", async () => {
+    if (!enforcementActive) return;
+    const state = closeoutState();
+    const ready = state.routeCurrent && state.missing.length === 0;
+    await pi.appendEntry(CLOSEOUT_TYPE, {
+      status: ready ? "ready" : "blocked",
+      decisionId: activeDecision?.decisionId ?? null,
+      routeCurrent: state.routeCurrent,
+      requiredEvidence: state.required,
+      observedEvidence: state.observed,
+      missingEvidence: state.missing,
+      reason: state.reason,
+    });
+    lastCloseoutPassed = ready;
+    if (ready) return;
+    return {
+      continue: true,
+      decision: "block",
+      reason: `Ompstack closeout blocked: ${state.reason}`,
+      additionalContext: `Before settling, establish a current RouteDecision and independent evidence. Missing: ${state.reason}.`,
+    };
+  });
+  pi.on("session_shutdown", async () => {
+    if (!enforcementActive || lastCloseoutPassed || shutdownTelemetryRecorded) return;
+    const state = closeoutState();
+    shutdownTelemetryRecorded = true;
+    await pi.appendEntry(CLOSEOUT_TYPE, {
+      status: "shutdown",
+      decisionId: activeDecision?.decisionId ?? null,
+      routeCurrent: state.routeCurrent,
+      requiredEvidence: state.required,
+      observedEvidence: state.observed,
+      missingEvidence: state.missing,
+      reason: `session shutdown before closeout: ${state.reason}`,
+    });
+  });
+
   pi.on("tool_call", async (event) => {
+    const inputPath = record(event.input)?.path;
+    if (event.toolName === "read" && inputPath === "skill://ompstack") await activate("skill-read");
     const decisionId = activeDecision?.decisionId ?? null;
     if (isReadOnlyTool(event)) {
       if (enforcementActive) await recordToolCall(event, decisionId, "allowed");
@@ -412,7 +535,7 @@ export default function ompstackRuntime(pi: ExtensionAPI) {
     }
     if (event.toolName === "write" || event.toolName === "edit") {
       await recordToolCall(event, activeDecision.decisionId, "allowed");
-      pendingMutations.set(event.toolCallId, activeDecision.decisionId);
+      if (mutationChangesRepository(activeDecision, event)) pendingMutations.set(event.toolCallId, activeDecision.decisionId);
       return;
     }
     if (event.toolName !== "task") {

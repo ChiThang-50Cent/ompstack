@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "bun:test";
 import { classifyRoute } from "../scripts/routing/classify-route.mjs";
 import { createRouteDecision } from "../scripts/routing/route-decision.mjs";
+import { deriveTargetRiskReservation } from "../scripts/routing/route-repository.mjs";
 
 const signals = { changedCodeFiles: 1, changedLines: 1, unclassifiedChangedFiles: 0, touchesAuth: "unknown", touchesAuthorization: "unknown", touchesCryptoOrSecrets: "unknown", touchesTenantIsolation: "unknown", touchesMoneyMovement: "unknown", touchesMigration: "unknown", destructiveMigration: "unknown", touchesRuntimeConfig: "unknown", touchesPublicAPI: "unknown", touchesPersistence: "unknown", touchesConcurrency: "unknown", touchesGeneratedCode: "unknown", touchesExposedParser: "unknown" };
 const graph = { materialUnknown: false, affectedModuleCount: 1, reverseDependentCount: 0 };
@@ -42,6 +43,42 @@ test("unknown signals fail closed and decisions are stable", () => {
   assert.deepEqual(left.declaredRiskFacts, facts);
   assert.deepEqual(changedFactsDecision.declaredRiskFacts, changedFacts);
   assert.equal(left.measurementPurpose, "material");
+});
+
+test("risk budget persists measured and reserved floors while deriving evidence from effective risk", () => {
+  const input = {
+    intent: "feature",
+    measurementPurpose: "bootstrap",
+    targets: ["src/example.ts:parse"],
+    repositoryRoot: "/repo",
+    changeSetDigest: "1".repeat(64),
+    classification: { risk: "low", reasonCodes: [], securityReviewRequired: false, verificationRequired: false },
+    measuredRisk: "low",
+    reservedRisk: "high",
+    reservationReasons: ["declared-code-target:src/example.ts"],
+    signals,
+    graph,
+    policyVersion: "1",
+    routeInputDigest: "0".repeat(64),
+  };
+  const decision = createRouteDecision(input);
+  assert.equal(decision.risk, "high");
+  assert.equal(decision.measuredRisk, "low");
+  assert.deepEqual(decision.riskBudget, {
+    measured: "low",
+    reserved: "high",
+    effective: "high",
+    reservationReasons: ["declared-code-target:src/example.ts"],
+  });
+  assert.deepEqual(decision.requiredIndependentEvidence, ["reviewer", "verifier"]);
+});
+
+test("target reservation is stable across bootstrap and material measurements", () => {
+  const bootstrap = deriveTargetRiskReservation(["src/example.ts:parse"]);
+  const material = deriveTargetRiskReservation(["src/example.ts:parse"]);
+  assert.deepEqual(bootstrap, material);
+  assert.equal(bootstrap.reserved, "medium");
+  assert.match(bootstrap.reservationReasons[0], /declared-code-target:src\/example\.ts/);
 });
 
 test("partial graph limits blast-radius confidence without escalating risk", () => {

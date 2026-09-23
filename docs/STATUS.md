@@ -6,14 +6,15 @@
 
 Ompstack now has a persisted runtime routing boundary rather than a prose-only workflow:
 
-- Explicit `/ompstack` or `/skill:ompstack` activation blocks mutable or unknown execution until a RouteDecision exists.
-- A RouteDecision is bound to the checked-out working-tree candidate, declared target paths, and `changeSetDigest`.
+- Explicit `/ompstack` or `/skill:ompstack` activation persists from the command/skill marker before headless tools; interactive input, exact skill reads, and direct route calls remain activation fallbacks. Mutable or unknown execution is blocked until a RouteDecision exists.
+- A RouteDecision is bound to the checked-out working-tree candidate, declared target paths, `changeSetDigest`, and optional session-local `local://` scratch roots. Documented `file:symbol` targets are audited as full strings while enforcement scopes their physical files.
 - Bootstrap or material purpose is derived from the measured change set. A successful parent mutation makes a material decision stale before independent evidence can proceed.
-- Declared write scope rejects paths outside the repository, paths outside declared targets, and target escapes through symlinks. Session changes rebuild this state from persisted entries.
-- Routing measures tri-state signals, conservative import-graph reachability, direct risk facts, and policy thresholds. Partial graph information constrains blast-radius confidence; it does not independently elevate risk.
+- Declared write scope rejects paths outside the repository, paths outside declared targets, target escapes through symlinks, undeclared scratch paths, and non-allowlisted protocol writes. Session changes rebuild this state from persisted entries.
+- Routing measures tri-state signals, conservative import-graph reachability, direct risk facts, and policy thresholds. The decision preserves measured risk plus a deterministic target reservation and uses the higher effective tier, preventing the bootstrap budget from understating a later candidate.
 - The route-fact contract has six declarations: `taskFacts.behaviorAffecting`, plus `riskFacts.sharedSemanticBoundary`, `consumerFamilies`, `executionModes`, `graphTraversal`, and `materialUnknown`. `consumerFamilies: 0` and `executionModes: 0` mean unknown and force High; conservative declarations are not free because `materialUnknown`, either zero sentinel, or multiple families or modes require 2–3 evidence lanes.
 - Code classification is separate from import-graph support: known JavaScript and supported graph-language extensions count as code, while any path outside explicit non-code coverage also counts as code. An unsupported graph language therefore cannot make real code non-behavior-affecting.
-- RouteDecision remains at schema version `2`: this release changes the route-input contract, not the persisted RouteDecision body.
+- `session_stop` records `route-closeout.v1` and blocks normal completion until the current route and required independent evidence are present; `session_shutdown` records unresolved closeout telemetry when the host terminates first.
+- RouteDecision remains at schema version `2`; this release adds route-input, risk-budget, scratch, route-output, and closeout behavior without changing the schema version.
 
 ## Current evidence and adoption contract
 

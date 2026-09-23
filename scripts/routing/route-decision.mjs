@@ -19,10 +19,21 @@ const playbooks = Object.freeze({
 });
 
 /** Creates an immutable decision bound to normalized inputs and a measured working-tree snapshot. */
-export function createRouteDecision({ intent, measurementPurpose, targets, repositoryRoot, changeSetDigest, classification, signals, graph, policyVersion, routeInputDigest, declaredRiskFacts = {} }) {
+export function createRouteDecision({ intent, measurementPurpose, targets, repositoryRoot, scratchPaths = [], changeSetDigest, classification, signals, graph, policyVersion, routeInputDigest, declaredRiskFacts = {}, measuredRisk = classification?.risk, reservedRisk = measuredRisk, reservationReasons = [] }) {
   const requiredPlaybook = playbooks[intent];
-  if (typeof intent !== "string" || requiredPlaybook === undefined || !["bootstrap", "material"].includes(measurementPurpose) || !Array.isArray(targets) || targets.length === 0 || !targets.every((target) => typeof target === "string" && target !== "") || typeof repositoryRoot !== "string" || repositoryRoot === "" || !/^[a-f0-9]{64}$/.test(changeSetDigest) || !classification || !signals || !graph || typeof policyVersion !== "string" || policyVersion === "" || !/^[a-f0-9]{64}$/.test(routeInputDigest)) throw new Error("route decision: input has an invalid shape");
+  const riskRank = { low: 0, medium: 1, high: 2, critical: 3 };
+  const riskNames = Object.keys(riskRank);
+  const effectiveRisk = riskNames.includes(measuredRisk) && riskNames.includes(reservedRisk)
+    ? (riskRank[measuredRisk] >= riskRank[reservedRisk] ? measuredRisk : reservedRisk)
+    : null;
+  if (typeof intent !== "string" || requiredPlaybook === undefined || !["bootstrap", "material"].includes(measurementPurpose) || !Array.isArray(targets) || targets.length === 0 || !targets.every((target) => typeof target === "string" && target !== "") || !Array.isArray(scratchPaths) || !scratchPaths.every((path) => typeof path === "string" && path !== "") || typeof repositoryRoot !== "string" || repositoryRoot === "" || !/^[a-f0-9]{64}$/.test(changeSetDigest) || !classification || !signals || !graph || typeof policyVersion !== "string" || policyVersion === "" || !/^[a-f0-9]{64}$/.test(routeInputDigest) || effectiveRisk === null || !Array.isArray(reservationReasons) || !reservationReasons.every((reason) => typeof reason === "string" && reason !== "")) throw new Error("route decision: input has an invalid shape");
   const signalsDigest = createHash("sha256").update(stable({ signals, graph })).digest("hex");
+  const riskBudget = Object.freeze({
+    measured: measuredRisk,
+    reserved: reservedRisk,
+    effective: effectiveRisk,
+    reservationReasons: Object.freeze([...reservationReasons]),
+  });
   const body = {
     schemaVersion: 2,
     policyVersion,
@@ -31,15 +42,17 @@ export function createRouteDecision({ intent, measurementPurpose, targets, repos
     measurementPurpose,
     repositoryRoot,
     targets: Object.freeze([...targets]),
-    intent,
-    risk: classification.risk,
+    scratchPaths: Object.freeze([...scratchPaths]),
+    risk: effectiveRisk,
+    measuredRisk,
+    riskBudget,
     requiredPlaybooks: Object.freeze([requiredPlaybook]),
-    requiredIndependentEvidence: Object.freeze(classification.risk === "low" ? [] : classification.risk === "medium" ? ["verifier"] : ["reviewer", "verifier", ...(classification.securityReviewRequired ? ["security-reviewer"] : [])]),
-    securityReviewRequired: classification.securityReviewRequired,
-    verificationRequired: classification.verificationRequired,
+    requiredIndependentEvidence: Object.freeze(effectiveRisk === "low" ? [] : effectiveRisk === "medium" ? ["verifier"] : ["reviewer", "verifier", ...(effectiveRisk === "critical" || classification.securityReviewRequired ? ["security-reviewer"] : [])]),
+    securityReviewRequired: effectiveRisk === "critical" || classification.securityReviewRequired,
+    verificationRequired: effectiveRisk !== "low",
     signalsDigest,
     signals: Object.freeze({ ...signals, graph: Object.freeze({ ...graph }) }),
-    reasonCodes: classification.reasonCodes,
+    reasonCodes: Object.freeze([...classification.reasonCodes, ...reservationReasons]),
   };
   return Object.freeze({ ...body, declaredRiskFacts: Object.freeze({ ...declaredRiskFacts }), decisionId: createHash("sha256").update(stable(body)).digest("hex") });
 }

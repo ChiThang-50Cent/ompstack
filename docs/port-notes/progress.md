@@ -164,3 +164,18 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: remove default-unavailable `find`, `lsp`, and `ast_grep`; replace non-AgentTool `browser`/`computer` declarations with verifier `eval`; keep the optional UI path documented and require `INCONCLUSIVE` when its settings/target are unavailable. The allowlist is pinned to oh-my-pi commit `62bc57b`.
 - Deviations from spec: browser/computer headless scenario not added because this CI surface did not establish a real UI target; limitation is documented.
 - Open questions: none
+
+### T1.6 Writer model fallback {#t16}
+- Status: done
+- Files: `agents/pstack-builder.md`, `agents/pstack-synthesizer.md`, `src/commands.ts`, `test/extension.test.mjs`, `test/host/scenarios/builder-noroles.json`, `docs/model-routing.md`, `README.md`, `docs/port-notes/progress.md`
+- Red-first proof:
+  - `PSTACK_HOST_KEEP=1 npm run test:host -- test/host/scenarios/builder-noroles.json` → `No model selected`, child rule not hit, README not built on OMP 18.3.0.
+  - `PSTACK_HOST_KEEP=1 PSTACK_OMP_BIN=.upstream/omp-18.2.11/node_modules/.bin/omp npm run test:host -- test/host/scenarios/builder-noroles.json` → the same `No model selected` failure on OMP 18.2.11.
+- Proof after fix:
+  - `npm run check` → 52 tests passed, including per-agent doctor coverage; router 33/33 and asset validation passed.
+  - `npm run test:host -- test/host/scenarios/builder-noroles.json` → PASS on OMP 18.3.0.
+  - `PSTACK_OMP_BIN=.upstream/omp-18.2.11/node_modules/.bin/omp npm run test:host -- test/host/scenarios/builder-noroles.json` → PASS on OMP 18.2.11.
+- Sources read: `.upstream/oh-my-pi/docs/models.md:449-465` (role aliases and model priority), `.upstream/oh-my-pi/packages/coding-agent/src/config/model-resolver.ts:1042-1065,1186-1207,1224-1255` (session-inherited `@smol`/`@slow` paths and effective agent patterns)
+- Decisions: writer chains end with `@smol` after `@pstack_code, @task`; `/pstack doctor` reports all seven agent chains candidate-by-candidate, including unresolved custom aliases and the resolved fallback.
+- Deviations from spec: none
+- Open questions: none

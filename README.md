@@ -173,7 +173,7 @@ The agents request role aliases rather than hard-coded providers:
 @pstack_verify
 ```
 
-Each agent also declares a built-in fallback such as `@smol`, `@task`, or `@slow`. Configure these aliases to match the models and budgets available in your OMP profile. OMP resolves the model; for verifier spawns the extension only reorders OMP's candidates to prefer a family different from the latest writer. When only one model is available, independence comes from a fresh context, frozen acceptance criteria, restricted tools, and runtime evidence—not from pretending the model is independent from itself.
+The ordered agent chains are `@pstack_fast,@smol` (scout), `@pstack_reason,@slow` (architect/judge), `@pstack_code,@task,@smol` (builder/synthesizer), `@pstack_review,@slow` (reviewer), and `@pstack_verify,@slow` (verifier). `@pstack_*` and `@task` depend on configured OMP roles; `@smol`/`@slow` can resolve through the selected/default session model. The writer chains end in `@smol` so a session with only `--model` remains usable. OMP resolves the model; `/pstack doctor` reports each agent's patterns and resolved candidates, while the extension only reorders verifier candidates to prefer a different family when configured. When only one model is available, independence comes from a fresh context, frozen acceptance criteria, restricted tools, and runtime evidence—not from pretending the model is independent from itself.
 
 See [docs/model-routing.md](docs/model-routing.md).
 

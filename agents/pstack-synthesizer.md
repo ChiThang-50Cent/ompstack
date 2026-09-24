@@ -2,7 +2,7 @@
 name: pstack-synthesizer
 description: Isolated pstack implementation worker that applies an approved arena base and bounded graft plan into one coherent artifact.
 tools: read, grep, glob, bash, edit, write
-model: "@pstack_code, @task"
+model: "@pstack_code, @task, @smol"
 thinking-level: high
 blocking: true
 advisor: true

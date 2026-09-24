@@ -262,6 +262,20 @@ test('strict mode blocks verifier spawn without an active run', async t => {
   assert.match(result.reason, /active run/);
 });
 
+test('doctor reports model resolution for every pstack agent', async t => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-doctor-'));
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+  const mock = createMock(cwd);
+  pstackExtension(mock.api);
+  await mock.emit('session_start');
+  await mock.commands.get('pstack').handler('doctor', mock.ctx);
+  const message = mock.notices.at(-1)?.message ?? '';
+  for (const agent of ['pstack-scout', 'pstack-architect', 'pstack-builder', 'pstack-reviewer', 'pstack-judge', 'pstack-synthesizer', 'pstack-verifier']) {
+    assert.match(message, new RegExp(`${agent}:`));
+  }
+  assert.match(message, /pstack-builder: .*@smol=/);
+});
+
 
 test('async task remains pending until the OMP job snapshot reports a terminal state', async t => {
   const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-async-'));

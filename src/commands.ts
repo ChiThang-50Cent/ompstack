@@ -76,6 +76,17 @@ function safeExportPath(cwd: string, requested: string | undefined): string {
   return candidate;
 }
 
+const AGENT_MODEL_PATTERNS: ReadonlyArray<{ name: string; patterns: readonly string[] }> = [
+  { name: "pstack-scout", patterns: ["@pstack_fast", "@smol"] },
+  { name: "pstack-architect", patterns: ["@pstack_reason", "@slow"] },
+  { name: "pstack-builder", patterns: ["@pstack_code", "@task", "@smol"] },
+  { name: "pstack-reviewer", patterns: ["@pstack_review", "@slow"] },
+  { name: "pstack-judge", patterns: ["@pstack_reason", "@slow"] },
+  { name: "pstack-synthesizer", patterns: ["@pstack_code", "@task", "@smol"] },
+  { name: "pstack-verifier", patterns: ["@pstack_verify", "@slow"] },
+];
+
+
 async function doctor(api: ExtensionAPI, store: PstackStore, ctx: ExtensionCommandContext): Promise<string> {
   const bucket = await store.get(ctx);
   const fingerprint = await computeArtifactFingerprint(api, ctx.cwd, bucket.config);
@@ -90,14 +101,16 @@ async function doctor(api: ExtensionAPI, store: PstackStore, ctx: ExtensionComma
     "pstack_verdict",
   ];
   const missingTools = requiredTools.filter(tool => !toolNames.includes(tool));
-  const aliases = ["@pstack_fast", "@pstack_code", "@pstack_reason", "@pstack_review", "@pstack_verify"];
-  const modelRows = aliases.map(alias => {
-    try {
-      const model = ctx.models.resolve(alias);
-      return `${alias}: ${model ? `${model.provider ?? "?"}/${model.id ?? model.name ?? "resolved"}` : "unresolved (fallbacks will be used)"}`;
-    } catch {
-      return `${alias}: unavailable in this OMP build`;
-    }
+  const modelRows = AGENT_MODEL_PATTERNS.map(agent => {
+    const candidates = agent.patterns.map(pattern => {
+      try {
+        const model = ctx.models.resolve(pattern);
+        return `${pattern}=${model ? `${model.provider ?? "?"}/${model.id ?? model.name ?? "resolved"}` : "unresolved"}`;
+      } catch {
+        return `${pattern}=unavailable`;
+      }
+    });
+    return `${agent.name}: ${candidates.join(" -> ")}`;
   });
   return [
     "pstack-omp doctor",

@@ -1,0 +1,109 @@
+{
+  "name": "builder-noroles",
+  "mode": "auto",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "commitFiles": true,
+  "prompt": "build without configured roles",
+  "timeoutSec": 150,
+  "ompConfig": "task.isolation.enabled: false\n",
+  "files": {
+    "README.md": "fixture\n"
+  },
+  "rules": [
+    {
+      "id": "child-builder",
+      "matchSystem": "Implement only the assigned artifact and respect its ownership boundary.",
+      "steps": [
+        {
+          "tool": "write",
+          "args": {
+            "path": "README.md",
+            "content": "BUILT\n"
+          }
+        },
+        {
+          "yield": {
+            "artifact": "README.md",
+            "summary": "BUILDER_MARKER",
+            "changed_files": [
+              {
+                "path": "README.md",
+                "change": "updated"
+              }
+            ],
+            "commands": [],
+            "evidence": [],
+            "status": "implemented"
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Build the README artifact",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": false,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "README is built"
+              }
+            ]
+          }
+        },
+        {
+          "tool": "task",
+          "args": {
+            "context": "builder fallback probe",
+            "tasks": [
+              {
+                "name": "builder1",
+                "agent": "pstack-builder",
+                "task": "Implement the assigned README artifact"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-builder"
+    },
+    {
+      "type": "fileContains",
+      "path": "README.md",
+      "text": "BUILT"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "BUILDER_MARKER"
+    }
+  ]
+}

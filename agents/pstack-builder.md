@@ -2,7 +2,7 @@
 name: pstack-builder
 description: Isolated implementation worker for one bounded pstack artifact; reports exact changes, deviations, commands, and evidence without self-approving.
 tools: read, grep, glob, bash, edit, write
-model: "@pstack_code, @task"
+model: "@pstack_code, @task, @smol"
 thinking-level: high
 blocking: true
 advisor: true

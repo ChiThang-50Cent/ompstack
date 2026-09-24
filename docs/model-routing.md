@@ -4,27 +4,21 @@ OMP owns model selection. It resolves `task.agentModelOverrides`, then the agent
 
 ## Role aliases in agent frontmatter
 
-Agent definitions request these OMP model roles, each with a built-in fallback:
+Agent definitions request ordered OMP patterns:
 
-| Alias | Work |
+| Agent | Ordered patterns |
 |---|---|
-| `@pstack_fast` | repository scan, extraction, bounded mechanical analysis |
-| `@pstack_code` | isolated implementation and synthesis |
-| `@pstack_reason` | architecture, arena judgment, complex reconciliation |
-| `@pstack_review` | adversarial artifact review |
-| `@pstack_verify` | independent real-surface verification |
+| `pstack-scout` | `@pstack_fast, @smol` |
+| `pstack-architect` | `@pstack_reason, @slow` |
+| `pstack-builder` | `@pstack_code, @task, @smol` |
+| `pstack-reviewer` | `@pstack_review, @slow` |
+| `pstack-judge` | `@pstack_reason, @slow` |
+| `pstack-synthesizer` | `@pstack_code, @task, @smol` |
+| `pstack-verifier` | `@pstack_verify, @slow` |
 
-Fallbacks are embedded in agent files:
+`@pstack_*` and `@task` are profile/configuration-dependent role aliases. OMP's `@smol` and `@slow` paths can resolve through the selected/default session model when no explicit role is configured. The writer chains therefore end with `@smol`; a writer chain ending at `@task` fails with `No model selected` when `modelRoles.task` is unset, even if the parent selected a model. `/pstack doctor` reports every agent's ordered patterns and the model each pattern resolves to in the current session.
 
-```text
-fast    → @smol
-code    → @task
-reason  → @slow
-review  → @slow
-verify  → @slow
-```
-
-Configure aliases through the OMP model/role facilities available in your profile. `/pstack doctor` reports whether each alias resolves.
+Configure aliases through the OMP model/role facilities available in your profile. OMP resolves the model; pstack only reorders verifier candidates when its cross-family preference is enabled.
 
 ## Pstack's single routing invariant
 

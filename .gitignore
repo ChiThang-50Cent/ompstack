@@ -7,3 +7,4 @@ dist/
 bun.lock
 logs/
 .DS_Store
+.upstream/

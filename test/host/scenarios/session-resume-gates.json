@@ -1,0 +1,111 @@
+{
+  "name": "session-resume-gates",
+  "mode": "auto",
+  "persistSession": true,
+  "runs": [
+    {
+      "prompt": "RESUME_OPEN open the run",
+      "expectExit": 3
+    },
+    {
+      "prompt": "RESUME_CHECK check it",
+      "ompArgs": [
+        "--continue"
+      ],
+      "expectExit": 3
+    },
+    {
+      "prompt": "RESUME_ABANDON give up",
+      "ompArgs": [
+        "--continue"
+      ],
+      "expectExit": 0
+    }
+  ],
+  "rules": [
+    {
+      "id": "abandon",
+      "matchUser": "RESUME_ABANDON",
+      "steps": [
+        {
+          "final": "unused"
+        },
+        {
+          "final": "unused"
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "abandon",
+            "reason": "resume scenario complete"
+          }
+        }
+      ]
+    },
+    {
+      "id": "check",
+      "matchUser": "RESUME_CHECK",
+      "steps": [
+        {
+          "final": "unused"
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "check"
+          }
+        }
+      ]
+    },
+    {
+      "id": "open",
+      "matchUser": "RESUME_OPEN",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Survive a restart",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": false,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "persisted criterion"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "toolResultContains",
+      "rule": "check",
+      "text": "[ACCEPTANCE_OPEN] AC-1 is still open: persisted criterion"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "abandon",
+      "text": "abandoned: resume scenario complete"
+    },
+    {
+      "type": "jsonlWhere",
+      "file": ".omp/pstack/runs/*/events.jsonl",
+      "where": {
+        "type": "start_run"
+      },
+      "min": 1
+    },
+    {
+      "type": "eventsContain",
+      "event": "gate_abandoned"
+    },
+    {
+      "type": "eventsLack",
+      "event": "gate_closed"
+    }
+  ]
+}

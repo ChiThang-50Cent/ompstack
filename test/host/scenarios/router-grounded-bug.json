@@ -1,0 +1,27 @@
+{
+  "name": "router-grounded-bug",
+  "mode": "auto",
+  "prompt": "this pr has a subtle bug where the scroll drifts every 750ms even when idle. repro first, then fix and verify.",
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "final": "ok"
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "systemContains",
+      "rule": "main",
+      "text": "Router suggestion: bug-fix/"
+    },
+    {
+      "type": "systemContains",
+      "rule": "main",
+      "text": "unless a better row in the skill://pstack routing table fits"
+    }
+  ]
+}

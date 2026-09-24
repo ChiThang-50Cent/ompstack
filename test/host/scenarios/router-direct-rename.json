@@ -1,0 +1,27 @@
+{
+  "name": "router-direct-rename",
+  "mode": "auto",
+  "prompt": "rename this variable",
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "final": "ok"
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "systemContains",
+      "rule": "main",
+      "text": "Keep this task direct"
+    },
+    {
+      "type": "systemLacks",
+      "rule": "main",
+      "text": "pstack_gate action=init"
+    }
+  ]
+}

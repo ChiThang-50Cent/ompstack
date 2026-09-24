@@ -99,14 +99,32 @@
       ]
     },
     {
-      "type": "toolResultContains",
-      "rule": "main",
-      "text": "SICKO_MARKER_DELETE"
+      "type": "anyOf",
+      "of": [
+        {
+          "type": "toolResultContains",
+          "rule": "main",
+          "text": "SICKO_MARKER_DELETE"
+        },
+        {
+          "type": "userContains",
+          "rule": "main",
+          "text": "SICKO_MARKER_DELETE"
+        }
+      ]
     },
     {
       "type": "fileUnchanged",
       "rule": "main",
       "path": "commented.js"
+    },
+    {
+      "type": "jsonWhere",
+      "file": ".omp/pstack/runs/*/state.json",
+      "where": {
+        "activeRun.agents.0.actorId": "sicko1",
+        "activeRun.agents.0.status": "completed"
+      }
     }
   ]
 }

@@ -1,0 +1,36 @@
+{
+  "name": "router-ungrounded-vi",
+  "mode": "auto",
+  "prompt": "Tab PR kh\u00f4ng ho\u1ea1t \u0111\u1ed9ng n\u1eefa, s\u1eeda gi\u00fap",
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "final": "ok"
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "systemContains",
+      "rule": "main",
+      "text": "Choose the playbook yourself from the routing table in skill://pstack"
+    },
+    {
+      "type": "systemLacks",
+      "rule": "main",
+      "text": "playbooks/feature.md"
+    },
+    {
+      "type": "systemLacks",
+      "rule": "main",
+      "text": "Router suggestion"
+    },
+    {
+      "type": "eventsLack",
+      "event": "start_run"
+    }
+  ]
+}

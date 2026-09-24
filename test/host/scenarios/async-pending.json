@@ -91,10 +91,23 @@
         "activeRun.agents.0.actorId": "scout1",
         "activeRun.agents.0.status": "completed"
       }
+    },
+    {
+      "type": "outputContains",
+      "text": "pstack: headless session ended with run"
+    },
+    {
+      "type": "outputContains",
+      "text": "[ACCEPTANCE_OPEN]"
+    },
+    {
+      "type": "eventsContain",
+      "event": "headless_open_gates"
     }
   ],
   "setup": [
     "plugin-link"
   ],
-  "loadExtension": false
+  "loadExtension": false,
+  "expectExit": 3
 }

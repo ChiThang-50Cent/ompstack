@@ -57,6 +57,10 @@ async function run(bin, args, ctx, timeoutSec = 90) {
 
 // Every assertion that names a rule first requires that rule to have been hit (no vacuous truth).
 function check(a, ctx) {
+  if (a.type === "anyOf") {
+    const failures = (a.of ?? []).map(sub => check(sub, ctx));
+    return failures.length > 0 && failures.some(f => !f) ? null : `anyOf failed: ${failures.join(" | ") || "no alternatives"}`;
+  }
   const scoped = a.rule ? ctx.log.filter(e => e.rule === a.rule) : ctx.log;
   if (a.rule && scoped.length === 0) return `rule ${a.rule} never hit`;
   const results = scoped.flatMap(e => e.toolResults).join("\n");
@@ -122,11 +126,12 @@ for (const file of files) {
     }
     for (const [i, r] of runs.entries()) {
       if (failures.length) break;
-      const args = ["--cwd", ws, "--no-session", "--no-title", "--model", "mock/mock-1", ...(sc.loadExtension === false ? [] : ["-e", path.join(root, "src/index.ts")]), ...((r.mode ?? sc.mode) ? ["--pstack-mode", r.mode ?? sc.mode] : []), ...(r.ompArgs ?? sc.ompArgs ?? []), "-p", r.prompt];
+      const sessionArgs = sc.persistSession ? ["--session-dir", path.join(tmp, "sessions")] : ["--no-session"];
+      const args = ["--cwd", ws, ...sessionArgs, "--no-title", "--model", "mock/mock-1", ...(sc.loadExtension === false ? [] : ["-e", path.join(root, "src/index.ts")]), ...((r.mode ?? sc.mode) ? ["--pstack-mode", r.mode ?? sc.mode] : []), ...(r.ompArgs ?? sc.ompArgs ?? []), "-p", r.prompt];
       const res = await run(ompBin, args, ctx, sc.timeoutSec ?? 90);
       ctx.out += `\n=== run ${i} ===\n${res.out}`;
       if (res.timedOut) failures.push(`run ${i} timed out`);
-      else if (res.code !== 0) failures.push(`run ${i} exited with code ${res.code}`);
+      else if (res.code !== (r.expectExit ?? sc.expectExit ?? 0)) failures.push(`run ${i} exited with code ${res.code}, expected ${r.expectExit ?? sc.expectExit ?? 0}`);
     }
   } finally {
     mock.kill("SIGTERM"); await waitExit(mock, 3000);

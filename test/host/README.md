@@ -21,7 +21,9 @@ Each scenario gets a fresh temp root with its own `home/` (`HOME`), `home/.omp/a
 | `pstackConfig` | object | written to `ws/.omp/pstack.json` |
 | `ompConfig` | string | YAML written to `<agentDir>/config.yml` |
 | `ompArgs` | string[] | extra OMP flags for every run |
-| `timeoutSec` | number | per run, default 90. A run that times out **or exits non-zero** fails the scenario |
+| `timeoutSec` | number | per run, default 90. A run that times out **or exits with a code other than `expectExit`** fails the scenario |
+| `expectExit` | number | expected OMP exit code, default 0; also settable per entry in `runs` |
+| `persistSession` | boolean | default `false` → `--no-session`. `true` → `--session-dir <tmp>/sessions`, shared by every run, so a later run can pass `--continue` in its `ompArgs` |
 | `rules` | array | mock rules (below) |
 | `assert` | array | assertions (below); evaluated only when setup and all runs succeeded |
 
@@ -63,5 +65,6 @@ Any assertion with `rule` is restricted to requests matched by that rule **and f
 | `pathExists` / `pathAbsent` | `path` (glob), `base?` (`ws` \| `home`) | glob matches something / nothing |
 | `outputContains` | `text` | combined OMP stdout/stderr contains text |
 | `gitBranchExists` | `pattern` | `git branch --list <pattern>` is non-empty |
+| `anyOf` | `of[]` (assertions) | at least one alternative passes; use it where OMP may deliver the same fact on two paths (a `wait` result or an `async-result` notice) |
 
 Pitfalls: print mode (`-p`) does not print slash-command output, so drive tools through mock tool calls; `Unable to connect` in the OMP log means the mock is down or a proxy intercepted localhost.

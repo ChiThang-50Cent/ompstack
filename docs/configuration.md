@@ -19,7 +19,7 @@ Malformed JSON or invalid value types do not crash the extension. Defaults are u
   "requireEvidenceForPass": true,
   "requireArtifactFingerprint": true,
   "maxPolicyCharacters": 8000,
-  "maxStopGateBlocks": 0,
+  "headlessOpenGateExitCode": 3,
   "auditDirectory": ".omp/pstack/runs",
   "fingerprintIgnore": [
     ".git",
@@ -77,7 +77,11 @@ Requires a final verdict to carry a tested fingerprint and rejects it when the c
 
 ### `maxStopGateBlocks`
 
-How many times `session_stop` may block a gate-only run (no live OMP goal) before the session is allowed to end. Gate-only runs must have been initialized in `auto` or `strict`; `off` refuses initialization. Default `0`: the session ends on the first stop and a warning lists the open gates. Stopping never passes a gate: the run stays `active`, and the next `pstack_gate action=check` or goal completion is still refused until the gates pass. Raise it to give the model that many extra attempts.
+How many times `session_stop` may block a gate-only run (no live OMP goal) before the session is allowed to end. Gate-only runs must have been initialized in `auto` or `strict`; `off` refuses initialization. When the key is omitted the budget depends on the mode: `strict` blocks twice, `auto` never blocks. Set it explicitly (including `0`) to override both. Stopping never passes a gate: the run stays `active`, and the next `pstack_gate action=check` or goal completion is still refused until the gates pass. Goal-bound runs are never blocked here; OMP's goal continuation owns that loop.
+
+### `headlessOpenGateExitCode`
+
+Exit code for a process without a UI (`omp -p`, `--mode json`, CI, cron) that ends while an auto/strict run is still active with open gates. Default `3`; `0` disables the override. Only a clean exit is changed: a non-zero code chosen by OMP (provider error, abort, signal) is passed through. The same condition always writes a gate report to stderr and a `headless_open_gates` audit event. A run whose gates pass but that was never closed with `pstack_gate action=check` is reported but does not change the exit code. Interactive sessions keep the UI warning and never change the exit code.
 
 ### `maxPolicyCharacters`
 

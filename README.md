@@ -241,7 +241,7 @@ Create `.omp/pstack.json` in the target project. If the file is absent, pstack s
   "maxWorkspaceFiles": 20000,
   "maxHashedFileBytes": 26214400,
   "maxPolicyCharacters": 8000,
-  "maxStopGateBlocks": 0
+  "headlessOpenGateExitCode": 3
 }
 ```
 

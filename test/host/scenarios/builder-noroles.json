@@ -104,6 +104,19 @@
       "type": "toolResultContains",
       "rule": "main",
       "text": "BUILDER_MARKER"
+    },
+    {
+      "type": "outputContains",
+      "text": "pstack: headless session ended with run"
+    },
+    {
+      "type": "outputContains",
+      "text": "[ACCEPTANCE_OPEN]"
+    },
+    {
+      "type": "eventsContain",
+      "event": "headless_open_gates"
     }
-  ]
+  ],
+  "expectExit": 3
 }

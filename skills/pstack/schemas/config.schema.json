@@ -32,7 +32,8 @@
     },
     "maxStopGateBlocks": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "session_stop blocks per gate-only run. Omit for the mode default: strict 2, auto 0."
     },
     "auditDirectory": {
       "type": "string",
@@ -52,6 +53,12 @@
     "maxHashedFileBytes": {
       "type": "integer",
       "minimum": 1
+    },
+    "headlessOpenGateExitCode": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 125,
+      "description": "Exit code for a headless OMP process that ends with an active run whose gates are open. 0 disables. Default 3."
     }
   }
 }

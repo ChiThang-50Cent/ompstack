@@ -12,6 +12,7 @@ import { enforcePstackChildToolPolicy } from "./child-policy.js";
 import { registerCommands, parseModeFlag } from "./commands.js";
 import { computeArtifactFingerprint } from "./fingerprint.js";
 import { evaluateCompletionGates, renderGateReport } from "./gates.js";
+import { isHeadless, renderHeadlessOpenGates, signalOpenGatesOnExit, writeStderr } from "./headless.js";
 import { currentGoal, goalFromValue } from "./goal.js";
 import { chooseModelPatterns, modelFamilyForPatterns, roleForAgent } from "./model-routing.js";
 import { buildPolicySegment, stripPstackPolicy } from "./policy.js";
@@ -23,6 +24,7 @@ import { rewriteTaskInput, taskInputContainsAgent } from "./task-rewrite.js";
 import { expectedTaskSpawns, extractTaskItems, TaskLifecycleTracker } from "./task-lifecycle.js";
 import { registerPstackTools } from "./tools.js";
 import { createId, isRecord, nowIso } from "./utils.js";
+import { stopGateBudget } from "./domain.js";
 
 /** OMP 18.2.11 does not re-export `GoalUpdatedEvent` from the package root. */
 type GoalUpdatedEvent = Extract<ExtensionEvent, { type: "goal_updated" }>;
@@ -76,9 +78,37 @@ export default function pstackExtension(api: ExtensionAPI): void {
   api.on("session_switch", hydrate);
   api.on("session_branch", hydrate);
   api.on("session_tree", hydrate);
-  api.on("session_shutdown", (_event: unknown, ctx: ExtensionContext) => {
-    lifecycle.dropSession(sessionKey(ctx));
-    store.clearSession(ctx);
+  const reportHeadlessOpenRun = async (ctx: ExtensionContext): Promise<void> => {
+    if (!isMainSession(ctx) || !isHeadless(ctx)) return;
+    // Background completions can arrive as notices rather than task/wait
+    // results; settle them from OMP's job snapshot before judging the run.
+    await lifecycle.reconcile(ctx, store);
+    const bucket = await store.get(ctx);
+    const run = bucket.state.activeRun;
+    if (bucket.state.mode === "off" || !run || run.status !== "active") return;
+    const current = await computeArtifactFingerprint(api, ctx.cwd, bucket.config);
+    const report = evaluateCompletionGates(bucket.state, current, bucket.config, { ignoreRunStatus: true });
+    // Gates that pass but were never closed are reported, not failed: the work
+    // may be done; only the bookkeeping is missing.
+    const exitCode = report.allowed ? 0 : bucket.config.headlessOpenGateExitCode;
+    writeStderr(renderHeadlessOpenGates(run, report, exitCode));
+    await store.checkpoint(ctx, "headless_open_gates", {
+      runId: run.id,
+      exitCode,
+      issues: report.issues.map(item => item.code),
+    });
+    signalOpenGatesOnExit(exitCode);
+  };
+
+  api.on("session_shutdown", async (_event: unknown, ctx: ExtensionContext) => {
+    try {
+      await reportHeadlessOpenRun(ctx);
+    } catch (error) {
+      api.logger.warn("pstack: headless open-gate report failed", { error: String(error) });
+    } finally {
+      lifecycle.dropSession(sessionKey(ctx));
+      store.clearSession(ctx);
+    }
   });
 
   api.on("before_agent_start", async (event: BeforeAgentStartEvent, ctx: ExtensionContext): Promise<BeforeAgentStartEventResult | undefined> => {
@@ -289,8 +319,11 @@ export default function pstackExtension(api: ExtensionAPI): void {
     if (report.allowed) return undefined;
     // Cannot finish: let the session end rather than burn turns. The run stays
     // active, so no gate is passed by stopping.
-    if (run.stopGateAttempts >= bucket.config.maxStopGateBlocks) {
-      ctx.ui.notify(`pstack: session ended with open gates; run ${run.id} stays active.\n${renderGateReport(report)}`, "warning");
+    if (run.stopGateAttempts >= stopGateBudget(bucket.config, bucket.state.mode)) {
+      // Headless sessions report once at session_shutdown (stderr + exit status).
+      if (!isHeadless(ctx)) {
+        ctx.ui.notify(`pstack: session ended with open gates; run ${run.id} stays active.\n${renderGateReport(report)}`, "warning");
+      }
       return undefined;
     }
     await store.mutate(ctx, { type: "increment_stop_gate", at: nowIso() }, "session_stop_blocked");

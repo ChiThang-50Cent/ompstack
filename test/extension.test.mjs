@@ -461,3 +461,74 @@ test('maxStopGateBlocks bounds session_stop blocks, then lets the session end', 
   assert.equal(latestRun(mock).status, 'active');
   assert.equal((await execute(mock.tools.get('pstack_gate'), { action: 'check' }, mock.ctx)).isError, true, 'gate still refuses after the stop');
 });
+
+function fakeProcess() {
+  const proc = { stderrText: '', exits: [], exitCode: undefined };
+  proc.stderr = { write(chunk) { proc.stderrText += chunk; return true; } };
+  proc.exit = code => { proc.exits.push(code); return undefined; };
+  return proc;
+}
+
+async function headlessRun(t, { mode, config, acceptance = [{ id: 'AC-1', text: 'reset works' }] }) {
+  const { setHeadlessProcessForTests } = await import('../dist/src/headless.js');
+  const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-headless-'));
+  const proc = fakeProcess();
+  setHeadlessProcessForTests(proc);
+  t.after(async () => { setHeadlessProcessForTests(undefined); await rm(cwd, { recursive: true, force: true }); });
+  if (config) await writeFile(path.join(cwd, 'pstack.json'), JSON.stringify(config));
+  const mock = createMock(cwd);
+  mock.ctx.hasUI = false;
+  pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', mode);
+  await mock.emit('session_start');
+  await execute(mock.tools.get('pstack_gate'), {
+    action: 'init', objective: 'Fix reset', playbook: 'bug-fix', ceremony: 'strict', verificationRequired: false, acceptance,
+  }, mock.ctx);
+  return { mock, proc, cwd };
+}
+
+test('strict gate-only runs block the stop twice by default, auto never does', async t => {
+  const strict = await headlessRun(t, { mode: 'strict' });
+  assert.equal((await strict.mock.emit('session_stop'))?.decision, 'block');
+  assert.equal((await strict.mock.emit('session_stop'))?.decision, 'block');
+  assert.equal(await strict.mock.emit('session_stop'), undefined, 'third stop is released');
+  assert.equal(strict.mock.notices.length, 0, 'headless sessions do not rely on invisible UI notices');
+
+  const auto = await headlessRun(t, { mode: 'auto' });
+  assert.equal(await auto.mock.emit('session_stop'), undefined, 'auto keeps the 0-block default');
+
+  const explicit = await headlessRun(t, { mode: 'strict', config: { maxStopGateBlocks: 0 } });
+  assert.equal(await explicit.mock.emit('session_stop'), undefined, 'explicit 0 overrides the strict default');
+});
+
+test('headless shutdown with open gates reports on stderr and turns a clean exit non-zero', async t => {
+  const { mock, proc, cwd } = await headlessRun(t, { mode: 'strict' });
+  await mock.emit('session_shutdown');
+  assert.match(proc.stderrText, /headless session ended with run run-/);
+  assert.match(proc.stderrText, /ACCEPTANCE_OPEN/);
+  assert.match(proc.stderrText, /Exit status 3/);
+  assert.equal(proc.exitCode, 3);
+  proc.exit(0);
+  proc.exit(1);
+  assert.deepEqual(proc.exits, [3, 1], 'a clean 0 becomes 3; OMP failures pass through');
+  const events = await readFile(path.join(cwd, '.omp/pstack/runs', latestRun(mock).id, 'events.jsonl'), 'utf8');
+  assert.match(events, /"type":"headless_open_gates"/);
+});
+
+test('headless shutdown leaves the exit alone when disabled, gates pass, or a UI is attached', async t => {
+  const disabled = await headlessRun(t, { mode: 'strict', config: { headlessOpenGateExitCode: 0 } });
+  await disabled.mock.emit('session_shutdown');
+  assert.match(disabled.proc.stderrText, /Exit status unchanged/);
+  assert.equal(disabled.proc.exitCode, undefined);
+
+  const passing = await headlessRun(t, { mode: 'strict', acceptance: [] });
+  await passing.mock.emit('session_shutdown');
+  assert.match(passing.proc.stderrText, /never closed with pstack_gate action=check/);
+  assert.equal(passing.proc.exitCode, undefined, 'passing-but-unclosed gates do not fail the process');
+
+  const ui = await headlessRun(t, { mode: 'strict' });
+  ui.mock.ctx.hasUI = true;
+  await ui.mock.emit('session_shutdown');
+  assert.equal(ui.proc.stderrText, '');
+  assert.equal(ui.proc.exitCode, undefined);
+});

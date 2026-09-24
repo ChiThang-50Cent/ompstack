@@ -1,0 +1,72 @@
+{
+  "name": "headless-open-gates-strict",
+  "mode": "strict",
+  "prompt": "fix the bug",
+  "expectExit": 3,
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Headless strict run",
+            "playbook": "bug-fix",
+            "ceremony": "strict",
+            "verificationRequired": true,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "defect reproduced, fixed, and verified"
+              }
+            ]
+          }
+        },
+        {
+          "final": "Done! The bug is fixed."
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "main",
+      "min": 4
+    },
+    {
+      "type": "eventWhere",
+      "event": "session_stop_blocked",
+      "where": {}
+    },
+    {
+      "type": "jsonlWhere",
+      "file": ".omp/pstack/runs/*/events.jsonl",
+      "where": {
+        "type": "session_stop_blocked"
+      },
+      "min": 2
+    },
+    {
+      "type": "eventsContain",
+      "event": "headless_open_gates"
+    },
+    {
+      "type": "outputContains",
+      "text": "pstack: headless session ended with run"
+    },
+    {
+      "type": "outputContains",
+      "text": "[ACCEPTANCE_OPEN]"
+    },
+    {
+      "type": "outputContains",
+      "text": "Exit status 3 signals an unfinished run"
+    },
+    {
+      "type": "eventsLack",
+      "event": "gate_closed"
+    }
+  ]
+}

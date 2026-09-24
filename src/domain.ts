@@ -84,12 +84,28 @@ export interface PstackConfig {
   requireEvidenceForPass: boolean;
   requireArtifactFingerprint: boolean;
   maxPolicyCharacters: number;
-  /** session_stop blocks allowed per auto/strict gate-only run before the session may end with open gates. */
-  maxStopGateBlocks: number;
+  /**
+   * session_stop blocks allowed per gate-only run before the session may end with open gates.
+   * Unset means mode-dependent: strict 2, auto 0 (see stopGateBudget).
+   */
+  maxStopGateBlocks?: number;
+  /**
+   * Exit code a headless (no UI) OMP process returns when it ends with an active run whose gates are open.
+   * OMP's own non-zero exit codes are never masked. 0 disables the override.
+   */
+  headlessOpenGateExitCode: number;
   auditDirectory: string;
   fingerprintIgnore: string[];
   maxWorkspaceFiles: number;
   maxHashedFileBytes: number;
+}
+
+/** Strict gate-only runs push back twice before letting a stop through; auto never blocks unless configured. */
+export const STRICT_DEFAULT_STOP_GATE_BLOCKS = 2;
+
+export function stopGateBudget(config: PstackConfig, mode: PstackMode): number {
+  if (config.maxStopGateBlocks !== undefined) return config.maxStopGateBlocks;
+  return mode === "strict" ? STRICT_DEFAULT_STOP_GATE_BLOCKS : 0;
 }
 
 export const DEFAULT_CONFIG: PstackConfig = {
@@ -100,7 +116,7 @@ export const DEFAULT_CONFIG: PstackConfig = {
   requireEvidenceForPass: true,
   requireArtifactFingerprint: true,
   maxPolicyCharacters: 8_000,
-  maxStopGateBlocks: 0,
+  headlessOpenGateExitCode: 3,
   auditDirectory: ".omp/pstack/runs",
   fingerprintIgnore: [
     ".git",

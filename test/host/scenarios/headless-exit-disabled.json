@@ -1,0 +1,50 @@
+{
+  "name": "headless-exit-disabled",
+  "mode": "strict",
+  "prompt": "fix the bug",
+  "expectExit": 0,
+  "pstackConfig": {
+    "headlessOpenGateExitCode": 0,
+    "maxStopGateBlocks": 0
+  },
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Headless strict run",
+            "playbook": "bug-fix",
+            "ceremony": "strict",
+            "verificationRequired": true,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "defect reproduced, fixed, and verified"
+              }
+            ]
+          }
+        },
+        {
+          "final": "Done!"
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "outputContains",
+      "text": "Exit status unchanged (headlessOpenGateExitCode is 0)."
+    },
+    {
+      "type": "eventsLack",
+      "event": "session_stop_blocked"
+    },
+    {
+      "type": "eventsContain",
+      "event": "headless_open_gates"
+    }
+  ]
+}

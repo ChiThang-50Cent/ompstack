@@ -11,8 +11,12 @@ function asPositiveInteger(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : fallback;
 }
 
-function asNonNegativeInteger(value: unknown, fallback: number): number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : fallback;
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+function asExitCode(value: unknown, fallback: number): number {
+  return isNonNegativeInteger(value) && value <= 125 ? value : fallback;
 }
 
 function asMode(value: unknown, fallback: PstackMode): PstackMode {
@@ -39,7 +43,8 @@ export function parseConfig(value: unknown): PstackConfig {
     requireEvidenceForPass: asBoolean(value.requireEvidenceForPass, DEFAULT_CONFIG.requireEvidenceForPass),
     requireArtifactFingerprint: asBoolean(value.requireArtifactFingerprint, DEFAULT_CONFIG.requireArtifactFingerprint),
     maxPolicyCharacters: asPositiveInteger(value.maxPolicyCharacters, DEFAULT_CONFIG.maxPolicyCharacters),
-    maxStopGateBlocks: asNonNegativeInteger(value.maxStopGateBlocks, DEFAULT_CONFIG.maxStopGateBlocks),
+    ...(isNonNegativeInteger(value.maxStopGateBlocks) ? { maxStopGateBlocks: value.maxStopGateBlocks } : {}),
+    headlessOpenGateExitCode: asExitCode(value.headlessOpenGateExitCode, DEFAULT_CONFIG.headlessOpenGateExitCode),
     auditDirectory: asString(value.auditDirectory, DEFAULT_CONFIG.auditDirectory),
     fingerprintIgnore: asStringArray(value.fingerprintIgnore, [...DEFAULT_CONFIG.fingerprintIgnore]),
     maxWorkspaceFiles: asPositiveInteger(value.maxWorkspaceFiles, DEFAULT_CONFIG.maxWorkspaceFiles),

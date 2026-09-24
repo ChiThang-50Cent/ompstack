@@ -142,3 +142,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack-reflect/references/synthesizer.md`
 - `skills/pstack-reflect/references/tooling-reviewer.md`
 - `docs/tools/reflect.md`
+
+### T3.10 skill `pstack-automate-me`
+
+- `skills/pstack-automate-me/SKILL.md`

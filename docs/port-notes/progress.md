@@ -366,3 +366,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: one OMP batch of panel reviewers a/b/c; separate pstack-synthesizer proposal; no application of skill edits without explicit approval; native reflect documented as memory-backend synthesis.
 - Deviations from spec: adapted transcript paths, OMP task vocabulary, role aliases, and parent approval boundaries.
 - Open questions: none.
+
+### T3.10 Skill `pstack-automate-me` {#t310}
+- Status: done
+- Files: `skills/pstack-automate-me/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 56 tests, router 33/33, and asset validation; `npm run check:upstream` passed with 93 current entries at `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/automate-me/SKILL.md`, `spec3_1.md:470`
+- Decisions: scoped transcript mining uses current-cwd OMP session rules; drafts `.omp/skills/<handle>-mode/SKILL.md`; explicit approval is required before writing or overwriting; existing pstack skills are referenced rather than duplicated.
+- Deviations from spec: replaced Cursor `create-skill` and workspace transcript paths with OMP `skill://` references, `task` batches, `ask`, and OMP profile/project skill locations.
+- Open questions: none.

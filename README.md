@@ -48,6 +48,7 @@ The central contract is simple:
 | `pstack-maintain-verification` | Audit every mapped feature, update proven drift, and re-run validation after feature changes. |
 | `pstack-recall` | Reconstruct current-cwd session context into a compact continuation brief. |
 | `pstack-reflect` | Review transcript learnings through a three-agent panel and propose, never apply, skill edits. |
+| `pstack-automate-me` | Draft or revise a personal `<handle>-mode` skill from scoped transcript evidence and confirmed preferences. |
 
 ## Runtime target
 

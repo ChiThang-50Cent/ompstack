@@ -49,6 +49,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | One metric, repeated hypothesis/measurement loop | `hillclimb` |
 | Captured trace/profile artifact diagnosis | `trace-forensics` |
 | Live-process instrumentation and runtime diagnosis | `runtime-forensics` |
+| Author or modify an OMP skill | `authoring-a-skill` |
 
 ## Non-negotiable execution contract
 

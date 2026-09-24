@@ -173,3 +173,17 @@ capture CPU/heap/CDP signal on the real surface
 ```
 
 Distinguish this from `trace-forensics`, which reads a capture that already exists.
+
+## Authoring a skill
+
+Use `authoring-a-skill` when the artifact is a reusable OMP skill:
+
+```text
+read neighboring skills and principles
+→ define the trigger boundary and smallest durable rule
+→ validate frontmatter, links, examples, and structure
+→ run eval for changed routing behavior
+→ inspect the full diff and wait for approval to overwrite existing skills
+```
+
+Do not weaken validators to make prose pass. Route personal working-style mode skills to `pstack-automate-me`.

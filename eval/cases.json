@@ -594,4 +594,26 @@
     "kind": "near-miss",
     "nearMissOf": "runtime-forensics"
   }
+  ,
+  {
+    "id": "authoring-omp-skill",
+    "title": "Author a reusable skill",
+    "prompt": "Author a new OMP skill with a precise trigger and validate its links.",
+    "expectedPlaybook": "authoring-a-skill",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-authoring-documentation",
+    "title": "Documentation for a workflow",
+    "prompt": "Write documentation for a new workflow skill.",
+    "expectedPlaybook": "documentation",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": false,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "authoring-a-skill"
+  }
 ]

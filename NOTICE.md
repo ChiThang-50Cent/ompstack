@@ -171,3 +171,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T4.4 playbook `runtime-forensics`
 
 - `skills/pstack/playbooks/runtime-forensics.md`
+
+### T4.5 playbook `authoring-a-skill`
+
+- `skills/pstack/playbooks/authoring-a-skill.md`

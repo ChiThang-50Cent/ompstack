@@ -452,3 +452,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: live capture and safe mechanism proof are mandatory; existing captures route to trace-forensics; no fix is applied in diagnosis.
 - Deviations from spec: OMP project verification/Eval surfaces replace Cursor control-skill names.
 - Open questions: none.
+
+### T4.5 Playbook `authoring-a-skill` {#t45}
+- Status: done
+- Files: `skills/pstack/playbooks/authoring-a-skill.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 59/59, and asset validation with 12 agents and 21 playbooks.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/authoring-a-skill.md`, `spec3_1.md:545`
+- Decisions: skill triggers are evaluated, cross-links and frontmatter are validated, and existing-file overwrites remain approval-gated.
+- Deviations from spec: OMP skill paths and `pstack-unslop` replace Cursor create-skill/deslop invocations.
+- Open questions: none.

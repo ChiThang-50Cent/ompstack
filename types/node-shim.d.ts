@@ -9,6 +9,7 @@ declare module "node:crypto" {
     digest(encoding: "hex"): string;
   };
   export function randomBytes(size: number): { toString(encoding: "hex"): string };
+  export function randomUUID(): string;
 }
 
 declare module "node:fs" {

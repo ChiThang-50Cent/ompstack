@@ -155,3 +155,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack-show-me-your-work/SKILL.md`
 - `skills/pstack-show-me-your-work/references/decision-log-template.tsv`
 - `skills/pstack-show-me-your-work/scripts/log.sh`
+
+### T4.1 playbook `eval` and judge cross-check
+
+- `skills/pstack/playbooks/eval.md`

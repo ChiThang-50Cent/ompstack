@@ -4,7 +4,7 @@ import path from "node:path";
 
 const EXPECTED_PLAYBOOKS = [
   "investigation", "bug-fix", "feature", "empirical-prototype", "performance", "refactor", "migration", "incident",
-  "review", "arena", "multi-phase", "shipping", "security", "test-repair", "dependency-upgrade", "documentation",
+  "review", "arena", "multi-phase", "shipping", "security", "test-repair", "dependency-upgrade", "documentation", "eval",
 ];
 const REQUIRED_FILES = [
   "README.md", "LICENSE", "NOTICE.md", "CHANGELOG.md",

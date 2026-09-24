@@ -9,11 +9,11 @@ The central contract is simple:
 ## What is included
 
 - A sticky `off`, `auto`, or `strict` session mode.
-- Sixteen task playbooks, twelve reusable operators, and twenty-three engineering principles.
-- Eleven custom agents with separated capabilities:
+- Seventeen task playbooks, twelve reusable operators, and twenty-three engineering principles.
+- Twelve custom agents with separated capabilities:
   - inspect-only scout and architect;
   - builder and synthesizer with OMP-owned task isolation;
-  - shell-capable reviewer and inspect-only arena judge;
+  - shell-capable reviewer and inspect-only arena judges, including an independent `pstack-judge-b` cross-check;
   - three independent panel reviewers and a read-only comment reviewer using the reviewer contract;
   - blocking, shell-capable final verifier with no edit/write tools (Bash and OMP `eval`; browser/computer are optional Eval preludes, not agent tools);
   - verifier UI checks require OMP `browser.enabled` or `computer.enabled`; absent settings/targets produce `INCONCLUSIVE`, not a claimed browser proof;

@@ -506,4 +506,26 @@
     "kind": "near-miss",
     "nearMissOf": "documentation"
   }
+  ,
+  {
+    "id": "eval-blinded-variants",
+    "title": "Blinded variant evaluation",
+    "prompt": "Run a blinded evaluation of two variants and score them under one rubric.",
+    "expectedPlaybook": "eval",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-eval-arena",
+    "title": "Arena without evaluation framing",
+    "prompt": "Compare multiple candidates for the parser implementation.",
+    "expectedPlaybook": "arena",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "eval"
+  }
 ]

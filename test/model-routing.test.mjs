@@ -21,6 +21,7 @@ test('maps specialist agent names to roles', () => {
     assert.equal(roleForAgent(agent), 'reviewer');
   }
   assert.equal(roleForAgent('pstack-comment-sicko'), 'reviewer');
+  assert.equal(roleForAgent('pstack-judge-b'), 'judge');
   assert.equal(roleForAgent('unknown'), undefined);
 });
 

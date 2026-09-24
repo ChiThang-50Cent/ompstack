@@ -45,6 +45,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Broken/flaky/insufficient tests | `test-repair` |
 | Package/runtime/toolchain update | `dependency-upgrade` |
 | Documentation as the primary artifact | `documentation` |
+| Evaluation design, blinded variants, one frozen rubric | `eval` |
 
 ## Non-negotiable execution contract
 

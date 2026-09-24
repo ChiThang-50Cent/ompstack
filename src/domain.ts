@@ -25,6 +25,7 @@ export const PLAYBOOKS = [
   "test-repair",
   "dependency-upgrade",
   "documentation",
+  "eval",
 ] as const;
 export type Playbook = (typeof PLAYBOOKS)[number];
 

@@ -114,3 +114,18 @@ Threat-model assets, trust boundaries, attacker-controlled inputs, sensitive sin
 ## Documentation
 
 Documentation is an artifact with readers and runnable claims. Verify commands, links, examples, version assumptions, and behavior against the actual project. Prose-only tasks can avoid runtime verdicts at standard ceremony; strict/program documentation still requires independent checking.
+
+## Eval
+
+Use `eval` for a blinded comparison of variants, not for a single test run:
+
+```text
+freeze variants, organic prompt, and weighted rubric
+→ create sanitized isolated workspaces
+→ run one OMP task batch with identical worker prompts
+→ judge sanitized outputs under one rubric
+→ inspect transcripts and artifacts
+→ synthesize a recommendation and independently verify any new artifact
+```
+
+Workers never see the rubric or other worker identities. Candidate votes do not transfer to a synthesized artifact.

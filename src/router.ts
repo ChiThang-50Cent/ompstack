@@ -18,6 +18,7 @@ const PLAYBOOK_SIGNALS: SignalGroup[] = [
   { playbook: "refactor", weight: 3, patterns: [/\brefactor\b/i, /simplif/i, /cleanup/i, /remove duplication/i] },
   { playbook: "review", weight: 3, patterns: [/code review/i, /review (?:this|the) (?:diff|patch|pr)/i, /audit (?:this|the) change/i] },
   { playbook: "arena", weight: 3, patterns: [/compare (?:multiple|several) designs/i, /multiple candidates/i, /arena/i, /competing implementations/i] },
+  { playbook: "eval", weight: 5, patterns: [/\b(?:eval|evaluation)\b/i, /blind(?:ed)? (?:evaluation|review)/i, /score (?:multiple|two) variants?/i] },
   { playbook: "shipping", weight: 3, patterns: [/stacked pr/i, /merge queue/i, /release train/i, /land (?:the|these) prs?/i] },
   { playbook: "empirical-prototype", weight: 3, patterns: [/prototype/i, /measure/i, /which (?:option|approach).*better/i, /a\/b/i, /experiment/i] },
   { playbook: "documentation", weight: 3, patterns: [/write docs?/i, /documentation/i, /readme/i, /runbook/i] },

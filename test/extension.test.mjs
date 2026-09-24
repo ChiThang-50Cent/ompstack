@@ -270,7 +270,7 @@ test('doctor reports model resolution for every pstack agent', async t => {
   await mock.emit('session_start');
   await mock.commands.get('pstack').handler('doctor', mock.ctx);
   const message = mock.notices.at(-1)?.message ?? '';
-  for (const agent of ['pstack-scout', 'pstack-architect', 'pstack-builder', 'pstack-reviewer', 'pstack-reviewer-a', 'pstack-reviewer-b', 'pstack-reviewer-c', 'pstack-comment-sicko', 'pstack-judge', 'pstack-synthesizer', 'pstack-verifier']) {
+  for (const agent of ['pstack-scout', 'pstack-architect', 'pstack-builder', 'pstack-reviewer', 'pstack-reviewer-a', 'pstack-reviewer-b', 'pstack-reviewer-c', 'pstack-comment-sicko', 'pstack-judge', 'pstack-judge-b', 'pstack-synthesizer', 'pstack-verifier']) {
     assert.match(message, new RegExp(`${agent}:`));
   }
   assert.match(message, /pstack-builder: .*@smol=/);

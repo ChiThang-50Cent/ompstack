@@ -416,3 +416,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: every case now declares `kind`; all registered playbooks require positive and near-miss coverage; normalized prompt collisions are rejected.
 - Deviations from spec: no router scorer change was needed because it ignores additive case metadata.
 - Open questions: none.
+
+### T4.1 Playbook `eval` and agent `pstack-judge-b` {#t41}
+- Status: done
+- Files: `skills/pstack/playbooks/eval.md`, `agents/pstack-judge-b.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `src/model-routing.ts`, `src/commands.ts`, `docs/model-routing.md`, `test/model-routing.test.mjs`, `test/extension.test.mjs`, `README.md`, `NOTICE.md`, `scripts/upstream-map.json`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 51/51, and asset validation with 12 agents and 17 playbooks; judge-b role and doctor coverage are asserted.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/eval.md`, `agents/pstack-judge.md`, `spec3_1.md:539-542`
+- Decisions: OMP `task` batches and OMP-owned isolation replace Cursor worktree/task syntax; both judge roles use the same structured rubric and sanitized labels.
+- Deviations from spec: no separate judge-b map entry because it is a local copy of the existing judge contract; host proof remains T5.5.
+- Open questions: none.

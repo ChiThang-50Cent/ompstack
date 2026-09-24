@@ -44,6 +44,11 @@ const requiredFiles = [
 for (const file of requiredFiles) assert(await exists(file), `${file}: required file missing`);
 
 const agentNames = ["scout", "architect", "builder", "reviewer", "judge", "synthesizer", "verifier"];
+
+const toolCatalog = await json("scripts/omp-tool-names.json");
+const knownToolNames = new Set(Array.isArray(toolCatalog?.tools) ? toolCatalog.tools : []);
+assert(knownToolNames.size > 0, "scripts/omp-tool-names.json: tools allowlist must be non-empty");
+
 for (const name of agentNames) {
   const relative = `agents/pstack-${name}.md`;
   assert(await exists(relative), `${relative}: missing`);
@@ -53,6 +58,10 @@ for (const name of agentNames) {
   assert(new RegExp(`^name:\\s*pstack-${name}$`, "m").test(fm), `${relative}: frontmatter name mismatch`);
   for (const field of ["description", "tools", "model", "output"]) {
     assert(new RegExp(`^${field}:`, "m").test(fm), `${relative}: ${field} missing`);
+  }
+  const declaredTools = /^tools:\s*(.+)$/m.exec(fm)?.[1].split(",").map(tool => tool.trim()).filter(Boolean) ?? [];
+  for (const tool of declaredTools) {
+    assert(knownToolNames.has(tool), `${relative}: unknown OMP tool '${tool}' (see scripts/omp-tool-names.json)`);
   }
   assert(!/^tools:.*\bpstack_/m.test(fm), `${relative}: child agent exposes a parent-state pstack_* tool`);
   if (["scout", "architect", "reviewer", "judge", "verifier"].includes(name)) {

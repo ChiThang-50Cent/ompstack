@@ -1,7 +1,7 @@
 ---
 name: pstack-judge
 description: Read-only blinded judge for pstack arena candidates; applies one frozen rubric, selects a base, and specifies grafts without editing.
-tools: read, find, grep, glob
+tools: read, grep, glob
 model: "@pstack_reason, @slow"
 thinking-level: high
 output:

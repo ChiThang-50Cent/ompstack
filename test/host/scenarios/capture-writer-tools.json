@@ -1,0 +1,174 @@
+{
+  "name": "capture-writer-tools",
+  "mode": "auto",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "prompt": "capture writers",
+  "timeoutSec": 150,
+  "ompConfig": "modelRoles:\n  pstack_code: mock/mock-1\ntask.isolation.enabled: false\n",
+  "files": {
+    "README.md": "fixture\n",
+    "builder.txt": "fixture\n",
+    "synthesizer.txt": "fixture\n"
+  },
+  "rules": [
+    {
+      "id": "child-builder",
+      "matchSystem": "Implement only the assigned artifact and respect its ownership boundary.",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo builder-BASH >> README.md"
+          }
+        },
+        {
+          "tool": "write",
+          "args": {
+            "path": "builder.txt",
+            "content": "BUILDER_WRITE\n"
+          }
+        },
+        {
+          "yield": {
+            "artifact": "builder.txt",
+            "summary": "BUILDER_MARKER",
+            "changed_files": [
+              {
+                "path": "builder.txt",
+                "change": "created"
+              }
+            ],
+            "commands": [],
+            "evidence": [],
+            "status": "implemented"
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-synthesizer",
+      "matchSystem": "Apply only the judge-approved base and graft plan.",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo synthesizer-BASH >> README.md"
+          }
+        },
+        {
+          "tool": "write",
+          "args": {
+            "path": "synthesizer.txt",
+            "content": "SYNTHESIZER_WRITE\n"
+          }
+        },
+        {
+          "yield": {
+            "base": "SYNTHESIZER_MARKER",
+            "applied_grafts": [],
+            "changed_files": [
+              "synthesizer.txt"
+            ],
+            "commands": [],
+            "evidence": [],
+            "status": "synthesized"
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "task",
+          "args": {
+            "context": "capture",
+            "tasks": [
+              {
+                "name": "builder1",
+                "agent": "pstack-builder",
+                "task": "Implement the builder probe"
+              },
+              {
+                "name": "synthesizer1",
+                "agent": "pstack-synthesizer",
+                "task": "Apply the synthesizer probe"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-builder"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "child-synthesizer"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "BUILDER_MARKER"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "SYNTHESIZER_MARKER"
+    },
+    {
+      "type": "fileContains",
+      "path": "builder.txt",
+      "text": "BUILDER_WRITE"
+    },
+    {
+      "type": "fileContains",
+      "path": "synthesizer.txt",
+      "text": "SYNTHESIZER_WRITE"
+    },
+    {
+      "type": "fileContains",
+      "path": "README.md",
+      "text": "builder-BASH"
+    },
+    {
+      "type": "fileContains",
+      "path": "README.md",
+      "text": "synthesizer-BASH"
+    }
+  ]
+}

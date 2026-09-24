@@ -150,3 +150,17 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: reconcile at pstack status/gate/check command boundaries; reconcile after `wait` and `hub op=wait`; parse the host's `<task-result>` marker as a fallback because wait consumes terminal rows from the async snapshot.
 - Deviations from spec: none
 - Open questions: none
+
+### T1.5 Agent tool declarations match the host {#t15}
+- Status: done
+- Files: `agents/pstack-scout.md`, `agents/pstack-architect.md`, `agents/pstack-judge.md`, `agents/pstack-reviewer.md`, `agents/pstack-verifier.md`, `agents/pstack-builder.md`, `agents/pstack-synthesizer.md`, `scripts/omp-tool-names.json`, `scripts/validate-assets.mjs`, `test/host/capture-report.mjs`, `test/host/scenarios/capture-writer-tools.json`, `docs/port-notes/child-tool-capture.md`, `docs/verification.md`, `docs/limitations.md`, `docs/security-model.md`, `README.md`, `docs/port-notes/progress.md`
+- Proof:
+  - `PSTACK_HOST_KEEP=1 npm run test:host -- test/host/scenarios/capture-child-tools.json` → PASS on OMP 18.3.0; verifier now receives `eval`.
+  - `PSTACK_HOST_KEEP=1 PSTACK_OMP_BIN=.upstream/omp-18.2.11/node_modules/.bin/omp npm run test:host -- test/host/scenarios/capture-child-tools.json` → PASS on OMP 18.2.11.
+  - `PSTACK_HOST_KEEP=1 npm run test:host -- test/host/scenarios/capture-writer-tools.json` and the 18.2.11 matrix override → PASS; builder/synthesizer offered lists and workspace probes are recorded in the capture document.
+  - `npm run check` → 51 tests passed, router 33/33, asset validation passed.
+  - `npm run test:host:matrix` → 12 scenarios PASS on both OMP 18.2.11 and 18.3.0; `known-failing.json` is empty.
+- Sources read: `.upstream/oh-my-pi/docs/tools/find.md:33`, `lsp.md:47`, `ast-grep.md:35`, `browser.md:16`, `computer.md:22-23`; OMP 18.2.11 `.upstream/omp-18.2.11/node_modules/@oh-my-pi/pi-coding-agent/src/sdk.ts:1984-1997`, `config/settings-schema.ts:4283-4315,4373-4381,4552-4560`, `lsp/tool.ts:195-197`, `task/index.ts:645-660`
+- Decisions: remove default-unavailable `find`, `lsp`, and `ast_grep`; replace non-AgentTool `browser`/`computer` declarations with verifier `eval`; keep the optional UI path documented and require `INCONCLUSIVE` when its settings/target are unavailable. The allowlist is pinned to oh-my-pi commit `62bc57b`.
+- Deviations from spec: browser/computer headless scenario not added because this CI surface did not establish a real UI target; limitation is documented.
+- Open questions: none

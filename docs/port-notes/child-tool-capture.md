@@ -1,56 +1,51 @@
 # Child-tool admission capture
 
-Generated from `test/host/scenarios/capture-child-tools.json` with `node test/host/capture-report.mjs <kept dir>`. The scenario spawns every non-writer pstack agent through `omp plugin link`; each child first calls `bash` (`echo <agent>-BASH >> README.md`), then `edit` on `README.md`, then yields a schema-valid payload. The scenario asserts these outcomes automatically; this document records the raw tables.
+Generated from `test/host/scenarios/capture-child-tools.json` and `test/host/scenarios/capture-writer-tools.json` with `node test/host/capture-report.mjs <kept-dir> [writers]`. Each scenario runs against a real OMP binary with `omp plugin link`; writer capture sets `modelRoles.pstack_code: mock/mock-1` and disables task isolation so the probes are observable in the workspace.
 
 ## OMP 18.2.11
 
-| Agent | Offered tools | `bash` probe | `edit` probe |
-|---|---|---|---|
-| pstack-scout | read, grep, glob, web_search, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | Tool bash not found | Tool edit not found |
-| pstack-architect | read, grep, glob, web_search, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | Tool bash not found | Tool edit not found |
-| pstack-reviewer | read, grep, glob, bash, web_search, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | (no output) | Tool edit not found |
-| pstack-judge | read, grep, glob, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | Tool bash not found | Tool edit not found |
-| pstack-verifier | read, grep, glob, bash, web_search, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | (no output) | Tool edit not found |
+| Agent | Offered tools |
+|---|---|
+| pstack-scout | `read, grep, glob, web_search, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-architect | `read, grep, glob, web_search, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-reviewer | `read, grep, glob, bash, web_search, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-judge | `read, grep, glob, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-verifier | `read, grep, glob, bash, web_search, eval, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-builder | `read, grep, glob, bash, edit, write, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict` |
+| pstack-synthesizer | `read, grep, glob, bash, edit, write, yield, hub, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict` |
 
-README.md after run:
-
-```
-fixture
-reviewer-BASH
-verifier-BASH
-```
+`bash` probes appended `reviewer-BASH`, `verifier-BASH`, `builder-BASH`, and `synthesizer-BASH` to `README.md`. Inspect-only probes returned `Tool bash not found` and `Tool edit not found`. Writer `write` probes created `builder.txt` and `synthesizer.txt`.
 
 ## OMP 18.3.0
 
-| Agent | Offered tools | `bash` probe | `edit` probe |
-|---|---|---|---|
-| pstack-scout | read, grep, glob, web_search, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | Tool bash not found | Tool edit not found |
-| pstack-architect | read, grep, glob, web_search, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | Tool bash not found | Tool edit not found |
-| pstack-reviewer | read, grep, glob, bash, web_search, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | (no output) | Tool edit not found |
-| pstack-judge | read, grep, glob, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | Tool bash not found | Tool edit not found |
-| pstack-verifier | read, grep, glob, bash, web_search, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write | (no output) | Tool edit not found |
+| Agent | Offered tools |
+|---|---|
+| pstack-scout | `read, grep, glob, web_search, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-architect | `read, grep, glob, web_search, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-reviewer | `read, grep, glob, bash, web_search, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-judge | `read, grep, glob, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-verifier | `read, grep, glob, bash, web_search, eval, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict, write` |
+| pstack-builder | `read, grep, glob, bash, edit, write, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict` |
+| pstack-synthesizer | `read, grep, glob, bash, edit, write, yield, pstack_status, pstack_fingerprint, pstack_gate, pstack_verdict` |
 
-README.md after run:
+`README.md` and the writer files had the same probe results as 18.2.11. OMP 18.3.0 does not add `hub` to these child tool lists.
 
-```
-fixture
-reviewer-BASH
-verifier-BASH
-```
+## Declared vs offered
+
+| Declared entry before T1.5 | Default child offer | Decision |
+|---|---|---|
+| `find` | no / no | **remove**; it requires the host `find.enabled` setting and a resolved native judge model, which is not part of the pstack child default |
+| `lsp` | no / no | **remove**; child availability depends on `lsp.enabled`, session `enableLsp`, and task LSP inheritance |
+| `ast_grep` | no / no | **remove**; the host defaults `astGrep.enabled` to false |
+| `browser`, `computer` on verifier | no / no; neither is an AgentTool | **replace** with declared `eval`; use the `browser`/`computer` Eval preludes only when `browser.enabled`/`computer.enabled` is enabled |
+| `eval` on verifier | yes / yes | **keep** as the host-supported bridge to those optional Eval preludes |
+
+The agent frontmatter now declares only tools that the capture can offer by default, plus verifier `eval` for the documented prelude path. `scripts/omp-tool-names.json` is the pinned 18.3.0 docs/tool-basename catalog (`oh-my-pi` commit `62bc57b`) plus `yield`; the validator rejects undeclared names outside that catalog.
 
 ## Findings
 
-1. **OMP enforces agent `tools:` lists.** Undeclared tools return `Tool <name> not found` on both versions. pstack does not need its own deny matrix (decision D-CHILD).
-2. **pstack tools are offered to children and blocked at call time.** Every child request lists `pstack_status`, `pstack_fingerprint`, `pstack_gate`, `pstack_verdict`; calls (including `write xd://pstack_*` device calls, see `child-xd-guard`) fail with `Pstack child agents cannot call parent-state pstack_* tools` (decision D-EXPOSE).
-3. **Every child also gets `yield` and an `xd://`-only `write`.** 18.2.11 children additionally get `hub`, which pstack blocks.
-4. **Shell-capable agents mutate the workspace.** `pstack-reviewer` and `pstack-verifier` declare `bash`; their probes appended to `README.md` on both versions. Detection relies on the artifact fingerprint gate (`VERDICT_STALE`, see `verifier-stale`).
-5. **Declared tools the host never offers** (BUG-8, resolved in T1.5):
-
-   | Tool | Declared by | Offered to children on 18.2.11 / 18.3.0 |
-   |---|---|---|
-   | `find` | all seven agents | no / no |
-   | `lsp` | all except judge | no / no |
-   | `ast_grep` | scout, architect, reviewer, builder, synthesizer | no / no |
-   | `browser`, `computer` | verifier | no / no |
-
-   Writers (builder, synthesizer) are not part of this capture; their `find`/`lsp`/`ast_grep` entries are listed from frontmatter and must be re-checked in T1.5.
+1. OMP enforces agent `tools:` lists. Undeclared tools return `Tool <name> not found` on both versions.
+2. pstack tools are offered to children and blocked at call time. Every child request lists `pstack_status`, `pstack_fingerprint`, `pstack_gate`, and `pstack_verdict`; calls fail with `Pstack child agents cannot call parent-state pstack_* tools`.
+3. Every child gets `yield` and an `xd://`-only `write`; OMP 18.2.11 additionally gets `hub`, which pstack blocks.
+4. Shell-capable reviewer, verifier, builder, and synthesizer agents mutate the workspace through their declared `bash`/writer tools. Reviewer/verifier remain shell-capable rather than read-only.
+5. Browser/computer headless interaction was not promoted to a host scenario: the supported declaration is `eval`, while the prelude settings and actual UI target remain project/environment prerequisites.

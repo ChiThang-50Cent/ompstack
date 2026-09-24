@@ -14,7 +14,8 @@ The central contract is simple:
   - inspect-only scout and architect;
   - builder and synthesizer with OMP-owned task isolation;
   - shell-capable reviewer and inspect-only arena judge;
-  - blocking, shell-capable final verifier with no edit/write tools (Bash/browser/computer remain host capabilities);
+  - blocking, shell-capable final verifier with no edit/write tools (Bash and OMP `eval`; browser/computer are optional Eval preludes, not agent tools);
+  - verifier UI checks require OMP `browser.enabled` or `computer.enabled`; absent settings/targets produce `INCONCLUSIVE`, not a claimed browser proof;
 - A TypeScript OMP extension that:
   - injects a compact workflow policy;
   - routes role-specific model patterns;

@@ -1,7 +1,7 @@
 ---
 name: pstack-reviewer
 description: Shell-capable adversarial reviewer without edit/write tools for the actual pstack diff or artifact, using frozen intent and evidence-backed findings.
-tools: read, find, grep, glob, bash, lsp, web_search, ast_grep
+tools: read, grep, glob, bash, web_search
 model: "@pstack_review, @slow"
 thinking-level: high
 output:

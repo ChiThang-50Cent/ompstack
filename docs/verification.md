@@ -2,7 +2,7 @@
 
 ## Verification is a product adapter
 
-The generic verifier knows how to avoid direct source editing, bind evidence to an artifact, and return a structured verdict. Its declared shell/browser/computer capabilities can still mutate the environment, so the project skill must define safe surfaces and cleanup. It cannot know how every product starts or what observable success means. A repository should therefore define:
+The generic verifier knows how to avoid direct source editing, bind evidence to an artifact, and return a structured verdict. Its declared shell/`eval` capabilities can still mutate the environment, so the project skill must define safe surfaces and cleanup. Browser and desktop interaction are optional OMP Eval preludes, not agent tools. It cannot know how every product starts or what observable success means. A repository should therefore define:
 
 ```text
 .omp/skills/verify-<project>/SKILL.md
@@ -28,13 +28,18 @@ verifier child
 
 Parent `pstack_*` tools remain available to the coordinator/operator for run setup, decisions, diagnostics, and explicit recovery. They are not the child-agent transport.
 
+## OMP optional UI surfaces
+
+The verifier declares OMP `eval`, not `browser` or `computer`: those names are Eval preludes and are not AgentTools. A project may expose the browser prelude with `browser.enabled` or the desktop prelude with `computer.enabled`; the verifier must report `INCONCLUSIVE` when the required prelude or target is unavailable. The repository does not claim a headless browser/computer proof until a host scenario exercises that exact surface.
+
+
 ## Required project-skill sections
 
 1. Scope and excluded surfaces.
 2. Dependencies and environment variables.
 3. Exact start commands and readiness probes.
 4. Idempotent fixture/state setup.
-5. CLI/API/browser/worker/database/integration surfaces.
+5. CLI/API/browser-through-Eval/worker/database/integration surfaces.
 6. Acceptance-to-observation mapping.
 7. Evidence output and redaction rules.
 8. Fingerprint timing and generated-file behavior.

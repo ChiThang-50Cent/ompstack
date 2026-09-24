@@ -1,7 +1,7 @@
 ---
 name: pstack-architect
 description: Read-only pstack architect that names the data shape, invariants, boundaries, alternatives, and verification plan before implementation.
-tools: read, find, grep, glob, lsp, web_search, ast_grep
+tools: read, grep, glob, web_search
 model: "@pstack_reason, @slow"
 thinking-level: high
 output:

@@ -1,7 +1,7 @@
 ---
 name: pstack-scout
 description: Read-only evidence scout for tracing current behavior, ownership, data flow, history, and blast radius before a pstack change.
-tools: read, find, grep, glob, lsp, web_search, ast_grep
+tools: read, grep, glob, web_search
 model: "@pstack_fast, @smol"
 thinking-level: medium
 read-summarize: false

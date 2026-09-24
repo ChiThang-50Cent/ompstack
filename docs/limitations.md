@@ -60,7 +60,7 @@ Human review, CI, protected branches, security policy, and deployment authorizat
 
 OMP agent `tools:` declarations are not a security sandbox: host versions can auto-add baseline or extension tools such as `hub`, `yield`, or extension-registered tools. OMP owns admission for undeclared `edit`, `write`, `task`, and shell tools. Pstack's child-session guard blocks parent-state `pstack_*` and `hub` calls.
 
-The guard is name- and event-based, not process isolation. Reviewer/verifier Bash can alter files or external state through arbitrary commands, and browser/computer tools can mutate remote systems. Project verification skills must name safe environments, permitted fixtures, cleanup, and irreversible boundaries.
+The guard is name- and event-based, not process isolation. Reviewer/verifier Bash and verifier `eval` can alter files or external state; browser/computer are optional Eval preludes gated by `browser.enabled`/`computer.enabled`. Project verification skills must name safe environments, permitted fixtures, cleanup, and irreversible boundaries. Headless browser/computer operation remains unverified by this repository's host scenarios.
 
 ## Fingerprint bounds
 

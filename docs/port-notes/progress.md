@@ -217,3 +217,14 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: copied upstream principle bodies, adapted only local relative links and retained the OMP `Application record` section; `guard-the-context-window` keeps the existing local filename `guard-context-window.md`.
 - Deviations from spec: none
 - Open questions: none
+
+### T2.2 Operator `how` {#t22}
+- Status: done
+- Files: `skills/pstack/operators/how.md`, `skills/pstack/operators/references/how/{explorer-prompt,explainer-prompt}.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run validate` → asset validator passed; operator count remains 12.
+  - `npm run check:upstream` → map current at pinned Cursor commit `12d587d`; three `how` entries are `imported`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/how/{SKILL.md,references/*}`, `spec3_1.md:392-397`
+- Decisions: complex investigations use one OMP `task` batch of `pstack-scout` items and parent-side synthesis; simple investigations stay in the parent. Cursor model/Task/readonly mechanics were replaced with OMP agent/tool vocabulary.
+- Deviations from spec: none
+- Open questions: none

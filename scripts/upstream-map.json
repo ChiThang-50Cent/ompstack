@@ -266,7 +266,7 @@
     "upstreamWords": 471,
     "target": "skills/pstack/operators/references/how/explainer-prompt.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -275,7 +275,7 @@
     "upstreamWords": 416,
     "target": "skills/pstack/operators/references/how/explorer-prompt.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -491,7 +491,7 @@
     "upstreamWords": 413,
     "target": "skills/pstack/operators/how.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

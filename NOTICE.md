@@ -41,3 +41,9 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack/principles/subtract-before-you-add.md`
 - `skills/pstack/principles/test-behavior-not-implementation.md`
 - `skills/pstack/principles/type-system-discipline.md`
+
+### T2.2 operator `how`
+
+- `skills/pstack/operators/how.md`
+- `skills/pstack/operators/references/how/explorer-prompt.md`
+- `skills/pstack/operators/references/how/explainer-prompt.md`

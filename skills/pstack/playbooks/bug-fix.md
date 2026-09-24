@@ -26,6 +26,7 @@ Reproduce an observed defect, find the root cause, implement the smallest cohere
 
 - Name the affected data shape, owner, and boundary.
 - Choose the smallest change that restores the invariant and avoids symptom-specific guards.
+- When the defect has a clear, cheap executable test path, load `skill://pstack-tdd` and follow its failing-before and passing-after workflow. If the path is impractical, record the closest executable regression check and why a new test was skipped.
 - Add or freeze a behavior-level regression check that fails for the original defect.
 
 ### 4. Implement

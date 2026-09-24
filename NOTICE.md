@@ -99,3 +99,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 
 - `skills/pstack-no-comments/SKILL.md`
 - `agents/pstack-comment-sicko.md`
+
+### T3.2 skill `pstack-tdd`
+
+- `skills/pstack-tdd/SKILL.md`

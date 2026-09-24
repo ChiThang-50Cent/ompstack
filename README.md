@@ -40,6 +40,7 @@ The central contract is simple:
 |---|---|
 | `pstack-unslop` | Review and remove low-value generated prose before it reaches the artifact. |
 | `pstack-no-comments` | Dispatch a read-only comment review and act on accepted findings. |
+| `pstack-tdd` | Build a failing-before regression check when the bug has a clear, cheap test path. |
 
 ## Runtime target
 

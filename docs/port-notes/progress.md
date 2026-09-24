@@ -13,3 +13,13 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+
+### T0.2 Host OMP resolver {#t02}
+- Status: done
+- Files: `scripts/lib/resolve-omp.sh`, `test/resolve-omp.test.mjs`
+- Proof:
+  - `npm run check` → `ok … resolve_omp skips node_modules/.bin and returns the host omp`, `ok … resolve_omp honors PSTACK_OMP_BIN`, `# pass 44`, `# fail 0`
+- Sources read: none
+- Decisions: none
+- Deviations from spec: none
+- Open questions: none

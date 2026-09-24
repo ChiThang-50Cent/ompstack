@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Fixed
+
+- The router no longer forces a playbook it cannot justify. A request without a playbook signal (no keyword match, a lone generic verb, or non-English text) is `grounded: false`; the injected policy names no playbook and tells the model to choose from the `skill://pstack` routing table, stay direct for small local edits, and use `pstack-figure-it-out` when no row fits. Grounded suggestions may be overridden by a better row. `pstack_gate init` says when its playbook is only the fallback. "rename this variable" routes `direct`.
+- Headless runs no longer end silently with open gates. Strict gate-only runs block the stop twice by default; a process without a UI that ends with an active run prints the gate report to stderr, records `headless_open_gates`, and exits 3 (`headlessOpenGateExitCode`).
+- Async task actors whose `wait` was skipped by a queued completion notice no longer stay pending forever. Reconciliation reads delivered `async-result` notices from the branch and matches snapshot rows by spawn key when no job or runtime id was learned; headless shutdown reconciles before judging the run.
+- `npm run check` builds on a clean install: the Node shim declares `randomUUID`.
+
+### Added
+
+- Host runner fields `expectExit` and `persistSession`, assertion `anyOf`, and six host scenarios: ungrounded Vietnamese routing, grounded routing, direct rename, headless strict open gates, headless exit override disabled, and a three-process `--continue` resume.
+
 ## 0.5.0 - 2026-09-24
 
 ### Fixed

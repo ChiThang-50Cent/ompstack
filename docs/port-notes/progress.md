@@ -251,3 +251,14 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: panel reviewers are copies of the read-only reviewer contract with ordered OMP panel-role fallbacks; `task-rewrite` and child policy use `roleForAgent`, not exact agent names. Model roles live in `examples/omp-config.example.yml`; a single-model panel is reported explicitly.
 - Deviations from spec: none
 - Open questions: host panel runtime proof is the scheduled T5.1 `panel-interrogate` scenario.
+
+### T2.5 Operators `architect`, `arena`, and `swarm` {#t25}
+- Status: done
+- Files: `skills/pstack/operators/{architect,arena,swarm}.md`, `skills/pstack/operators/references/architect/*`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run validate` → asset validation passed with 12 operators.
+  - `npm run check:upstream` → map current at pinned Cursor commit `12d587d`; six T2.5 entries are `imported`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/{architect,arena,swarm}/**`, `spec3_1.md:436-441`
+- Decisions: arena uses one OMP `task` batch of `pstack-builder` candidates, checks `task.isolation.enabled` before claiming `isolated: true`, judges with `pstack-judge`, and preserves synthesis-bound verification. Swarm uses named OMP agents and disjoint output ownership.
+- Deviations from spec: none
+- Open questions: no host arena scenario is required before later runtime proof.

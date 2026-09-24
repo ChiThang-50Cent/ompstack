@@ -212,7 +212,7 @@
     "upstreamWords": 292,
     "target": "skills/pstack/operators/references/architect/design-red-flags.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -221,7 +221,7 @@
     "upstreamWords": 466,
     "target": "skills/pstack/operators/references/architect/rationale-template.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -230,7 +230,7 @@
     "upstreamWords": 466,
     "target": "skills/pstack/operators/references/architect/runner-prompt.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -518,7 +518,7 @@
     "upstreamWords": 764,
     "target": "skills/pstack/operators/architect.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -527,7 +527,7 @@
     "upstreamWords": 737,
     "target": "skills/pstack/operators/arena.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -536,7 +536,7 @@
     "upstreamWords": 466,
     "target": "skills/pstack/operators/swarm.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

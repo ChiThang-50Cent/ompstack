@@ -76,3 +76,12 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `agents/pstack-reviewer-b.md`
 - `agents/pstack-reviewer-c.md`
 - `examples/omp-config.example.yml`
+
+### T2.5 operators `architect`, `arena`, and `swarm`
+
+- `skills/pstack/operators/architect.md`
+- `skills/pstack/operators/references/architect/design-red-flags.md`
+- `skills/pstack/operators/references/architect/rationale-template.md`
+- `skills/pstack/operators/references/architect/runner-prompt.md`
+- `skills/pstack/operators/arena.md`
+- `skills/pstack/operators/swarm.md`

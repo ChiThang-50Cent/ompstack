@@ -42,6 +42,7 @@ The central contract is simple:
 | `pstack-no-comments` | Dispatch a read-only comment review and act on accepted findings. |
 | `pstack-tdd` | Build a failing-before regression check when the bug has a clear, cheap test path. |
 | `pstack-blast-radius` | Prove the safety-critical fact behind a change by running real code. |
+| `pstack-technical-writing` | Apply layered structure, reader-focused sentences, and unambiguous technical prose. |
 
 ## Runtime target
 

@@ -14,6 +14,7 @@ Produce technical documentation that is structurally accurate, runnable where ap
 
 - Name reader, prerequisite knowledge, task/outcome, scope, and freshness boundary.
 - Choose document type and information architecture.
+- For the writing standard, load `skill://pstack-technical-writing` before drafting or reviewing the document.
 - Record claims that require code/runtime verification.
 
 ### 2. Ground facts

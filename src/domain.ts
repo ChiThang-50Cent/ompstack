@@ -70,7 +70,7 @@ export interface PstackConfig {
   requireEvidenceForPass: boolean;
   requireArtifactFingerprint: boolean;
   maxPolicyCharacters: number;
-  /** session_stop blocks allowed per gate-only run before the session may end with open gates. */
+  /** session_stop blocks allowed per auto/strict gate-only run before the session may end with open gates. */
   maxStopGateBlocks: number;
   auditDirectory: string;
   fingerprintIgnore: string[];

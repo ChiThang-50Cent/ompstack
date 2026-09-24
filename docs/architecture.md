@@ -183,7 +183,7 @@ It returns strict structured output containing `PASS`, `FAIL`, or `INCONCLUSIVE`
 
 ### Completion
 
-`goal op=complete`, `pstack_gate action=check`, and `/pstack check` evaluate gates while ignoring only the open run status. A goal-bound run is closed by OMP's `goal_updated` `complete` event (a `dropped` goal fails the run); a gate-only run is closed by `check`. `session_stop` gates only runs without a live bound goal, and at most `maxStopGateBlocks` times (default `0`: the session ends at once with a warning; the run stays `active`, so nothing passes by stopping). While the goal is in goal mode, OMP's goal continuation owns the keep-working loop and `goal op=complete` is the gate; blocking the stop as well made the model spin in a live 18.2.11 run.
+`goal op=complete`, `pstack_gate action=check`, and `/pstack check` evaluate gates while ignoring only the open run status. Gate-only runs must be opened in `auto` or `strict`; gate initialization is refused in `off`. A goal-bound run is closed by OMP's `goal_updated` `complete` event (a `dropped` goal fails the run); a gate-only run is closed by `check`. `session_stop` gates only runs without a live bound goal, and at most `maxStopGateBlocks` times (default `0`: the session ends at once with a warning; the run stays `active`, so nothing passes by stopping). While the goal is in goal mode, OMP's goal continuation owns the keep-working loop and `goal op=complete` is the gate; blocking the stop as well made the model spin in a live 18.2.11 run.
 
 A successful explicit completion marks the run `done`, appends a compact completed-run history record, and allows future session stop.
 

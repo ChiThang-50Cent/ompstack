@@ -32,7 +32,7 @@ export function evaluateCompletionGates(
 ): GateReport {
   const issues: GateIssue[] = [];
   const run = state.activeRun;
-  if (state.mode === "off" || !run) {
+  if (!run) {
     return { allowed: true, issues, checkedAt: nowIso() };
   }
 

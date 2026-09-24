@@ -25,8 +25,8 @@ export interface GateControlOutcome {
 /**
  * Opens the proof state for one objective. OMP owns the lifecycle: with an
  * active goal the run gates `goal op=complete`; without goal mode the run is
- * gate-only and closes through {@link checkGate}. Explicit acceptance criteria
- * win; the goal objective is context only and never becomes a criterion.
+ * gate-only, must start in auto or strict, and closes through {@link checkGate}.
+ * Explicit acceptance criteria win; the goal objective is context only and never becomes a criterion.
  */
 export async function initGate(
   exec: ExecRunner,
@@ -35,6 +35,12 @@ export async function initGate(
   input: GateInitInput,
 ): Promise<GateControlOutcome> {
   const bucket = await store.get(ctx);
+  if (bucket.state.mode === "off") {
+    return {
+      ok: false,
+      text: "Pstack is off for this session. Enable it with /pstack auto, /pstack strict, or --pstack-mode before opening a run.",
+    };
+  }
   const existing = bucket.state.activeRun;
   if (existing && existing.status === "active") {
     return { ok: false, text: `Run ${existing.id} is still active; check or abandon it first.` };
@@ -65,7 +71,7 @@ export async function initGate(
       `Started ${run.id}: ${run.playbook}/${run.ceremony}; baseline ${fingerprint.digest}.`,
       run.goalRef
         ? `Gates OMP goal ${run.goalRef}: goal op=complete is refused until all gates pass.`
-        : "Gate-only mode (no active OMP goal): close the run with pstack_gate action=check once gates pass.",
+        : "Gate-only mode (auto/strict; no active OMP goal): close it with pstack_gate action=check once gates pass.",
       ...(run.acceptance.length === 0 ? ["No acceptance criteria yet: add them with pstack_acceptance."] : []),
     ].join("\n"),
     details: run,

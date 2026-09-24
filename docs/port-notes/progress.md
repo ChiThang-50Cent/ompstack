@@ -100,3 +100,15 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Deviations from spec: `test/host/run.mjs` now resolves a relative `--omp`/`PSTACK_OMP_BIN` against the invoking directory (runs use the scenario workspace as cwd, so a relative path crashed the runner) and turns spawn errors into scenario failures instead of an unhandled exception. Found while generating the 18.2.11 capture; included here because the capture could not be produced without it.
 - Open questions: none
 - Re-verified on `/home/vmn`: `capture-child-tools` passed on OMP 18.2.11 and 18.3.0; `capture-report.mjs` reproduced both tables from kept directories.
+
+### T1.1 Truthful gates in `off` mode {#t11}
+- Status: done
+- Files: `src/gate-control.ts`, `src/gates.ts`, `test/gate-off-mode.test.mjs`, `test/host/scenarios/gate-off-mode.json`, `test/host/known-failing.json`, `README.md`, `docs/architecture.md`, `docs/configuration.md`, `src/commands.ts`, `src/policy.ts`, `src/status.ts`, `src/domain.ts`, `src/index.ts`
+- Proof:
+  - `npm run check` → 46 tests passed, router 33/33, asset validation passed.
+  - `npm run test:host -- test/host/scenarios/gate-off-mode.json` → PASS on host OMP 18.3.0.
+  - `npm run test:host:matrix` → `gate-off-mode PASS` on OMP 18.2.11 and 18.3.0; all other baseline scenarios unchanged.
+- Sources read: `src/gates.ts`, `src/gate-control.ts`, `src/commands.ts`, `docs/architecture.md`, `docs/configuration.md`
+- Decisions: `pstack_gate init` and `/pstack init` refuse in `off` without mutating state; active runs remain evaluable after the mode changes to `off`.
+- Deviations from spec: none
+- Open questions: none

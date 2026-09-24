@@ -21,7 +21,7 @@ function activeRunPolicy(state: PstackSessionState): string {
     `Required acceptance: ${passed}/${required.length} passed. Final verdict: ${latestVerdict?.verdict ?? "missing"}.`,
     run.goalRef
       ? `Completion gate: OMP goal ${run.goalRef}; goal op=complete is refused until the gates below pass.`
-      : "Completion gate: gate-only run; close it with pstack_gate action=check.",
+      : "Completion gate: auto/strict gate-only run; close it with pstack_gate action=check.",
     "Record acceptance, evidence, decisions, and verdicts with pstack tools; OMP owns planning and orchestration.",
     "The coordinator owns correctness. Subagent summaries are claims, not acceptance evidence.",
     "Do not finish while required criteria, independent verification, or artifact-bound evidence gates remain open.",

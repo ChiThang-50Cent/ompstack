@@ -33,9 +33,18 @@
   ],
   "assert": [
     {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "Pstack is off"
+    },
+    {
       "type": "toolResultLacks",
-      "text": "all gates passed",
-      "rule": "main"
+      "rule": "main",
+      "text": "all gates passed"
+    },
+    {
+      "type": "pathAbsent",
+      "path": ".omp/pstack/runs"
     },
     {
       "type": "eventsLack",

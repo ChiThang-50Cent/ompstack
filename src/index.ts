@@ -254,7 +254,7 @@ export default function pstackExtension(api: ExtensionAPI): void {
     // While the bound goal is live, OMP's goal continuation owns "keep working"
     // and goal op=complete is the gate; blocking the stop too makes the model
     // spin (observed live: 18 blocked stops in ~50s). Without a live goal the
-    // run is gate-only and session_stop is its gate.
+    // run is an auto/strict gate-only run and session_stop is its gate.
     const goal = run.goalRef ? currentGoal(ctx) : undefined;
     if (goal && goal.id === run.goalRef) return undefined;
     const current = await computeArtifactFingerprint(api, ctx.cwd, bucket.config);

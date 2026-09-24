@@ -18,7 +18,7 @@ export function renderState(state: PstackSessionState, config: PstackConfig, gat
     `Run: ${run.id}`,
     `Objective: ${run.objective}`,
     `Playbook / ceremony: ${run.playbook} / ${run.ceremony}`,
-    `Status: ${run.status}${run.goalRef ? ` (gates OMP goal ${run.goalRef})` : " (gate-only)"}`,
+    `Status: ${run.status}${run.goalRef ? ` (gates OMP goal ${run.goalRef})` : " (gate-only; initialized in auto/strict)"}`,
     `Acceptance: ${passed}/${required.length} required passed`,
     `Evidence: ${run.evidence.length}; decisions: ${run.decisions.length}; agents: ${run.agents.length}`,
     `Latest verdict: ${latest ? `${latest.verdict} (${latest.scope})` : "none"}`,

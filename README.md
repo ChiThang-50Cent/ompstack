@@ -81,7 +81,7 @@ Then ask for normal engineering work. For an explicit strict run:
 /pstack init bug-fix
 ```
 
-`/pstack init` binds the run to the active OMP goal; `goal op=complete` is then refused until every gate passes. Without goal mode (for example `omp -p`), `/pstack init bug-fix <objective>` opens a gate-only run.
+`/pstack init` binds the run to the active OMP goal; `goal op=complete` is then refused until every gate passes. Without goal mode (for example `omp -p`), enable `auto` or `strict` before `/pstack init bug-fix <objective>`; that opens a gate-only run.
 
 The model should then:
 
@@ -99,7 +99,7 @@ Useful commands:
 ```text
 /pstack                  # current status
 /pstack auto|strict|off  # sticky mode
-/pstack check            # evaluate gates; closes a gate-only run when they pass
+/pstack check            # evaluate gates; closes an auto/strict gate-only run when they pass
 /pstack abandon <reason> # mark the run failed
 /pstack doctor           # runtime/config/model-role diagnostics
 /pstack export           # export state to .omp/pstack/export.json
@@ -110,6 +110,7 @@ Useful commands:
 ### `off`
 
 No policy injection, task rewriting, provenance tracking, or completion blocking. Registered tools remain present, but normal OMP behavior is otherwise untouched.
+Gate-only runs require `auto` or `strict` at initialization; `off` refuses to open a run.
 
 ### `auto`
 

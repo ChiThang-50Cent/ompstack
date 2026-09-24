@@ -77,7 +77,7 @@ Requires a final verdict to carry a tested fingerprint and rejects it when the c
 
 ### `maxStopGateBlocks`
 
-How many times `session_stop` may block a gate-only run (no live OMP goal) before the session is allowed to end. Default `0`: the session ends on the first stop and a warning lists the open gates. Stopping never passes a gate: the run stays `active`, and the next `pstack_gate action=check` or goal completion is still refused until the gates pass. Raise it to give the model that many extra attempts.
+How many times `session_stop` may block a gate-only run (no live OMP goal) before the session is allowed to end. Gate-only runs must have been initialized in `auto` or `strict`; `off` refuses initialization. Default `0`: the session ends on the first stop and a warning lists the open gates. Stopping never passes a gate: the run stays `active`, and the next `pstack_gate action=check` or goal completion is still refused until the gates pass. Raise it to give the model that many extra attempts.
 
 ### `maxPolicyCharacters`
 

@@ -817,7 +817,7 @@
     "upstreamWords": 315,
     "target": "skills/pstack/playbooks/trace-forensics.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

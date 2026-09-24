@@ -550,4 +550,26 @@
     "kind": "near-miss",
     "nearMissOf": "hillclimb"
   }
+  ,
+  {
+    "id": "trace-captured-profile",
+    "title": "Captured profile diagnosis",
+    "prompt": "Run trace forensics on a captured CPU profile and attribute the hot path to source.",
+    "expectedPlaybook": "trace-forensics",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-trace-performance",
+    "title": "Performance profile without trace forensics",
+    "prompt": "Profile endpoint latency and reduce it under the workload.",
+    "expectedPlaybook": "performance",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "trace-forensics"
+  }
 ]

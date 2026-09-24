@@ -144,3 +144,18 @@ ground workload and one metric
 ```
 
 Never claim a win from code inspection. A first improvement is not the stop condition when cheap hypotheses remain.
+
+## Trace forensics
+
+Use `trace-forensics` when the capture already exists and the task is read-only diagnosis:
+
+```text
+identify format and load artifact
+→ reduce large data into a queryable shape
+→ query hot path, retainer chain, or blocked thread
+→ map frames to source
+→ compare paired captures when available
+→ return cited diagnosis without applying a fix
+```
+
+Without a paired capture, report the strongest artifact-supported hypothesis rather than a confirmed cause.

@@ -47,6 +47,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Documentation as the primary artifact | `documentation` |
 | Evaluation design, blinded variants, one frozen rubric | `eval` |
 | One metric, repeated hypothesis/measurement loop | `hillclimb` |
+| Captured trace/profile artifact diagnosis | `trace-forensics` |
 
 ## Non-negotiable execution contract
 

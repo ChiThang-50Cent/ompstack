@@ -27,6 +27,7 @@ export const PLAYBOOKS = [
   "documentation",
   "eval",
   "hillclimb",
+  "trace-forensics",
 ] as const;
 export type Playbook = (typeof PLAYBOOKS)[number];
 

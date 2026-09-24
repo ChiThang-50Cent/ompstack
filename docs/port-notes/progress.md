@@ -434,3 +434,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: one frozen metric/harness, one hypothesis per iteration, pstack evidence and decision trail, explicit keep/revert gate.
 - Deviations from spec: OMP `task`, pstack evidence, and OMP goal mode replace Cursor-specific child model and wake syntax.
 - Open questions: none.
+
+### T4.3 Playbook `trace-forensics` {#t43}
+- Status: done
+- Files: `skills/pstack/playbooks/trace-forensics.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 55/55, and asset validation with 12 agents and 19 playbooks.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/trace-forensics.md`, `spec3_1.md:543`
+- Decisions: fixed captures are read-only; large data is reduced to a queryable shape before diagnosis; source attribution and paired-capture limits are explicit.
+- Deviations from spec: OMP `pstack-scout` and current-cwd session evidence replace Cursor-specific context-window and transcript terms.
+- Open questions: none.

@@ -163,3 +163,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T4.2 playbook `hillclimb`
 
 - `skills/pstack/playbooks/hillclimb.md`
+
+### T4.3 playbook `trace-forensics`
+
+- `skills/pstack/playbooks/trace-forensics.md`

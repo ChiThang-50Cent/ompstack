@@ -103,3 +103,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T3.2 skill `pstack-tdd`
 
 - `skills/pstack-tdd/SKILL.md`
+
+### T3.3 skill `pstack-blast-radius`
+
+- `skills/pstack-blast-radius/SKILL.md`

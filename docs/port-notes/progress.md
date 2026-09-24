@@ -228,3 +228,14 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: complex investigations use one OMP `task` batch of `pstack-scout` items and parent-side synthesis; simple investigations stay in the parent. Cursor model/Task/readonly mechanics were replaced with OMP agent/tool vocabulary.
 - Deviations from spec: none
 - Open questions: none
+
+### T2.3 Operator `why` {#t23}
+- Status: done
+- Files: `skills/pstack/operators/why.md`, `skills/pstack/operators/references/why/**`, `docs/mcp-runtime-lifecycle.md`, `scripts/lib/validate.mjs`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run validate` → asset validation passed; operator count remains 12 and all 13 `why` entries pass fidelity.
+  - `npm run check:upstream` → map current at pinned Cursor commit `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/why/**`, `spec3_1.md:399-404`
+- Decisions: repository/code and in-repository incident evidence use one `pstack-scout` task batch; MCP-backed categories remain parent-owned and unavailable categories are explicit gaps. Added `docs/mcp-runtime-lifecycle.md` to make that capability boundary auditable. Synthesis stays in the parent by default, with `pstack-synthesizer` optional.
+- Deviations from spec: none
+- Open questions: none

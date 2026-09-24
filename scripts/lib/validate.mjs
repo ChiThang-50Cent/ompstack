@@ -9,7 +9,7 @@ const EXPECTED_PLAYBOOKS = [
 const REQUIRED_FILES = [
   "README.md", "LICENSE", "NOTICE.md", "CHANGELOG.md",
   "docs/architecture.md", "docs/installation.md", "docs/configuration.md",
-  "docs/workflows.md", "docs/verification.md", "docs/model-routing.md",
+  "docs/mcp-runtime-lifecycle.md", "docs/verification.md", "docs/model-routing.md",
   "docs/limitations.md", "docs/development.md", "docs/security-model.md",
   "eval/cases.json", "eval/README.md", "scripts/omp-tool-names.json", "scripts/upstream-map.json",
 ];

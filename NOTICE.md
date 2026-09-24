@@ -47,3 +47,20 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack/operators/how.md`
 - `skills/pstack/operators/references/how/explorer-prompt.md`
 - `skills/pstack/operators/references/how/explainer-prompt.md`
+
+### T2.3 operator `why`
+
+- `docs/mcp-runtime-lifecycle.md`
+- `skills/pstack/operators/why.md`
+- `skills/pstack/operators/references/why/epistemics.md`
+- `skills/pstack/operators/references/why/investigator-prompt.md`
+- `skills/pstack/operators/references/why/source-playbook.md`
+- `skills/pstack/operators/references/why/synthesizer-prompt.md`
+- `skills/pstack/operators/references/why/sources/code-archaeology.md`
+- `skills/pstack/operators/references/why/sources/databricks.md`
+- `skills/pstack/operators/references/why/sources/datadog.md`
+- `skills/pstack/operators/references/why/sources/incident-postmortem.md`
+- `skills/pstack/operators/references/why/sources/linear.md`
+- `skills/pstack/operators/references/why/sources/notion.md`
+- `skills/pstack/operators/references/why/sources/sentry.md`
+- `skills/pstack/operators/references/why/sources/slack.md`

@@ -175,3 +175,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T4.5 playbook `authoring-a-skill`
 
 - `skills/pstack/playbooks/authoring-a-skill.md`
+
+### T4.6 playbook `opening-a-pr`
+
+- `skills/pstack/playbooks/opening-a-pr.md`

@@ -30,6 +30,7 @@ export const PLAYBOOKS = [
   "trace-forensics",
   "runtime-forensics",
   "authoring-a-skill",
+  "opening-a-pr",
 ] as const;
 export type Playbook = (typeof PLAYBOOKS)[number];
 

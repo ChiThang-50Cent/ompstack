@@ -50,6 +50,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Captured trace/profile artifact diagnosis | `trace-forensics` |
 | Live-process instrumentation and runtime diagnosis | `runtime-forensics` |
 | Author or modify an OMP skill | `authoring-a-skill` |
+| Create a reviewable pull request or ordered PR stack | `opening-a-pr` |
 
 ## Non-negotiable execution contract
 

@@ -187,3 +187,18 @@ read neighboring skills and principles
 ```
 
 Do not weaken validators to make prose pass. Route personal working-style mode skills to `pstack-automate-me`.
+
+## Opening a PR
+
+Use `opening-a-pr` after implementation is verified and the user wants a review artifact:
+
+```text
+resolve clean branch/worktree and forge
+→ split coherent commits
+→ write and unslop the PR brief
+→ create a ready PR against the correct base
+→ verify remote head, checks, and review state
+→ hand merge or babysit authorization back to the user
+```
+
+Opening a PR does not authorize merge, deployment, force-push, or automatic merge.

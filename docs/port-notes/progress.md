@@ -461,3 +461,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: skill triggers are evaluated, cross-links and frontmatter are validated, and existing-file overwrites remain approval-gated.
 - Deviations from spec: OMP skill paths and `pstack-unslop` replace Cursor create-skill/deslop invocations.
 - Open questions: none.
+
+### T4.6 Playbook `opening-a-pr` {#t46}
+- Status: done
+- Files: `skills/pstack/playbooks/opening-a-pr.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run eval:router` passed 61/61; `npm run validate` passed with 12 agents and 22 playbooks; the opening-a-pr case exercises readiness routing and the shipping near-miss boundary.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/opening-a-pr.md`, `spec3_1.md:546`
+- Decisions: forge choice is resolved once; PR creation stays separate from merge/babysit authorization; commits and body use technical-writing/unslop checks.
+- Deviations from spec: `gh`/`origin` are retained as optional forge surfaces; unsupported stack tooling is not required.
+- Open questions: none.

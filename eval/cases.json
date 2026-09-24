@@ -616,4 +616,26 @@
     "kind": "near-miss",
     "nearMissOf": "authoring-a-skill"
   }
+  ,
+  {
+    "id": "opening-pr-ready",
+    "title": "Open a review artifact",
+    "prompt": "Open a pull request for the verified change.",
+    "expectedPlaybook": "opening-a-pr",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-opening-shipping",
+    "title": "Land a release train",
+    "prompt": "Land the release train after checks pass.",
+    "expectedPlaybook": "shipping",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "opening-a-pr"
+  }
 ]

@@ -11,7 +11,8 @@ const here = path.dirname(new URL(import.meta.url).pathname);
 const root = path.resolve(here, "../..");
 const argv = process.argv.slice(2);
 const take = flag => { const i = argv.indexOf(flag); return i >= 0 ? argv.splice(i, 2)[1] : undefined; };
-const ompBin = take("--omp") ?? process.env.PSTACK_OMP_BIN;
+const rawOmp = take("--omp") ?? process.env.PSTACK_OMP_BIN;
+const ompBin = rawOmp && rawOmp.includes("/") ? path.resolve(rawOmp) : rawOmp; // runs use the scenario workspace as cwd
 if (!ompBin) { console.error("host: pass --omp <bin> or PSTACK_OMP_BIN"); process.exit(2); }
 const scenarioDir = path.join(here, "scenarios");
 const files = argv.length ? argv : fs.readdirSync(scenarioDir).filter(f => f.endsWith(".json")).sort().map(f => path.join(scenarioDir, f));
@@ -48,9 +49,10 @@ async function waitListening(port, ms = 5000) {
 async function run(bin, args, ctx, timeoutSec = 90) {
   const child = spawn(bin, args, { cwd: ctx.ws, env: ctx.env, stdio: ["ignore", "pipe", "pipe"] });
   let out = "";
+  const spawnError = new Promise(r => child.on("error", e => r({ code: null, timedOut: false, out: `spawn failed: ${e.message}` })));
   child.stdout.on("data", d => (out += d)); child.stderr.on("data", d => (out += d));
-  const r = await waitExit(child, timeoutSec * 1000);
-  return { ...r, out };
+  const r = await Promise.race([waitExit(child, timeoutSec * 1000), spawnError]);
+  return { ...r, out: out + (r.out ?? "") };
 }
 
 // Every assertion that names a rule first requires that rule to have been hit (no vacuous truth).

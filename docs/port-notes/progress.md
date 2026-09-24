@@ -82,3 +82,14 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+
+### T0.7 Child-tool capture document {#t07}
+- Status: done
+- Files: `test/host/capture-report.mjs`, `docs/port-notes/child-tool-capture.md`, `test/host/run.mjs` (fix, see deviations)
+- Proof:
+  - `PSTACK_HOST_KEEP=1 PSTACK_OMP_BIN=.upstream/omp-<v>/node_modules/.bin/omp npm run test:host -- test/host/scenarios/capture-child-tools.json` → `capture-child-tools PASS` for 18.2.11 and 18.3.0; tables in the capture doc were generated from both kept directories.
+  - `npm run check` → `# pass 44`, `# fail 0`; `npm run test:host` and `npm run test:host:matrix` → 9 PASS + 2 XFAIL per version, exit 0.
+- Sources read: none beyond the capture logs
+- Decisions: D-CHILD and D-EXPOSE confirmed by the capture (no difference from the spec's expected table)
+- Deviations from spec: `test/host/run.mjs` now resolves a relative `--omp`/`PSTACK_OMP_BIN` against the invoking directory (runs use the scenario workspace as cwd, so a relative path crashed the runner) and turns spawn errors into scenario failures instead of an unhandled exception. Found while generating the 18.2.11 capture; included here because the capture could not be produced without it.
+- Open questions: none

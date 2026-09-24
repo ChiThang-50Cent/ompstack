@@ -49,6 +49,10 @@ The central contract is simple:
 | `pstack-recall` | Reconstruct current-cwd session context into a compact continuation brief. |
 | `pstack-reflect` | Review transcript learnings through a three-agent panel and propose, never apply, skill edits. |
 | `pstack-automate-me` | Draft or revise a personal `<handle>-mode` skill from scoped transcript evidence and confirmed preferences. |
+| `pstack-figure-it-out` | Design an auditable playbook when no narrower workflow fits, with staged hypotheses, gates, and decision evidence. |
+| `pstack-teach` | Explain what a body of work is, how it works, and why it is built that way. |
+| `pstack-bro` | Restate the last message in plain human language without jargon. |
+| `pstack-show-me-your-work` | Keep the canonical pstack decision trail and an optional reviewer-friendly TSV export. |
 
 ## Runtime target
 

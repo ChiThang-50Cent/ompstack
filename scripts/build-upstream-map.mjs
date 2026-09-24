@@ -76,7 +76,7 @@ const skillMappings = [
   ["skills/show-me-your-work/SKILL.md", "skills/pstack-show-me-your-work/SKILL.md"],
   ["skills/poteto-mode/playbooks/prototype.md", "skills/pstack/playbooks/empirical-prototype.md", { aggregate: true }],
   ["agents/comment-sicko.md", "agents/pstack-comment-sicko.md"],
-  ["skills/show-me-your-work/scripts/log.sh", "scripts/log.sh"],
+  ["skills/show-me-your-work/scripts/log.sh", "skills/pstack-show-me-your-work/scripts/log.sh"],
 ];
 const playbookNames = [
   "authoring-a-skill", "autonomous-run", "autopilot-full", "autopilot-stack", "babysit", "eval", "hillclimb",

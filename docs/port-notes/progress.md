@@ -375,3 +375,35 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: scoped transcript mining uses current-cwd OMP session rules; drafts `.omp/skills/<handle>-mode/SKILL.md`; explicit approval is required before writing or overwriting; existing pstack skills are referenced rather than duplicated.
 - Deviations from spec: replaced Cursor `create-skill` and workspace transcript paths with OMP `skill://` references, `task` batches, `ask`, and OMP profile/project skill locations.
 - Open questions: none.
+
+### T3.11a Skill `pstack-figure-it-out` {#t311a}
+- Status: done
+- Files: `skills/pstack-figure-it-out/SKILL.md`
+- Proof: `npm run check` passed 56 tests, router 33/33, and asset validation; `npm run check:upstream` passed with 93 current entries at `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/figure-it-out/SKILL.md`, `spec3_1.md:471`
+- Decisions: OMP todo/gate/evidence vocabulary; `pstack` principles and `pstack-show-me-your-work` references replace Cursor-only names.
+- Open questions: none.
+
+### T3.11b Skill `pstack-teach` {#t311b}
+- Status: done
+- Files: `skills/pstack-teach/SKILL.md`
+- Proof: `npm run check` passed 56 tests, router 33/33, and asset validation; `npm run check:upstream` passed with 93 current entries at `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/teach/SKILL.md`, `spec3_1.md:471`
+- Decisions: parallel `how` and `why` operator use; plain-language explanation; OMP Mermaid/runtime visual adaptation.
+- Open questions: none.
+
+### T3.11c Skill `pstack-bro` {#t311c}
+- Status: done
+- Files: `skills/pstack-bro/SKILL.md`
+- Proof: `npm run check` passed 56 tests, router 33/33, and asset validation; `npm run check:upstream` passed with 93 current entries at `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/bro/SKILL.md`, `spec3_1.md:471`
+- Decisions: preserve concise jargon-removal behavior and OMP skill metadata.
+- Open questions: none.
+
+### T3.11d Skill `pstack-show-me-your-work` {#t311d}
+- Status: done
+- Files: `skills/pstack-show-me-your-work/SKILL.md`, `skills/pstack-show-me-your-work/references/decision-log-template.tsv`, `skills/pstack-show-me-your-work/scripts/log.sh`
+- Proof: `npm run check` passed 56 tests, router 33/33, and asset validation; `npm run check:upstream` passed with 93 current entries at `12d587d`; smoke test wrote a header plus sanitized row with `skills/pstack-show-me-your-work/scripts/log.sh`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/show-me-your-work/SKILL.md`, `.upstream/cursor-plugins/pstack/skills/show-me-your-work/references/decision-log-template.tsv`, `.upstream/cursor-plugins/pstack/skills/show-me-your-work/scripts/log.sh`, `spec3_1.md:471`
+- Decisions: `pstack_decision` is canonical; TSV and script are optional safe export; cross-model review uses an OMP read-only task.
+- Open questions: none.

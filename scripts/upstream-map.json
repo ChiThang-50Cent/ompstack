@@ -365,7 +365,7 @@
     "upstreamWords": 6,
     "target": "skills/pstack-show-me-your-work/references/decision-log-template.tsv",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -654,7 +654,7 @@
     "upstreamWords": 583,
     "target": "skills/pstack-figure-it-out/SKILL.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -663,7 +663,7 @@
     "upstreamWords": 967,
     "target": "skills/pstack-teach/SKILL.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -672,7 +672,7 @@
     "upstreamWords": 22,
     "target": "skills/pstack-bro/SKILL.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -681,7 +681,7 @@
     "upstreamWords": 1017,
     "target": "skills/pstack-show-me-your-work/SKILL.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -707,9 +707,9 @@
     "upstream": "pstack/skills/show-me-your-work/scripts/log.sh",
     "upstreamSha256": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e",
     "upstreamWords": 225,
-    "target": "scripts/log.sh",
+    "target": "skills/pstack-show-me-your-work/scripts/log.sh",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

@@ -146,3 +146,12 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T3.10 skill `pstack-automate-me`
 
 - `skills/pstack-automate-me/SKILL.md`
+
+### T3.11 skills `pstack-figure-it-out`, `pstack-teach`, `pstack-bro`, and `pstack-show-me-your-work`
+
+- `skills/pstack-figure-it-out/SKILL.md`
+- `skills/pstack-teach/SKILL.md`
+- `skills/pstack-bro/SKILL.md`
+- `skills/pstack-show-me-your-work/SKILL.md`
+- `skills/pstack-show-me-your-work/references/decision-log-template.tsv`
+- `skills/pstack-show-me-your-work/scripts/log.sh`

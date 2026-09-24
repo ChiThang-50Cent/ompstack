@@ -111,9 +111,71 @@ function terminal(status: AgentStatus): boolean {
   return TERMINAL.has(status);
 }
 
-function snapshotRows(snapshot: unknown): Array<{ id?: string; agentId?: string; status?: string; type?: string }> {
+interface JobRow {
+  id?: string;
+  /** Delivery rows only: when the notice was written; must not predate the actor's spawn. */
+  deliveredAt?: string;
+  agentId?: string;
+  status?: string;
+  type?: string;
+  source?: "snapshot" | "delivery";
+}
+
+/** OMP's `customType` for injected background-job completion notices (session/async-job-delivery.ts). */
+const ASYNC_RESULT_MESSAGE_TYPE = "async-result";
+
+function deliveredAtOf(value: unknown): string | undefined {
+  const ms = typeof value === "number" ? value : typeof value === "string" ? Date.parse(value) : Number.NaN;
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : undefined;
+}
+
+/**
+ * Terminal rows from delivered `async-result` notices on the current branch.
+ * A notice is only written after the job settled; a schema-invalid structured
+ * payload is a failed worker contract, anything else a completed job.
+ */
+function deliveredResultRows(ctx: ExtensionContext): JobRow[] {
+  let entries: unknown[];
+  try {
+    entries = ctx.sessionManager.getBranch() as unknown[];
+  } catch {
+    return [];
+  }
+  const rows: JobRow[] = [];
+  for (const entry of entries) {
+    if (!isRecord(entry) || entry.type !== "custom_message" || entry.customType !== ASYNC_RESULT_MESSAGE_TYPE) continue;
+    const details = entry.details;
+    if (!isRecord(details) || !Array.isArray(details.jobs)) continue;
+    for (const job of details.jobs) {
+      if (!isRecord(job) || typeof job.jobId !== "string" || !job.jobId.trim()) continue;
+      const schemaStatus = isRecord(job.schema) && typeof job.schema.status === "string" ? job.schema.status : undefined;
+      rows.push({
+        id: job.jobId.trim(),
+        ...(deliveredAtOf(entry.timestamp) ? { deliveredAt: deliveredAtOf(entry.timestamp) as string } : {}),
+        status: schemaStatus === "invalid" ? "failed" : "completed",
+        ...(typeof job.type === "string" ? { type: job.type } : {}),
+        source: "delivery",
+      });
+    }
+  }
+  return rows;
+}
+
+/**
+ * Last-resort match for an actor that never learned its job or runtime id
+ * (its task result was a skipped `wait`): OMP names a task job after the task
+ * item, which is also the spawn key. Only used when the key is unambiguous.
+ */
+function rowBySpawnKey(actor: AgentRecord, openActors: AgentRecord[], rows: JobRow[]): JobRow | undefined {
+  const key = actor.spawnKey?.trim();
+  if (!key) return undefined;
+  if (openActors.filter(other => other.spawnKey?.trim() === key).length !== 1) return undefined;
+  return rows.find(item => item.id === key || item.agentId === key);
+}
+
+function snapshotRows(snapshot: unknown): JobRow[] {
   if (!isRecord(snapshot)) return [];
-  const rows: Array<{ id?: string; agentId?: string; status?: string; type?: string }> = [];
+  const rows: JobRow[] = [];
   for (const key of ["running", "recent"] as const) {
     const value = snapshot[key];
     if (!Array.isArray(value)) continue;
@@ -124,6 +186,7 @@ function snapshotRows(snapshot: unknown): Array<{ id?: string; agentId?: string;
         ...(typeof item.agentId === "string" ? { agentId: item.agentId } : {}),
         ...(typeof item.status === "string" ? { status: item.status } : {}),
         ...(typeof item.type === "string" ? { type: item.type } : {}),
+        source: "snapshot",
       });
     }
   }
@@ -283,16 +346,25 @@ export class TaskLifecycleTracker {
     } catch {
       return [];
     }
-    const rows = snapshotRows(snapshot);
-    if (rows.length === 0) return [];
+    // The snapshot's `recent` list is capped, and a completion OMP already
+    // delivered as an `async-result` notice (for example when `wait` was
+    // skipped because the notice was queued) may never reach a task or wait
+    // tool_result. Delivered notices are durable branch entries, so read them too.
+    // Delivered notices are terminal by construction, so they win over a stale
+    // `running` snapshot row for the same job.
+    const allRows = [...deliveredResultRows(ctx), ...snapshotRows(snapshot)];
+    if (allRows.length === 0) return [];
     const touched: string[] = [];
     const at = nowIso();
-    for (const actor of run.agents) {
-      if (actor.invocationKind !== "task" || terminal(actor.status)) continue;
+    const openTaskActors = run.agents.filter(actor => actor.invocationKind === "task" && !terminal(actor.status));
+    for (const actor of openTaskActors) {
+      // A job id can be reused by a later task item; ignore notices older than this actor.
+      const spawnedMs = Date.parse(actor.spawnedAt);
+      const rows = allRows.filter(item => !item.deliveredAt || !Number.isFinite(spawnedMs) || Date.parse(item.deliveredAt) >= spawnedMs);
       const row = rows.find(item =>
         (actor.runtimeAgentId && item.agentId === actor.runtimeAgentId)
         || (actor.jobId && item.id === actor.jobId),
-      );
+      ) ?? (actor.jobId || actor.runtimeAgentId ? undefined : rowBySpawnKey(actor, openTaskActors, rows));
       if (!row) continue;
       const status = normalizeStatus(row.status) ?? (row.type === "running" ? "running" : undefined);
       if (!status || status === actor.status) continue;
@@ -304,7 +376,7 @@ export class TaskLifecycleTracker {
           ...(row.id ? { jobId: row.id } : {}),
           lastSeenAt: at,
           ...(terminal(status) ? { completedAt: at } : {}),
-          lifecycleNote: `reconciled from async job snapshot (${row.status ?? row.type ?? "unknown"})`,
+          lifecycleNote: `reconciled from ${row.source === "delivery" ? "async-result delivery" : "async job snapshot"} (${row.status ?? row.type ?? "unknown"})`,
         },
         at,
       }, "subagent_job_reconcile");

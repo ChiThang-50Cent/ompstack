@@ -56,6 +56,7 @@
     "pack:local": "npm pack --ignore-scripts",
     "verify:omp": "bash scripts/verify-with-omp.sh",
     "test:host": "sh scripts/host-smoke.sh",
+    "test:host:matrix": "sh scripts/host-matrix.sh",
     "eval:router": "node eval/score-router.mjs",
     "install:local": "bash scripts/install-local.sh",
     "uninstall:local": "bash scripts/uninstall-local.sh",

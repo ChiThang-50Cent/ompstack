@@ -36,6 +36,8 @@ PSTACK_HOST_KEEP=1 npm run test:host -- <scenario>     # keep the temp home/work
 PSTACK_OMP_BIN=/path/to/omp npm run test:host          # pick a specific OMP binary
 ```
 
+`npm run test:host:matrix` runs the same scenarios on every supported OMP version (`PSTACK_OMP_MATRIX`, default `"18.2.11 18.3.0"`). Each version is installed once into the gitignored `.upstream/omp-<version>/` and checked with `omp --version`. The peer range in `package.json` must only claim versions whose matrix column is green.
+
 `scripts/host-smoke.sh` resolves OMP with `scripts/lib/resolve-omp.sh`, which skips `node_modules/.bin`, so the type-checking devDependency is never used as the host. The scenario schema, mock rule steps and assertion types are documented in [test/host/README.md](../test/host/README.md). To add a scenario, drop a JSON file into `test/host/scenarios/`; route child agent sessions with `matchSystem` set to a line unique to the agent body, and give every child assertion a `rule` so it fails when the child never ran.
 
 ## Type strategy

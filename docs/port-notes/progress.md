@@ -71,3 +71,14 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: child-agent scenarios use `setup: ["plugin-link"]` with `loadExtension: false`
 - Deviations from spec: none
 - Open questions: none
+
+### T0.6 Host compatibility matrix {#t06}
+- Status: done
+- Files: `scripts/host-matrix.sh`, `package.json` (`test:host:matrix`), `docs/development.md`
+- Proof (`npm run test:host:matrix`, exit 0): both `omp/18.2.11` and `omp/18.3.0` → 9 PASS, 2 XFAIL (`async-pending`, `gate-off-mode`), identical to T0.5.
+  - `npm run check` → `# pass 44`, `# fail 0`
+- Environment note: each installed OMP version occupies ~1.3 GB under `.upstream/omp-<v>/`; the pinned oh-my-pi clone ~0.8 GB.
+- Sources read: none
+- Decisions: none
+- Deviations from spec: none
+- Open questions: none

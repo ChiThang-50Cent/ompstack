@@ -11,7 +11,7 @@ const REQUIRED_FILES = [
   "docs/architecture.md", "docs/installation.md", "docs/configuration.md",
   "docs/mcp-runtime-lifecycle.md", "docs/verification.md", "docs/model-routing.md",
   "docs/limitations.md", "docs/development.md", "docs/security-model.md",
-  "eval/cases.json", "eval/README.md", "scripts/omp-tool-names.json", "scripts/upstream-map.json",
+  "eval/cases.json", "eval/README.md", "scripts/omp-tool-names.json", "scripts/upstream-map.json", "scripts/build-notice.mjs",
 ];
 const CORE_AGENTS = ["pstack-scout", "pstack-architect", "pstack-builder", "pstack-reviewer", "pstack-judge", "pstack-synthesizer", "pstack-verifier"];
 const LEFTOVER_PATTERN = /(?:\bsubagent_type\b|\breadonly\s*:|\brun_in_background\b|\.mdc\b|~\/.cursor\b|\bAskQuestion\b|\bBugbot\b|\/loop\b|\b(?:claude-(?:opus|sonnet|haiku|fable|mythos)|gpt-\d|o[1-9](?:-mini|-pro)?|gemini-\d|grok-\d|deepseek-[\w.-]+|qwen\d[\w.-]+|kimi-[\w.-]+|glm-\d[\w.-]+|composer-\d[\w.-]+|mistral-[\w.-]+|llama-?\d[\w.-]+)\b)/i;
@@ -174,6 +174,15 @@ async function validateUpstreamMap(root, map, errors, options) {
   }
 }
 
+async function validateNotice(root, map, errors) {
+  if (!Array.isArray(map)) return;
+  const notice = await readFile(path.join(root, "NOTICE.md"), "utf8").catch(() => "");
+  for (const entry of map.filter(item => item?.status === "imported")) {
+    assert(errors, notice.includes(entry.upstream), `NOTICE.md: imported upstream path missing: ${entry.upstream}`);
+    assert(errors, notice.includes(entry.target), `NOTICE.md: imported target missing: ${entry.target}`);
+  }
+}
+
 export async function validate(repoRoot, options = {}) {
   const root = path.resolve(repoRoot);
   const errors = [];
@@ -297,6 +306,7 @@ export async function validate(repoRoot, options = {}) {
   await validateFeatureMaps(root, errors);
   const upstreamMap = await readJson(root, "scripts/upstream-map.json", errors);
   await validateUpstreamMap(root, upstreamMap, errors, options);
+  await validateNotice(root, upstreamMap, errors);
 
   return {
     errors,

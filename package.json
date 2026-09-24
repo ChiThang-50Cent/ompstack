@@ -53,6 +53,8 @@
     "test": "npm run build && npm run test:run",
     "validate": "node scripts/validate-assets.mjs",
     "check:upstream": "node scripts/build-upstream-map.mjs --check",
+    "build:notice": "node scripts/build-notice.mjs",
+    "check:notice": "node scripts/build-notice.mjs --check",
     "check": "npm run clean && npm run build && npm run test:run && npm run eval:router && npm run validate",
     "pack:local": "npm pack --ignore-scripts",
     "verify:omp": "bash scripts/verify-with-omp.sh",

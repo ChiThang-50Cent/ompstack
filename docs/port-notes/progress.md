@@ -586,3 +586,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: `pstack-judge` and `pstack-judge-b` both map to the judge role; panel-b and reason aliases are deliberately resolved to distinct mock models.
 - Deviations from spec: none.
 - Open questions: none.
+
+### T6.1 Docs and counts {#t61}
+- Status: done
+- Files: `README.md`, `BUILD_REPORT.md`, `NOTICE.md`, `CHANGELOG.md`, `scripts/build-notice.mjs`, `scripts/lib/validate.mjs`, `package.json`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 59 tests, router 77/77, and asset validation with 12 agents, 30 playbooks, 12 operators, 23 principles, and 77 eval cases; `npm run check:upstream` reported 94 current entries; `npm run check:notice` reported 93 imported entries; full `npm run test:host:matrix` passed all 18 scenarios on OMP 18.2.11 and 18.3.0.
+- Sources read: `spec3_1.md:576-581`, `docs/port-notes/child-tool-capture.md`, `test/host/known-failing.json`
+- Decisions: NOTICE is generated from imported upstream-map entries and validator checks both imported source paths and local targets; README, BUILD_REPORT, and limitations use measured tree/host counts.
+- Deviations from spec: none.
+- Open questions: version and marketplace metadata remain on 0.4.0 until the ordered T6.2/T6.3 release commits.

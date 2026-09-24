@@ -34,7 +34,7 @@ The central contract is simple:
 - Project-verification skill guidance and concrete Go API / browser app examples.
 - Unit, integration, negative-topology, asset-validation, and router-evaluation fixtures.
 
-### Bundled workflow skills
+### Bundled workflow skills (15 reusable skills)
 
 | Skill | Purpose |
 |---|---|
@@ -61,6 +61,20 @@ The central contract is simple:
 - OMP itself runs the TypeScript extension through its Bun-based extension loader.
 
 OMP 18.2.11 is the minimum because the implementation relies on `before_subagent_spawn` to apply role/model policy and capture provenance before a worker starts.
+
+## Host verification
+
+The host scenarios use the offline mock provider and a real OMP binary:
+
+```bash
+# one scenario against the selected host OMP
+npm run test:host -- test/host/scenarios/verifier-pass.json
+
+# all scenarios against OMP 18.2.11 and 18.3.0
+npm run test:host:matrix
+```
+
+Set `PSTACK_HOST_KEEP=1` to retain a failing or passing temporary workspace for audit. The capture report is generated from retained directories with `node test/host/capture-report.mjs <kept-dir> [writers]`. See [docs/verification.md](docs/verification.md) and [docs/port-notes/child-tool-capture.md](docs/port-notes/child-tool-capture.md) for the matrix boundary.
 
 ## Install for local development
 

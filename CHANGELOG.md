@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+## 0.5.0 - 2026-09-24
+
+### Fixed
+
+- **BUG-1:** `off` mode no longer opens or mutates pstack gates; active runs remain evaluable after a mode change.
+- **BUG-2/3:** `verify-with-omp` resolves the real host OMP, supports the pinned 18.2.11 baseline and 18.3.0 matrix, and has an offline mock smoke.
+- **BUG-4/5/6:** documentation now distinguishes OMP-owned isolation, child tool admission, shell-capable reviewers/verifiers, and unverified UI/provider boundaries.
+- **BUG-7:** `wait` and `hub op=wait` reconcile terminal task-result markers idempotently, including hosts that consume terminal rows from the job snapshot.
+- **BUG-8:** agent tool declarations match the pinned OMP catalog; unavailable `find`, `lsp`, `ast_grep`, `browser`, and `computer` declarations were removed or replaced with the supported Eval bridge.
+- **BUG-9:** builders and synthesizers resolve through `@pstack_code`, `@task`, and `@smol` fallback chains when model roles are not configured.
+
+### Added
+
+- Twenty-three upstream-mapped principles, twelve OMP-adapted operators, thirty task playbooks, and fifteen reusable workflow skills.
+- Blinded router evaluation with positive and near-miss cases for every playbook.
+- Panel reviewers A/B/C, `pstack-judge-b`, comment-sicko review, autonomous/pause/worktree cleanup, and multi-day orchestration/autopilot playbooks.
+- Read-only OMP worktree audit, generated NOTICE attribution, and five additional live host scenarios for panel, isolation, comment review, and judge routing.
+
+### Changed
+
+- Upstream attribution is pinned to Cursor plugins commit `12d587d`; `scripts/upstream-map.json` and generated `NOTICE.md` track imported paths and fidelity.
+- Release documentation reports 12 agents, 30 playbooks, 12 operators, 23 principles, 77 router cases, and host verification on OMP 18.2.11 and 18.3.0.
+- Non-isolated writer warnings now persist a structured `writer_not_isolated` audit checkpoint; concurrent audit writes use collision-free temporary files.
+
 ### Documentation corrections
 
 - OMP owns builder/synthesizer task isolation; pstack requests isolation and warns when OMP runs a writer without it.

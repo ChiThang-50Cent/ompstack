@@ -46,6 +46,7 @@ The central contract is simple:
 | `pstack-typescript-best-practices` | Apply constructive TypeScript models, boundary validation, and exhaustive narrowing. |
 | `pstack-create-verification` | Create a project-local verifier and a validated user-facing feature map. |
 | `pstack-maintain-verification` | Audit every mapped feature, update proven drift, and re-run validation after feature changes. |
+| `pstack-recall` | Reconstruct current-cwd session context into a compact continuation brief. |
 
 ## Runtime target
 

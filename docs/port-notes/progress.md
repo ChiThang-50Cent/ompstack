@@ -348,3 +348,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: OMP source review uses one `task` batch of read-only `pstack-scout` items; feature changes explicitly update `features/` and rerun `validate` before live re-proof.
 - Deviations from spec: replaced native command and Cursor paths with OMP skill links and `.omp` project paths.
 - Open questions: none.
+
+### T3.8 Skill `pstack-recall` {#t38}
+- Status: done
+- Files: `skills/pstack-recall/SKILL.md`, `docs/session.md`, `docs/tools/recall.md`, `docs/verification.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` → 56 tests passed, router 33/33, asset validation passed with 11 agents and four feature fixtures; `npm run check:upstream` → map current at pinned Cursor commit `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/recall/SKILL.md`, `.upstream/oh-my-pi/docs/tools/recall.md`, `.upstream/oh-my-pi/packages/coding-agent/src/session/session-paths.ts`, `spec3_1.md:467-470`
+- Decisions: current-cwd bucket only; `<agentDir>` honors profiles and `PI_CODING_AGENT_DIR`; native `recall` remains a long-term memory query and is documented separately.
+- Deviations from spec: created the missing local `docs/session.md` and `docs/tools/recall.md` from pinned OMP source evidence.
+- Open questions: none.

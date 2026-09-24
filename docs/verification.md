@@ -64,6 +64,8 @@ The body records user entry points, exact drive commands, edge cases, fixtures, 
 
 `npm run validate` checks every `examples/*/features/` directory. It requires all frontmatter keys, a matching slug, a supported surface, non-empty `reach`, `handles`, and `states`, and an index whose links are exactly the feature files. A missing entry or extra link fails validation.
 
+The native OMP `recall` tool is different. It queries Hindsight or Mnemopi long-term memory. It does not reconstruct raw JSONL sessions. See [`docs/tools/recall.md`](tools/recall.md) for the native contract and the boundary with `skill://pstack-recall`.
+
 ## Verifier output contract
 
 The bundled verifier schema requires:

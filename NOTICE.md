@@ -127,3 +127,9 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T3.7 skill `pstack-maintain-verification`
 
 - `skills/pstack-maintain-verification/SKILL.md`
+
+### T3.8 skill `pstack-recall` and OMP session docs
+
+- `skills/pstack-recall/SKILL.md`
+- `docs/session.md`
+- `docs/tools/recall.md`

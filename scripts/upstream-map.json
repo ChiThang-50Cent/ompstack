@@ -745,7 +745,7 @@
     "upstreamWords": 1458,
     "target": "skills/pstack/playbooks/autopilot-full.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -754,7 +754,7 @@
     "upstreamWords": 823,
     "target": "skills/pstack/playbooks/autopilot-stack.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -799,7 +799,7 @@
     "upstreamWords": 2636,
     "target": "skills/pstack/playbooks/orchestrate.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

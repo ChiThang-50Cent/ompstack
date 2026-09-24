@@ -746,4 +746,68 @@
     "kind": "near-miss",
     "nearMissOf": "worktree-cleanup"
   }
+  ,
+  {
+    "id": "orchestrate-program",
+    "title": "Standing multi-day coordinator",
+    "prompt": "Orchestrate a multi-day program with a standing coordinator and multiple PRs.",
+    "expectedPlaybook": "orchestrate",
+    "expectedCeremony": "program",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-orchestrate-autonomous",
+    "title": "Single autonomous predicate",
+    "prompt": "Run one autonomous run to a declared exit predicate.",
+    "expectedPlaybook": "autonomous-run",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "orchestrate"
+  },
+  {
+    "id": "autopilot-full-queue",
+    "title": "Independent full autopilot",
+    "prompt": "Use full autopilot for this queue with one owner per PR.",
+    "expectedPlaybook": "autopilot-full",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-autopilot-full-phases",
+    "title": "Phased queue without full autonomy",
+    "prompt": "Use a multi-phase workstream with several phases.",
+    "expectedPlaybook": "multi-phase",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "autopilot-full"
+  },
+  {
+    "id": "autopilot-stack-review",
+    "title": "Reviewable linear stack",
+    "prompt": "Use autopilot-stack to build a linear base-branch stack for review before landing.",
+    "expectedPlaybook": "autopilot-stack",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-autopilot-stack-shipping",
+    "title": "Shipping queue without stack review",
+    "prompt": "Ship a stacked PR through the merge queue.",
+    "expectedPlaybook": "shipping",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "autopilot-stack"
+  }
 ]

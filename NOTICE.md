@@ -195,3 +195,9 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack/playbooks/pause-safely.md`
 - `skills/pstack/playbooks/worktree-cleanup.md`
 - `scripts/worktree-audit.sh`
+
+### T4.10 playbooks `orchestrate`, `autopilot-full`, and `autopilot-stack`
+
+- `skills/pstack/playbooks/orchestrate.md`
+- `skills/pstack/playbooks/autopilot-full.md`
+- `skills/pstack/playbooks/autopilot-stack.md`

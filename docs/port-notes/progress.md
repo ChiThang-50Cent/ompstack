@@ -514,4 +514,30 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/worktree-cleanup.md`, `.upstream/cursor-plugins/pstack/skills/poteto-mode/scripts/worktree-audit.sh`, `docs/session.md`, `spec3_1.md:549`
 - Decisions: audit is read-only and maps OMP's profile-aware current-cwd session bucket; active, dirty, or uncertain worktrees are held for explicit review before deletion.
 - Deviations from spec: remote fetch and deletion were intentionally omitted from the audit script; stale refs and deletion authority stay visible rather than being changed by a dry run.
+
+### T4.10a Playbook `orchestrate` {#t410a}
+- Status: done
+- Files: `skills/pstack/playbooks/orchestrate.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 77/77, and asset validation with 12 agents and 30 playbooks; `npm run check:upstream` reported 94 current entries.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/orchestrate.md`, `docs/limitations.md`, `spec3_1.md:550`
+- Decisions: the parent OMP session is the coordinator; durable Markdown/JSON/TSV records, `task`, job-state reconciliation, and `pstack_decision` replace the upstream orchestration CLI.
+- Deviations from spec: no unsupported orchestration daemon or nested native scheduler was invented; the playbook states OMP's recovery and lease limits.
+- Open questions: none.
+
+### T4.10b Playbook `autopilot-full` {#t410b}
+- Status: done
+- Files: `skills/pstack/playbooks/autopilot-full.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 77/77, and asset validation with 12 agents and 30 playbooks.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/autopilot-full.md`, `docs/limitations.md`, `spec3_1.md:550`
+- Decisions: one writer per branch, independent current-head swarm verdicts, explicit countersigns, and zero-write stop propagation are mandatory.
+- Deviations from spec: OMP task/model-role routing and pstack verification replace upstream cloud-agent and proprietary control-skill mechanics.
+- Open questions: none.
+
+### T4.10c Playbook `autopilot-stack` {#t410c}
+- Status: done
+- Files: `skills/pstack/playbooks/autopilot-stack.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 77/77, and asset validation with 12 agents and 30 playbooks.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/autopilot-stack.md`, `docs/limitations.md`, `spec3_1.md:550`
+- Decisions: topology has one writer, verification precedes append, and the operator—not an owner—lands the final linear chain.
+- Deviations from spec: OMP goal wakes and task snapshots replace terminal loop/sleeper controls; no unsupported stack CLI is required.
 - Open questions: none.

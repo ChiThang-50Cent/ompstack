@@ -1,0 +1,44 @@
+---
+name: pstack-autopilot-full
+description: Run independent PR owners from build through merge under explicit full-autonomy authority, with an independent multi-lane verdict for every current head.
+---
+
+# Autopilot-full
+
+Own the verdicts, not the PRs. One owner carries each PR from build to merge, and nothing merges without a clean independent verdict from the current head. Use this for “autopilot this queue”, “full autopilot”, or one-owner-per-PR programs. `orchestrate` has a standing coordinator who lands verified work; this playbook gives each owner the whole lifecycle while the parent retains verification, countersigns, and audits.
+
+## Limits in OMP
+
+See [OMP limits](../../../docs/limitations.md#multi-day-autonomy). OMP can dispatch tasks, persist session state, and expose job snapshots; it cannot guarantee an always-on daemon, provider recovery, lease coordination, or forge merge authority. “Full” means the operator granted the named merge scope and the parent enforces the review contract; it does not mean unattended execution survives every host failure.
+
+1. **Mark operator-owned items and honor state-then-wait.** Items the operator names remain with the operator. The operator reviews and clicks, and no owner merges one. When the operator asks only for the protocol or plan, state it and stop. Execution begins on explicit go; arm an OMP goal with the complete objective and record the authorization in `pstack_decision`. The goal continues across turns until the queue is done or a gate closes it.
+2. **Dispatch one owner per PR with an early trail.** Resolve the forge once. `gh` is the default; an installed repository-specific forge helper may be used only after it resolves the repository, with the fallback recorded. Do not require unsupported stack tooling. Each owner is a bounded `pstack-builder` task on one branch or worktree. It builds, runs project checks, pushes its first snapshot, opens a ready PR before self-proof, and records a `pstack-show-me-your-work` trail. It runs `skill://pstack-unslop`, `skill://pstack-no-comments`, and `babysit` where those are in scope. It rebases before the code-ready report and reports the exact current head SHA. Keep an owner record with task ID, expected runtime, branch, PR, state, and every later pushed SHA in the durable program root.
+
+   The owner may use force-with-lease only on its own branch after checking the remote lease. Never force-push a shared branch. Run path-specific pre-review checks on the committed head; a hook pass is not proof. Self-proof, CI, and babysitting may run beside the verification swarm. An owner reports `code-ready` with its head SHA, then `merge-ready` only after all owner-local gates finish.
+3. **Run owners in true parallel and never stack independent work.** Parallelize self-contained PRs with one writer per branch and disjoint files. Serialize genuine overlap. Start independent work from the current base; dependent work branches only after its prerequisite lands. An owner may keep a short private base stack only for a genuinely dependent split, and it remains one writer for that stack. Cross-PR drift is absorbed by a fresh rebase and re-verification, not by guessing.
+4. **Swarm-verify every round before merge.** A round begins at the owner's code-ready SHA and repeats for each later push that changes the patch. Dispatch a batch of independent `pstack-verifier` or review-lane tasks with the full frozen brief; use `skill://pstack/operators/swarm.md` for lane design. Use a different model family from the writer when available. The lanes rerun gates at that SHA, inspect the diff while distrusting the PR body, and prove the load-bearing behavior on the real surface. If the surface is UI or CLI, use the project verification skill or named driver; no mock-only proof is a clean behavioral verdict.
+
+   Include at least two review focuses, such as parity with the base, lifetimes and races, data/config safety, and consumer compatibility. Include a regression lane against current base. If base cannot exercise a new feature, record that limitation and test both the diff's new behavior and the end state the operator waits for. Audit receipts in the merge-ready report. Every proven behavior finding returns to the owner in one fix-forward brief. A finding reported as a note is still a finding: request a red test covering every site with the defect, or a reproducible receipt when a test cannot express it. A changed head gets a fresh swarm and verdict; only the shipping playbook's patch-identity rule can preserve a lane result.
+5. **On a clean verdict, merge only within authority.** The owner prepares merge from a head freshly rebased onto current base and reports the new SHA. CI must pass on that SHA. A base movement or rewritten SHA voids the verdict unless the documented patch-identity rule preserves it. With an explicit full-autonomy grant and the parent's clean verdict, the owner may squash-merge through the resolved forge and take the next self-contained item. An operator-named item stops at `merge-ready` for the operator's click. Babysitting alone never authorizes merge.
+6. **Run the root layer.** A new raise of a pinned gate or budget requires a fresh parent countersign after verifier proof. The parent never bypasses a forge-enforced approval. Absorbing a value already landed is drift, not a raise. Arm a scheduled OMP goal wake for the audit cadence; do not rely on notifications or memory. At each tick, re-read this playbook from the current base, compare the operation to the armed objective, inspect every owner record, reconcile job snapshots, and collect decision trails. Count only side effects as progress: commits, pushes, PR/check deltas, and durable reports.
+
+   A task that errors or reaches its expected runtime without a side effect is stuck. Record it, stand it down if possible, and dispatch a replacement with the same acceptance and the consolidated evidence. Never accept or drop work merely because a worker is silent. When merges batch, run a post-merge regression and automated-review comment sweep. End the audit only after all delegated work is terminal or explicitly held.
+7. **Stand down instantly on operator stop.** A hold reaches every owner as a zero-writes order. Owners retain their briefs and state until the operator releases them. Reconcile each owner after the hold; do not assume a task stopped until its job state is terminal.
+
+## Owner contract
+
+Every owner receives the objective, its exclusive path set, base revision, acceptance criteria, exact verification commands, timebox, forbidden operations, and report schema. The parent does not fill missing fields from memory. Before accepting a result, compare the reported branch and head SHA with the forge, confirm the task result is terminal, and inspect the changed-path boundary. A clean PR body cannot substitute for a receipt. If the owner touched a forbidden path, quarantine the result and create a fix-forward task instead of silently widening scope.
+
+The owner reports these transitions in order: `started`, `code-ready`, `self-verified`, `merge-ready`, and `merged` or `held`. Each transition names the current SHA and evidence path. A retry gets a new task occurrence and a reason; it does not overwrite the failed occurrence. If an owner returns prose without the required structured fields, classify it as `needs-verification` and ask a verifier to reconstruct only what the artifact proves.
+
+## Verdict and stop rules
+
+The parent verdict is bound to the exact workspace or Git fingerprint and the exact PR head. A later push, rebase, generated-file change, or base movement creates a new round unless the recorded patch-identity rule proves the prior lane receipts still apply. Do not infer independence from different task names: record writer and verifier actor IDs and model-role families. A verifier that shares the writer actor is not independent.
+
+When a lane finds a defect, preserve the finding, the reproduction, and the affected paths in the next owner brief. Do not let a passing unrelated lane erase it. If the owner cannot reproduce the finding, the parent keeps the gate open until the difference is explained. If the forge, provider, or live verification surface is unavailable, return `INCONCLUSIVE` with the limitation and hold the PR; unavailable evidence is not a clean verdict.
+
+Operator stop, budget exhaustion, provider loss, and a new irreversible gate all supersede throughput. Keep durable records, stop writes, and report the first safe resume action. On restart, reconcile every owner by branch and PR, not by a stale task notification, then rerun the current-head verdict before merge.
+
+## Reply
+
+Return the queue with PR owner, state, and current head SHA; each independent verdict and its lanes; merged work and the next item per owner; countersigns and rationale; open operator gates; and the durable decision-trail paths.

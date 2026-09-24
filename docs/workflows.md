@@ -253,3 +253,15 @@ Use `pause-safely` only for an explicit stop request. Finish or back out the ato
 ## Worktree cleanup
 
 Use `worktree-cleanup` for a dry-run audit before any deletion. It reads current-cwd OMP session paths, holds active or dirty worktrees, and requires explicit authority before pruning.
+
+## Multi-day program
+
+Use `orchestrate` when the work outlives one agent. Frame a countable predicate, create a durable program record, pilot one unit, then refill a bounded task window. Keep the frontier computed, the verification ledger keyed by current head SHA, and all human gates explicit.
+
+## Full autopilot
+
+Use `autopilot-full` only with explicit merge scope. Owners may run independent PRs in parallel, but every current head needs an independent multi-lane verdict and operator-named items stop at merge-ready.
+
+## Autopilot stack
+
+Use `autopilot-stack` when the operator reviews and lands a sequenced chain. The root is the only topology writer; clean verdicts append PRs to the linear stack, but no owner merges.

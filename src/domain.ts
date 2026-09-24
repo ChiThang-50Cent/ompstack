@@ -36,6 +36,9 @@ export const PLAYBOOKS = [
   "autonomous-run",
   "pause-safely",
   "worktree-cleanup",
+  "orchestrate",
+  "autopilot-full",
+  "autopilot-stack",
 ] as const;
 export type Playbook = (typeof PLAYBOOKS)[number];
 

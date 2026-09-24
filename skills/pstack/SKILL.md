@@ -56,6 +56,9 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Long-running OMP goal with a declared exit predicate | `autonomous-run` |
 | Explicit cold-start checkpoint and safe stop | `pause-safely` |
 | Dry-run audit and gated worktree pruning | `worktree-cleanup` |
+| Multi-day program with durable queue, tracks, and coordinator | `orchestrate` |
+| Independent PR owners with full merge authority | `autopilot-full` |
+| Sequenced PR stack for operator review before landing | `autopilot-stack` |
 
 ## Non-negotiable execution contract
 

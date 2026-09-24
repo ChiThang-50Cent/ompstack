@@ -608,7 +608,102 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 ### T6.3 Marketplace commit M {#t63}
 - Status: done
 - Files: `.omp-plugin/marketplace.json`, `scripts/check-release.mjs`, `scripts/lib/validate.mjs`, `package.json`, `docs/port-notes/progress.md`
-- Proof: marketplace metadata/plugin/source ref are `0.5.0`/`v0.5.0`; `source.sha` is `2cf90f8e582b22a72f24cb1abaaa489fd4b22536`; `npm run check:release`, `npm run validate`, `npm run check:notice`, and `npm run check:upstream` passed.
+- Proof: marketplace metadata/plugin/source ref are `0.5.0`/`v0.5.0`; `source.sha` is `4a455062006bae9ed14ad6799aa79cb86a87ad86`; `npm run check:release`, `npm run validate`, `npm run check:notice`, and `npm run check:upstream` passed.
 - Decisions: `check:release` verifies package/plugin parity, marketplace internal consistency, and local tag SHA equality when the referenced tag exists.
 - Deviations from spec: none.
 - Open questions: tarball install and final independent verification remain in T6.4.
+
+### T6.4 Tarball check and final summary {#t64}
+- Status: done
+- Files: `BUILD_REPORT.md`, `docs/port-notes/progress.md`
+- Proof: `npm pack --ignore-scripts` produced `pstack-omp-0.5.0.tgz`; extracted package install completed with `npm install --no-audit --no-fund`; `npm ls --depth=0` exited successfully with OMP 18.3.0 and TypeScript 5.9.3; packaged `npm run check` passed 59 tests, router 77/77, and asset validation.
+- Warnings: npm reported deprecated `boolean@3.2.0` and pending install-script approval notices for transitive packages; no command failed.
+- Deviations from spec: none.
+- Open questions: final independent verifier and proof-gate closure only.
+
+
+## Final task summary
+
+- Source command: `git log --grep='^Task:' --format='%h %s'` (generated before the T6.4 commit, so this section does not contain its own SHA).
+- Status: 61/61 specified tasks done; skipped: none; blocked: none.
+- Word count: `find skills agents -name '*.md' | xargs cat | wc -w` equivalent = 63913.
+- Tests: 59 passing Node tests; router cases: 77/77.
+- Host scenario table: all 18 scenarios PASS on OMP 18.2.11 and 18.3.0; known-failing allowlist is empty.
+
+### Task commit log
+
+```text
+8c6f39e chore(release): publish v0.5.0 marketplace
+4a45506 chore(release): prepare v0.5.0
+a1b4b17 docs: publish host verification and generated attribution
+079eb2a test: add Phase 5 host scenarios
+43fdcc2 feat: add program orchestration playbooks
+5fcfcad feat: add autonomous and cleanup playbooks
+d45344a feat: add visual parity playbook
+fdf2261 feat: add babysit playbook
+de22a2f feat: add pull request playbook
+248f9ed feat: add skill authoring playbook
+92b186c feat: add runtime forensics playbook
+700bb45 feat: add trace forensics playbook
+a24fd46 feat: add hillclimb playbook
+dfe7629 feat: add blinded eval playbook
+a2085a1 test: enforce playbook eval boundaries
+97e42c6 feat: add pstack decision trail skill
+b0653a6 feat: add pstack bro skill
+ece0ac4 feat: add pstack teach skill
+da00d4e feat: add pstack figure-it-out skill
+c4c84e4 feat: add pstack automate-me workflow
+a2cfc3d feat: add pstack reflect workflow
+0c55077 feat(content): add session recall workflow
+b42b7f4 feat(content): add verification maintenance loop
+34c97e9 feat(content): add verification feature maps
+593458c feat(content): add TypeScript practice skill
+a4c0c9d feat(content): add technical writing standard
+dae9516 feat(content): add blast radius evidence skill
+1c21fa8 feat(content): add pstack tdd skill
+daee6c9 feat(content): add no-comments review flow
+0394dc2 feat(content): merge poteto rules into pstack skill
+eefed90 feat(content): import unslop skill
+1b2e3c4 feat(content): import architecture operators
+6ed0e14 feat(review): add interrogate reviewer panel
+fefbff9 feat(content): import why operator
+9cf705c feat(content): import how operator
+ad39108 feat(content): import pstack principles
+39ca5ed feat(validation): add asset validator API and upstream map
+29692f7 chore(deps): bump OMP development dependency
+18d98fd fix(models): add writer session fallback
+a26c317 fix(agents): align declared tools with OMP
+aad6102 fix(async): reconcile consumed task results
+1be3d08 docs: clarify OMP ownership and child capabilities
+e3f86b4 fix(host): use resolved OMP for smoke checks
+1a2fe27 fix(gates): make off mode truthful
+93cfa05 test(host): re-verify Phase 0
+f5a2090 docs(port-notes): record child-tool admission capture on OMP 18.2.11 and 18.3.0
+f41c416 test(host): run host scenarios on the OMP 18.2.11 + 18.3.0 matrix
+03346ca test(host): add baseline host scenarios and live-smoke fixture
+fdce09e test(host): add host scenario runner and npm run test:host
+72d5ef9 test(host): add scripted OpenAI-compatible mock LLM for host scenarios
+d9caa07 build(host): add host OMP resolver that ignores node_modules/.bin
+e91046f build(upstream): pin pstack and OMP reference sources
+```
+
+| Host scenario | OMP 18.2.11 | OMP 18.3.0 |
+|---|---|---|
+| `async-pending` | PASS | PASS |
+| `builder-isolation-branch` | PASS | PASS |
+| `builder-isolation-off` | PASS | PASS |
+| `builder-noroles` | PASS | PASS |
+| `capture-child-tools` | PASS | PASS |
+| `capture-writer-tools` | PASS | PASS |
+| `child-scout-spawn` | PASS | PASS |
+| `child-xd-guard` | PASS | PASS |
+| `comment-sicko` | PASS | PASS |
+| `gate-blocks-auto` | PASS | PASS |
+| `gate-blocks-strict` | PASS | PASS |
+| `gate-off-mode` | PASS | PASS |
+| `judge-b` | PASS | PASS |
+| `panel-interrogate` | PASS | PASS |
+| `policy-off` | PASS | PASS |
+| `status-auto` | PASS | PASS |
+| `verifier-pass` | PASS | PASS |
+| `verifier-stale` | PASS | PASS |

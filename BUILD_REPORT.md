@@ -81,7 +81,7 @@ The checked tree contains 30 playbook files, 12 operator files, 23 principle fil
 
 ## Packaged-artifact verification
 
-The release procedure uses `npm pack --ignore-scripts`, extracts the exact tarball into a clean temporary directory, installs its declared dependencies without audit scripts, and reruns `npm run check`. The final release evidence records the resolved Node, npm, TypeScript, and OMP versions in `docs/port-notes/progress.md`.
+`npm pack --ignore-scripts` produced `pstack-omp-0.5.0.tgz`. After extraction into a clean temporary directory, `npm install --no-audit --no-fund`, `npm ls --depth=0`, and `npm run check` completed successfully. The tarball check used Node.js v23.11.1, npm 11.17.0, OMP 18.3.0, and TypeScript 5.9.3; the packaged check passed 59 tests, router 77/77, and asset validation.
 
 ## Runtime verification boundary
 

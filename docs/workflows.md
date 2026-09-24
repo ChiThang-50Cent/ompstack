@@ -202,3 +202,17 @@ resolve clean branch/worktree and forge
 ```
 
 Opening a PR does not authorize merge, deployment, force-push, or automatic merge.
+
+## Babysit
+
+Use `babysit` after a stack is built and verified:
+
+```text
+declare mode and forge
+→ work the lowest unmerged PR
+→ classify review threads and CI before changing anything
+→ batch fixes and re-check the resulting head
+→ stop at forge-confirmed merge-ready
+```
+
+Babysit never merges or arms automatic merge. Shipping owns that authorization boundary.

@@ -320,7 +320,7 @@
     "upstreamWords": 1489,
     "target": "skills/pstack/playbooks/references/bugbot-triage.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -754,7 +754,7 @@
     "upstreamWords": 1333,
     "target": "skills/pstack/playbooks/babysit.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

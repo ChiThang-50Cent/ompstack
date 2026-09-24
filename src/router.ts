@@ -24,6 +24,7 @@ const PLAYBOOK_SIGNALS: SignalGroup[] = [
   { playbook: "trace-forensics", weight: 5, patterns: [/trace forensics/i, /captured (?:cpu|performance) profile/i, /heapsnapshot/i, /cpuprofile/i, /spindump/i] },
   { playbook: "authoring-a-skill", weight: 6, patterns: [/author(?:ing)? (?:a |an )?(?:new )?(?:omp )?skill/i, /new (?:omp )?skill/i, /update .*skill/i] },
   { playbook: "opening-a-pr", weight: 5, patterns: [/open(?:ing)? (?:a )?(?:pull request|pr)/i, /create (?:a )?(?:pull request|pr)/i, /\bpull request\b/i] },
+  { playbook: "babysit", weight: 5, patterns: [/\bbabysit\b/i, /merge-ready/i, /review thread(?:s)?/i, /get it green/i] },
   { playbook: "shipping", weight: 3, patterns: [/stacked pr/i, /merge queue/i, /release train/i, /land (?:the|these) prs?/i] },
   { playbook: "empirical-prototype", weight: 3, patterns: [/prototype/i, /measure/i, /which (?:option|approach).*better/i, /a\/b/i, /experiment/i] },
   { playbook: "documentation", weight: 3, patterns: [/write docs?/i, /documentation/i, /readme/i, /runbook/i] },

@@ -638,4 +638,26 @@
     "kind": "near-miss",
     "nearMissOf": "opening-a-pr"
   }
+  ,
+  {
+    "id": "babysit-merge-ready",
+    "title": "Drive a PR to readiness",
+    "prompt": "Babysit this PR until it is merge-ready.",
+    "expectedPlaybook": "babysit",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-babysit-review",
+    "title": "Review PR correctness",
+    "prompt": "Review the PR for correctness defects.",
+    "expectedPlaybook": "review",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "babysit"
+  }
 ]

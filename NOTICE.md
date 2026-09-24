@@ -179,3 +179,8 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T4.6 playbook `opening-a-pr`
 
 - `skills/pstack/playbooks/opening-a-pr.md`
+
+### T4.7 playbook `babysit` and triage reference
+
+- `skills/pstack/playbooks/babysit.md`
+- `skills/pstack/playbooks/references/bugbot-triage.md`

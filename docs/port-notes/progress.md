@@ -470,3 +470,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: forge choice is resolved once; PR creation stays separate from merge/babysit authorization; commits and body use technical-writing/unslop checks.
 - Deviations from spec: `gh`/`origin` are retained as optional forge surfaces; unsupported stack tooling is not required.
 - Open questions: none.
+
+### T4.7 Playbook `babysit` and triage reference {#t47}
+- Status: done
+- Files: `skills/pstack/playbooks/babysit.md`, `skills/pstack/playbooks/references/bugbot-triage.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 63/63, and asset validation with 12 agents and 23 playbooks; automated-review triage path has no forbidden Cursor leftovers.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/babysit.md`, `.upstream/cursor-plugins/pstack/skills/poteto-mode/references/bugbot-triage.md`, `spec3_1.md:547`
+- Decisions: OMP forge commands and explicit merge boundary replace Cursor watcher assumptions; high-risk review categories always escalate; the triage reference stays separate from the playbook.
+- Deviations from spec: `scripts/watch-pr/*` was not ported because the OMP path uses `gh`/`origin` checks watch; no Cursor loop syntax is retained.
+- Open questions: none.

@@ -51,6 +51,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Live-process instrumentation and runtime diagnosis | `runtime-forensics` |
 | Author or modify an OMP skill | `authoring-a-skill` |
 | Create a reviewable pull request or ordered PR stack | `opening-a-pr` |
+| Watch one PR or stack to a forge-confirmed merge-ready state | `babysit` |
 
 ## Non-negotiable execution contract
 

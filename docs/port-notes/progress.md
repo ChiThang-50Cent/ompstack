@@ -112,3 +112,16 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: `pstack_gate init` and `/pstack init` refuse in `off` without mutating state; active runs remain evaluable after the mode changes to `off`.
 - Deviations from spec: none
 - Open questions: none
+
+### T1.2 Host resolver and `verify-with-omp` smoke {#t12}
+- Status: done
+- Files: `scripts/verify-with-omp.sh`, `docs/installation.md`, `docs/development.md`
+- Proof:
+  - `npm run verify:omp` → host OMP `/home/vmn/.bun/bin/omp` (`omp/18.3.0`), devDependency OMP `18.2.11 (not used)`, smoke skipped by default.
+  - `PSTACK_LIVE_SMOKE=1 npm run verify:omp` → `verify-with-omp PASS` on host OMP 18.3.0 using the offline mock provider.
+  - `PSTACK_OMP_BIN=.upstream/omp-18.2.11/node_modules/.bin/omp PSTACK_LIVE_SMOKE=1 npm run verify:omp` → `verify-with-omp PASS`.
+  - `npm run check` → 46 tests passed, router 33/33, asset validation passed.
+- Sources read: `scripts/lib/resolve-omp.sh`, `test/host/run.mjs`, `test/host/live-smoke/verify-with-omp.json`
+- Decisions: `mock` is the default opt-in smoke provider; `real` preserves the provider-backed flow and explicitly enables `--pstack-mode auto`.
+- Deviations from spec: none
+- Open questions: none

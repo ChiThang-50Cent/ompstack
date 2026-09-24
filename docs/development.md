@@ -44,6 +44,8 @@ PSTACK_OMP_BIN=/path/to/omp npm run test:host          # pick a specific OMP bin
 
 `types/oh-my-pi.d.ts` models the API subset used by the plugin so logic can compile offline. It is not published as a replacement for OMP types. Real host compatibility must be checked with `npm run verify:omp` and against OMP's current official type definitions/source.
 
+`npm run verify:omp` sources the same host resolver and prints the selected host OMP plus the local devDependency version when present; the devDependency is never used for runtime smoke. With `PSTACK_LIVE_SMOKE=1`, the default `mock` provider runs `test/host/live-smoke/verify-with-omp.json` offline. Set `PSTACK_SMOKE_PROVIDER=real` for the token-spending provider-backed flow.
+
 `types/node-shim.d.ts` provides the minimal Node declarations needed when `@types/node` is unavailable in an offline environment.
 
 ## Adding a playbook

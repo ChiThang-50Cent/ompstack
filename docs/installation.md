@@ -86,23 +86,27 @@ npm run verify:omp
 
 The default preflight checks:
 
-- `omp` is on `PATH`;
-- version is at least 18.2.11;
-- the CLI advertises extension loading.
+- the host OMP resolved by `scripts/lib/resolve-omp.sh` (never `node_modules/.bin/omp`);
+- host version is at least 18.2.11;
+- the host CLI advertises extension loading.
 
-A model-backed smoke consumes one short OMP request and is therefore opt-in:
+A smoke is opt-in:
 
 ```bash
 PSTACK_LIVE_SMOKE=1 npm run verify:omp
 ```
 
-Choose a specific configured role/model if needed:
+This runs the two-run offline scripted mock fixture by default, so it needs no API key or network. To use the configured provider instead:
 
 ```bash
-PSTACK_SMOKE_MODEL=@slow PSTACK_LIVE_SMOKE=1 npm run verify:omp
+PSTACK_SMOKE_PROVIDER=real PSTACK_LIVE_SMOKE=1 npm run verify:omp
 ```
 
-The smoke loads `src/index.ts`, enables only `pstack_status`, asks the model to call it, and checks that pstack state text is observed.
+For the real provider, choose a configured role/model if needed:
+
+```bash
+PSTACK_SMOKE_PROVIDER=real PSTACK_SMOKE_MODEL=@slow PSTACK_LIVE_SMOKE=1 npm run verify:omp
+```
 
 ## Project configuration
 

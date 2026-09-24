@@ -321,3 +321,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: preserved the four-layer standard and replaced the upstream slash trigger with an OMP skill link in the documentation playbook.
 - Deviations from spec: none.
 - Open questions: none.
+
+### T3.5 Skill `pstack-typescript-best-practices` {#t35}
+- Status: done
+- Files: `skills/pstack-typescript-best-practices/SKILL.md`, `skills/pstack-typescript-best-practices/references/patterns.md`, `skills/pstack/principles/type-system-discipline.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` → 54 tests passed, router 33/33, asset validation passed with 11 agents; `npm run check:upstream` → map current at pinned Cursor commit `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/typescript-best-practices/SKILL.md`, `.upstream/cursor-plugins/pstack/skills/typescript-best-practices/references/patterns.md`, `spec3_1.md:464-466`
+- Decisions: kept the upstream rule table and examples, and linked the OMP skill from the type-system principle.
+- Deviations from spec: none.
+- Open questions: none.

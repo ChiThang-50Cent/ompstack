@@ -111,3 +111,8 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T3.4 skill `pstack-technical-writing`
 
 - `skills/pstack-technical-writing/SKILL.md`
+
+### T3.5 skill `pstack-typescript-best-practices`
+
+- `skills/pstack-typescript-best-practices/SKILL.md`
+- `skills/pstack-typescript-best-practices/references/patterns.md`

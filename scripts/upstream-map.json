@@ -374,7 +374,7 @@
     "upstreamWords": 1316,
     "target": "skills/pstack-typescript-best-practices/references/patterns.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -600,7 +600,7 @@
     "upstreamWords": 400,
     "target": "skills/pstack-typescript-best-practices/SKILL.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

@@ -43,6 +43,7 @@ The central contract is simple:
 | `pstack-tdd` | Build a failing-before regression check when the bug has a clear, cheap test path. |
 | `pstack-blast-radius` | Prove the safety-critical fact behind a change by running real code. |
 | `pstack-technical-writing` | Apply layered structure, reader-focused sentences, and unambiguous technical prose. |
+| `pstack-typescript-best-practices` | Apply constructive TypeScript models, boundary validation, and exhaustive narrowing. |
 
 ## Runtime target
 

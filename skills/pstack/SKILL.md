@@ -52,6 +52,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Author or modify an OMP skill | `authoring-a-skill` |
 | Create a reviewable pull request or ordered PR stack | `opening-a-pr` |
 | Watch one PR or stack to a forge-confirmed merge-ready state | `babysit` |
+| Pixel-exact UI migration with screenshot diff | `visual-parity` |
 
 ## Non-negotiable execution contract
 

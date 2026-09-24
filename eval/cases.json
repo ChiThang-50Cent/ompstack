@@ -660,4 +660,26 @@
     "kind": "near-miss",
     "nearMissOf": "babysit"
   }
+  ,
+  {
+    "id": "visual-parity-baseline",
+    "title": "Pixel exact migration",
+    "prompt": "Migrate this UI with a screenshot baseline and prove zero pixel diff.",
+    "expectedPlaybook": "visual-parity",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-visual-prototype",
+    "title": "Visual choice prototype",
+    "prompt": "Prototype and observe the layout behavior in a scratch surface.",
+    "expectedPlaybook": "empirical-prototype",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "visual-parity"
+  }
 ]

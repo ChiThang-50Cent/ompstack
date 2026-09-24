@@ -32,6 +32,7 @@ export const PLAYBOOKS = [
   "authoring-a-skill",
   "opening-a-pr",
   "babysit",
+  "visual-parity",
 ] as const;
 export type Playbook = (typeof PLAYBOOKS)[number];
 

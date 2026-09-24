@@ -216,3 +216,18 @@ declare mode and forge
 ```
 
 Babysit never merges or arms automatic merge. Shipping owns that authorization boundary.
+
+## Visual parity
+
+Use `visual-parity` when the baseline image is the specification:
+
+```text
+freeze current-state screenshots
+→ hold the harness and baseline immutable
+→ migrate one component or primitive
+→ drive matching UI states
+→ compare image diff and investigate every nonzero delta
+→ report remaining components
+```
+
+No screenshot baseline means no parity claim.

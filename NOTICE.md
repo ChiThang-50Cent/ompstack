@@ -184,3 +184,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 
 - `skills/pstack/playbooks/babysit.md`
 - `skills/pstack/playbooks/references/bugbot-triage.md`
+
+### T4.8 playbook `visual-parity`
+
+- `skills/pstack/playbooks/visual-parity.md`

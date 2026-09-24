@@ -479,3 +479,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: OMP forge commands and explicit merge boundary replace Cursor watcher assumptions; high-risk review categories always escalate; the triage reference stays separate from the playbook.
 - Deviations from spec: `scripts/watch-pr/*` was not ported because the OMP path uses `gh`/`origin` checks watch; no Cursor loop syntax is retained.
 - Open questions: none.
+
+### T4.8 Playbook `visual-parity` {#t48}
+- Status: done
+- Files: `skills/pstack/playbooks/visual-parity.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 65/65, and asset validation with 12 agents and 24 playbooks.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/visual-parity.md`, `spec3_1.md:548`
+- Decisions: immutable screenshot baseline, one component per unit, nonzero pixel diff is failure, Eval browser is optional and limitations are explicit.
+- Deviations from spec: OMP Eval/browser prelude and project verification driver replace Cursor control-skill references.
+- Open questions: none.

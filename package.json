@@ -44,7 +44,7 @@
     }
   },
   "devDependencies": {
-    "@oh-my-pi/pi-coding-agent": "18.2.11",
+    "@oh-my-pi/pi-coding-agent": "18.3.0",
     "typescript": "^5.8.3"
   },
   "scripts": {

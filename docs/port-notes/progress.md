@@ -179,3 +179,17 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: writer chains end with `@smol` after `@pstack_code, @task`; `/pstack doctor` reports all seven agent chains candidate-by-candidate, including unresolved custom aliases and the resolved fallback.
 - Deviations from spec: none
 - Open questions: none
+
+### T1.7 Dependency bump and lockfile {#t17}
+- Status: done
+- Files: `package.json`, `package-lock.json`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm install` → dependency tree updated to OMP 18.3.0.
+  - `npm ls @oh-my-pi/pi-coding-agent` → `@oh-my-pi/pi-coding-agent@18.3.0`.
+  - `npm run check` → 52 tests passed, router 33/33, asset validation passed.
+  - `npm run test:host` → 13 scenarios PASS on host OMP 18.3.0.
+  - `npm run test:host:matrix` → OMP 18.2.11 scenarios PASS; OMP 18.3.0 matrix run completed after the command's backgrounded final leg.
+- Sources read: `spec3_1.md:333-339`, `package.json`, `package-lock.json`
+- Decisions: devDependency and lockfile use 18.3.0; peer range remains `>=18.2.11` so the compatibility matrix remains required.
+- Deviations from spec: none
+- Open questions: none

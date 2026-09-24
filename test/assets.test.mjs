@@ -45,6 +45,24 @@ test('validator rejects a feature index with a nonexistent slug', async t => {
     await writeFile(file, `${await readFile(file, 'utf8')}\n- [Missing](missing.md)\n`);
   }, 'feature indexes must link only existing feature files');
 });
+
+test('validator rejects an eval corpus missing a near-miss', async t => {
+  await assertInvalid(t, async copy => {
+    const file = path.join(copy, 'eval/cases.json');
+    const cases = JSON.parse(await readFile(file, 'utf8')).filter(item => item.nearMissOf !== 'feature');
+    await writeFile(file, `${JSON.stringify(cases, null, 2)}\n`);
+  }, 'each playbook must have a near-miss case');
+});
+
+test('validator rejects duplicate normalized eval prompts', async t => {
+  await assertInvalid(t, async copy => {
+    const file = path.join(copy, 'eval/cases.json');
+    const cases = JSON.parse(await readFile(file, 'utf8'));
+    cases[1].prompt = `  ${cases[0].prompt.toUpperCase().replace(/\s+/g, '   ')}  `;
+    await writeFile(file, `${JSON.stringify(cases, null, 2)}\n`);
+  }, 'normalized duplicate prompts must fail validation');
+
+});
 test('validator rejects a broken pstack skill link', async t => {
   await assertInvalid(t, async copy => {
     const file = path.join(copy, 'skills/pstack/SKILL.md');

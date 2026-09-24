@@ -6,7 +6,8 @@
     "expectedPlaybook": "feature",
     "expectedCeremony": "direct",
     "expectedVerificationRequired": false,
-    "class": "trivial"
+    "class": "trivial",
+    "kind": "positive"
   },
   {
     "id": "direct-rename",
@@ -15,7 +16,8 @@
     "expectedPlaybook": "feature",
     "expectedCeremony": "direct",
     "expectedVerificationRequired": false,
-    "class": "trivial"
+    "class": "trivial",
+    "kind": "positive"
   },
   {
     "id": "direct-docs",
@@ -24,7 +26,8 @@
     "expectedPlaybook": "documentation",
     "expectedCeremony": "direct",
     "expectedVerificationRequired": false,
-    "class": "trivial"
+    "class": "trivial",
+    "kind": "positive"
   },
   {
     "id": "direct-label",
@@ -33,7 +36,8 @@
     "expectedPlaybook": "feature",
     "expectedCeremony": "direct",
     "expectedVerificationRequired": false,
-    "class": "trivial"
+    "class": "trivial",
+    "kind": "positive"
   },
   {
     "id": "bug-basic",
@@ -42,7 +46,8 @@
     "expectedPlaybook": "bug-fix",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "bug"
+    "class": "bug",
+    "kind": "positive"
   },
   {
     "id": "bug-regression",
@@ -51,7 +56,8 @@
     "expectedPlaybook": "bug-fix",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "bug"
+    "class": "bug",
+    "kind": "positive"
   },
   {
     "id": "bug-race",
@@ -60,7 +66,8 @@
     "expectedPlaybook": "bug-fix",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "bug"
+    "class": "bug",
+    "kind": "positive"
   },
   {
     "id": "security-bypass",
@@ -69,7 +76,8 @@
     "expectedPlaybook": "security",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "security"
+    "class": "security",
+    "kind": "positive"
   },
   {
     "id": "security-threat",
@@ -78,7 +86,8 @@
     "expectedPlaybook": "security",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "security"
+    "class": "security",
+    "kind": "positive"
   },
   {
     "id": "performance-latency",
@@ -87,7 +96,8 @@
     "expectedPlaybook": "performance",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "empirical"
+    "class": "empirical",
+    "kind": "positive"
   },
   {
     "id": "performance-program",
@@ -96,7 +106,8 @@
     "expectedPlaybook": "performance",
     "expectedCeremony": "program",
     "expectedVerificationRequired": true,
-    "class": "program"
+    "class": "program",
+    "kind": "positive"
   },
   {
     "id": "migration-schema",
@@ -105,7 +116,8 @@
     "expectedPlaybook": "migration",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "migration"
+    "class": "migration",
+    "kind": "positive"
   },
   {
     "id": "migration-large",
@@ -114,7 +126,8 @@
     "expectedPlaybook": "migration",
     "expectedCeremony": "program",
     "expectedVerificationRequired": true,
-    "class": "program"
+    "class": "program",
+    "kind": "positive"
   },
   {
     "id": "incident-outage",
@@ -123,7 +136,8 @@
     "expectedPlaybook": "incident",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "incident"
+    "class": "incident",
+    "kind": "positive"
   },
   {
     "id": "incident-program",
@@ -132,7 +146,8 @@
     "expectedPlaybook": "incident",
     "expectedCeremony": "program",
     "expectedVerificationRequired": true,
-    "class": "program"
+    "class": "program",
+    "kind": "positive"
   },
   {
     "id": "review-diff",
@@ -141,7 +156,8 @@
     "expectedPlaybook": "review",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "review"
+    "class": "review",
+    "kind": "positive"
   },
   {
     "id": "arena-candidates",
@@ -150,7 +166,8 @@
     "expectedPlaybook": "arena",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "arena"
+    "class": "arena",
+    "kind": "positive"
   },
   {
     "id": "shipping-stack",
@@ -159,7 +176,8 @@
     "expectedPlaybook": "shipping",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "shipping"
+    "class": "shipping",
+    "kind": "positive"
   },
   {
     "id": "prototype-choice",
@@ -168,7 +186,8 @@
     "expectedPlaybook": "empirical-prototype",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "empirical"
+    "class": "empirical",
+    "kind": "positive"
   },
   {
     "id": "investigation-how",
@@ -177,7 +196,8 @@
     "expectedPlaybook": "investigation",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": false,
-    "class": "investigation"
+    "class": "investigation",
+    "kind": "positive"
   },
   {
     "id": "investigation-why",
@@ -186,7 +206,8 @@
     "expectedPlaybook": "investigation",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": false,
-    "class": "investigation"
+    "class": "investigation",
+    "kind": "positive"
   },
   {
     "id": "multi-phase",
@@ -195,7 +216,8 @@
     "expectedPlaybook": "multi-phase",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "program"
+    "class": "program",
+    "kind": "positive"
   },
   {
     "id": "feature-endpoint",
@@ -204,7 +226,8 @@
     "expectedPlaybook": "feature",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "feature"
+    "class": "feature",
+    "kind": "positive"
   },
   {
     "id": "feature-public-api",
@@ -213,7 +236,8 @@
     "expectedPlaybook": "feature",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "feature"
+    "class": "feature",
+    "kind": "positive"
   },
   {
     "id": "feature-program",
@@ -222,7 +246,8 @@
     "expectedPlaybook": "feature",
     "expectedCeremony": "program",
     "expectedVerificationRequired": true,
-    "class": "program"
+    "class": "program",
+    "kind": "positive"
   },
   {
     "id": "feature-payment",
@@ -231,7 +256,8 @@
     "expectedPlaybook": "feature",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "feature"
+    "class": "feature",
+    "kind": "positive"
   },
   {
     "id": "refactor-local",
@@ -240,7 +266,8 @@
     "expectedPlaybook": "refactor",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "refactor"
+    "class": "refactor",
+    "kind": "positive"
   },
   {
     "id": "refactor-program",
@@ -249,7 +276,8 @@
     "expectedPlaybook": "refactor",
     "expectedCeremony": "program",
     "expectedVerificationRequired": true,
-    "class": "program"
+    "class": "program",
+    "kind": "positive"
   },
   {
     "id": "dependency-major",
@@ -258,7 +286,8 @@
     "expectedPlaybook": "dependency-upgrade",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "dependency"
+    "class": "dependency",
+    "kind": "positive"
   },
   {
     "id": "test-flaky",
@@ -267,7 +296,8 @@
     "expectedPlaybook": "test-repair",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": true,
-    "class": "test"
+    "class": "test",
+    "kind": "positive"
   },
   {
     "id": "docs-runbook",
@@ -276,7 +306,8 @@
     "expectedPlaybook": "documentation",
     "expectedCeremony": "standard",
     "expectedVerificationRequired": false,
-    "class": "documentation"
+    "class": "documentation",
+    "kind": "positive"
   },
   {
     "id": "docs-architecture",
@@ -285,7 +316,8 @@
     "expectedPlaybook": "documentation",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "documentation"
+    "class": "documentation",
+    "kind": "positive"
   },
   {
     "id": "dependency-public-api",
@@ -294,6 +326,184 @@
     "expectedPlaybook": "dependency-upgrade",
     "expectedCeremony": "strict",
     "expectedVerificationRequired": true,
-    "class": "dependency"
+    "class": "dependency",
+    "kind": "positive"
+  }
+  ,
+  {
+    "id": "near-investigation-bug",
+    "title": "Investigation language around a bug",
+    "prompt": "Fix the bug after investigating the date parser error.",
+    "expectedPlaybook": "bug-fix",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "investigation"
+  },
+  {
+    "id": "near-bug-investigation",
+    "title": "Investigation without a defect",
+    "prompt": "Investigate why request ownership flows through the service.",
+    "expectedPlaybook": "investigation",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": false,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "bug-fix"
+  },
+  {
+    "id": "near-feature-refactor",
+    "title": "Refactor without a feature",
+    "prompt": "Refactor the parser to add no new behavior.",
+    "expectedPlaybook": "refactor",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "feature"
+  },
+  {
+    "id": "near-empirical-performance",
+    "title": "Performance work with measurement",
+    "prompt": "Measure and reduce request latency under the existing workload.",
+    "expectedPlaybook": "performance",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "empirical-prototype"
+  },
+  {
+    "id": "near-performance-prototype",
+    "title": "Prototype for a measurable choice",
+    "prompt": "Prototype and measure which cache approach is better.",
+    "expectedPlaybook": "empirical-prototype",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "performance"
+  },
+  {
+    "id": "near-refactor-bug",
+    "title": "Regression from duplicate branches",
+    "prompt": "Fix the regression caused by duplicated parser branches.",
+    "expectedPlaybook": "bug-fix",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "refactor"
+  },
+  {
+    "id": "near-migration-dependency",
+    "title": "Dependency upgrade boundary",
+    "prompt": "Upgrade dependency Foo to a safe patch release.",
+    "expectedPlaybook": "dependency-upgrade",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "migration"
+  },
+  {
+    "id": "near-incident-security",
+    "title": "Security issue during an outage",
+    "prompt": "Fix an authentication bypass during an outage.",
+    "expectedPlaybook": "security",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "incident"
+  },
+  {
+    "id": "near-review-bug",
+    "title": "Failing review patch",
+    "prompt": "Fix the failing code review patch.",
+    "expectedPlaybook": "bug-fix",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "review"
+  },
+  {
+    "id": "near-arena-empirical",
+    "title": "Measured choice without an arena",
+    "prompt": "Prototype and measure which approach is better instead of comparing candidates.",
+    "expectedPlaybook": "empirical-prototype",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "arena"
+  },
+  {
+    "id": "near-multiphase-migration",
+    "title": "Migration with phases",
+    "prompt": "Execute a large migration in several phases.",
+    "expectedPlaybook": "migration",
+    "expectedCeremony": "program",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "multi-phase"
+  },
+  {
+    "id": "near-shipping-review",
+    "title": "Reviewing a stacked change",
+    "prompt": "Review the PR for correctness defects after stacking it.",
+    "expectedPlaybook": "review",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "shipping"
+  },
+  {
+    "id": "near-security-incident",
+    "title": "Authentication outage",
+    "prompt": "Restore service after an authentication outage.",
+    "expectedPlaybook": "incident",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "security"
+  },
+  {
+    "id": "near-test-bug",
+    "title": "Bug in the test suite",
+    "prompt": "Fix the bug where the test suite fails.",
+    "expectedPlaybook": "bug-fix",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "test-repair"
+  },
+  {
+    "id": "near-dependency-migration",
+    "title": "Major dependency migration",
+    "prompt": "Migrate dependency Foo to a major version.",
+    "expectedPlaybook": "migration",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "dependency-upgrade"
+  },
+  {
+    "id": "near-documentation-incident",
+    "title": "Security incident runbook",
+    "prompt": "Write a security runbook for incident response.",
+    "expectedPlaybook": "incident",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "documentation"
   }
 ]

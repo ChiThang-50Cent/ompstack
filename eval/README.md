@@ -53,3 +53,12 @@ Randomize task order and blind the evaluator to arm labels. Record:
 - Count a task as over-orchestrated when pstack adds roles/panels without changing correctness/evidence on a direct task.
 - Separate routing correctness from execution correctness.
 - Keep negative fixtures separate from the valid golden corpus so validation can remain green while asserting rejection behavior.
+
+## Case schema
+
+Every case keeps its existing `class` field and adds:
+
+- `kind`: required, either `positive` or `near-miss`.
+- `nearMissOf`: required only for a `near-miss`, naming the playbook whose boundary the prompt tests.
+
+The validator requires at least one positive case for every registered playbook and at least one near-miss for every registered playbook. A near-miss must route to a different expected playbook. Prompts are compared after lowercasing, collapsing whitespace, and trimming, so normalized duplicates are invalid. Keep near-miss cases in the same deterministic corpus because `npm run eval:router` must prove both the intended route and the boundary.

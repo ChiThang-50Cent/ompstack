@@ -407,3 +407,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Sources read: `.upstream/cursor-plugins/pstack/skills/show-me-your-work/SKILL.md`, `.upstream/cursor-plugins/pstack/skills/show-me-your-work/references/decision-log-template.tsv`, `.upstream/cursor-plugins/pstack/skills/show-me-your-work/scripts/log.sh`, `spec3_1.md:471`
 - Decisions: `pstack_decision` is canonical; TSV and script are optional safe export; cross-model review uses an OMP read-only task.
 - Open questions: none.
+
+### T4.0 Eval coverage rules {#t40}
+- Status: done
+- Files: `scripts/lib/validate.mjs`, `eval/cases.json`, `eval/README.md`, `test/assets.test.mjs`
+- Proof: `npm run eval:router` passed 49/49; `npm run validate` passed with 49 eval cases; `npm run check` passed 58 tests including missing-near-miss and normalized-duplicate fixtures.
+- Sources read: `spec3_1.md:515-529`, current validator, router scorer, eval corpus.
+- Decisions: every case now declares `kind`; all registered playbooks require positive and near-miss coverage; normalized prompt collisions are rejected.
+- Deviations from spec: no router scorer change was needed because it ignores additive case metadata.
+- Open questions: none.

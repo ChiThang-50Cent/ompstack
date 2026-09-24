@@ -25,6 +25,10 @@ function wordCount(source) {
   return body.match(/\S+/g)?.length ?? 0;
 }
 
+function normalizePrompt(prompt) {
+  return prompt.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
 function frontmatter(source, relative, errors) {
   const match = /^---\n([\s\S]*?)\n---\n/.exec(source);
   if (!match) {
@@ -240,12 +244,39 @@ export async function validate(repoRoot, options = {}) {
   assert(errors, Array.isArray(evalCases) && evalCases.length >= 24, "eval corpus must contain at least 24 cases");
   if (Array.isArray(evalCases)) {
     const ids = new Set();
+    const prompts = new Set();
+    const positiveByPlaybook = new Map(playbooks.map(playbook => [playbook, 0]));
+    const nearMissByPlaybook = new Map(playbooks.map(playbook => [playbook, 0]));
     for (const item of evalCases) {
       assert(errors, typeof item?.id === "string" && item.id.length > 0, "eval case id missing");
       assert(errors, !ids.has(item?.id), `eval case id duplicated: ${item?.id}`);
       ids.add(item?.id);
       assert(errors, ["direct", "standard", "strict", "program"].includes(item?.expectedCeremony), `${item?.id}: invalid expectedCeremony`);
       assert(errors, playbooks.includes(item?.expectedPlaybook), `${item?.id}: invalid expectedPlaybook`);
+      assert(errors, ["positive", "near-miss"].includes(item?.kind), `${item?.id}: kind must be positive or near-miss`);
+      assert(errors, typeof item?.prompt === "string" && item.prompt.trim().length > 0, `${item?.id}: prompt is required`);
+      if (typeof item?.prompt === "string") {
+        const normalized = normalizePrompt(item.prompt);
+        assert(errors, !prompts.has(normalized), `${item?.id}: normalized prompt duplicated`);
+        prompts.add(normalized);
+      }
+      if (item?.kind === "positive") {
+        assert(errors, !("nearMissOf" in item), `${item?.id}: positive case must not set nearMissOf`);
+        if (playbooks.includes(item?.expectedPlaybook)) {
+          positiveByPlaybook.set(item.expectedPlaybook, positiveByPlaybook.get(item.expectedPlaybook) + 1);
+        }
+      }
+      if (item?.kind === "near-miss") {
+        assert(errors, typeof item?.nearMissOf === "string" && playbooks.includes(item.nearMissOf), `${item?.id}: near-miss must name a known nearMissOf playbook`);
+        assert(errors, item?.expectedPlaybook !== item?.nearMissOf, `${item?.id}: near-miss expectedPlaybook must differ from nearMissOf`);
+        if (playbooks.includes(item?.nearMissOf)) {
+          nearMissByPlaybook.set(item.nearMissOf, nearMissByPlaybook.get(item.nearMissOf) + 1);
+        }
+      }
+    }
+    for (const playbook of playbooks) {
+      assert(errors, positiveByPlaybook.get(playbook) > 0, `eval corpus missing positive case for ${playbook}`);
+      assert(errors, nearMissByPlaybook.get(playbook) > 0, `eval corpus missing near-miss case for ${playbook}`);
     }
   }
 

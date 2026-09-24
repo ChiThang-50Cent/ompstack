@@ -121,6 +121,45 @@ Load on demand:
 - `skill://pstack/operators/empirical-decision.md`
 - `skill://pstack/operators/closeout.md`
 
+## Poteto-mode compatibility
+
+The upstream poteto rules are adapted here to OMP's durable policy and agent contracts. Apply these rules without changing the extension's compact `src/policy.ts` output. This skill is loaded on demand.
+
+### Principles and triggers
+
+When a principle shapes a decision, name the principle and the concrete choice it changed. Cite only a leaf principle read in the current session.
+
+- Nontrivial behavior, architecture, or an "are we sure?" question uses `skill://pstack/operators/how.md`.
+- Code crossing a function or module boundary names the data shape first and uses `skill://pstack/operators/architect.md`.
+- Parallel evidence partitions use `skill://pstack/operators/swarm.md`. Competing artifacts or designs use `skill://pstack/operators/arena.md`.
+- Contested or high-risk changes use `skill://pstack/operators/interrogate.md` before shipping.
+- A nontrivial multi-step feature records the throughput checkpoint from `skill://pstack/playbooks/feature.md`.
+- Any prose surface, including this reply and agent-facing instructions, uses `skill://pstack-unslop`. Preserve meaning and match the intended tone.
+- Long, autonomous, or multi-phase work uses `skill://pstack/operators/decision-trail.md` and `skill://pstack/playbooks/multi-phase.md` when the work spans dependent phases.
+- A broken local skill is repaired in its own bounded change. Do not silently work around it.
+
+### Classify before asking
+
+Before asking the human to choose between approaches, classify the fork. If the answer is an observable fact about behavior, timing, layout, output, compatibility, performance, or evaluation separation, run the smallest discriminating experiment through `skill://pstack/playbooks/empirical-prototype.md`. Do not ask the human to answer a fact the repository or runtime can measure. Ask only for product direction, user preference, intent, authority, inaccessible data, or an irreversible/high-consequence decision. A read-only investigation with a cited answer stays an investigation instead of building a prototype.
+
+When the user grants full autonomy, decide reversible choices covered by that grant, act, and report the decision. Always pause before force-pushing a shared branch, deploying, deleting production data, sending customer or public messages, changing secrets outside existing boundaries, or taking another irreversible action.
+
+### Delegation defaults
+
+Use OMP agents only for bounded work. Pass file or artifact pointers instead of copying large content into the parent context. Freeze objective, ownership, inputs, allowed tools, output schema, done predicate, prohibited actions, and evidence. The hardest cross-cutting design, concurrency, or subtle algorithm work goes to `@pstack_reason`; simpler implementation work uses the role chain selected by OMP. Parallel writers require separate worktrees or artifacts, and the coordinator reviews every result and owns correctness.
+
+### Reply and comment style
+
+Write short declarative sentences. Avoid em dashes and mid-sentence colons. Keep the detail, tradeoffs, choices, and open decisions required by the selected playbook. State the consumer and maintainer impact before implementation detail. Put evidence or an explicit inference label in the same sentence as every claim. Link only artifacts read or produced in the current session. Comments explain non-obvious why; tests and logs should carry phase meaning instead of narration.
+
+### Sticky mode semantics
+
+`off`, `auto`, and `strict` are sticky OMP session modes. `off` disables policy injection, task rewriting, provenance tracking, and completion blocking while leaving normal OMP tools present. `auto` routes ordinary work proportionally. `strict` requires an active pstack run before pstack agents spawn and enforces the completion gates. Set the mode through `/pstack auto`, `/pstack strict`, or `/pstack off`; loading this skill never changes it.
+
+### Playbook sequencing
+
+Open a TODO whose first items are the matched playbook's phases before adding task-specific items. Copy the phase procedure into the TODO. A skipped phase remains visible with a concrete reason. Use the existing OMP playbook that matches the work; use `pstack-multi-phase` when the effort crosses dependent phases or requires a durable frontier. Verify each unit before advancing and close through the gate rather than merely stating that the work is done.
+
 ## Completion
 
 A run can complete only when all required acceptance criteria are passed or explicitly waived with reasons, no required worker is pending, the independent verdict is PASS when verification is required, evidence references exist, writer and verifier are distinct, and the verdict fingerprint equals the current artifact fingerprint. FAIL and INCONCLUSIVE are not success states.

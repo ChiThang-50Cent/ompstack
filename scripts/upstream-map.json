@@ -553,9 +553,9 @@
     "upstreamSha256": "7645c9ee27ef9798c48a84060b6df409f8593d1058c7c25cbec28dce976195f9",
     "upstreamWords": 2689,
     "target": "skills/pstack/SKILL.md",
-    "minRatio": 0.85,
-    "status": "planned",
-    "reason": null,
+    "minRatio": 0.58162885831164,
+    "status": "imported",
+    "reason": "merged with ompstack runtime contract",
     "aggregate": true
   },
   {

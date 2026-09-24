@@ -273,3 +273,15 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: changed only the skill frontmatter name to `pstack-unslop`; retained the numbered rule corpus and `disable-model-invocation: true`.
 - Deviations from spec: none
 - Open questions: none
+
+### T2.7 Main skill merge {#t27}
+- Status: done
+- Files: `skills/pstack/SKILL.md`, `skills/pstack/playbooks/empirical-prototype.md` (comparison only), `docs/port-notes/poteto-mode-diff.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run check` → 54 tests passed, router 33/33, validator passed with 10 agents, 12 operators, and 23 principles.
+  - `npm run check:upstream` → map current at pinned Cursor commit `12d587d`; aggregate main-skill entry imported.
+  - Measured aggregate fidelity ratio: 1,564 target words / 2,689 upstream words = `0.58162885831164`; map reason is `merged with ompstack runtime contract`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/SKILL.md`, `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/prototype.md`, `spec3_1.md:448-454`
+- Decisions: merged applicable autonomy, classify-before-asking, OMP delegation defaults, unslop reply style, sticky `off`/`auto`/`strict` semantics, and playbook sequencing into the existing OMP skill. Kept `src/policy.ts` unchanged. Deferred Cursor-only or not-yet-imported skills are recorded row-by-row in the diff table without forward links.
+- Deviations from spec: no runtime policy output growth; upstream aggregate is intentionally below 0.85 because the target preserves the existing OMP runtime contract.
+- Open questions: no remaining T2 content-fidelity questions.

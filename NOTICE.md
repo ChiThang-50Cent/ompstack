@@ -89,3 +89,8 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T2.6 skill `pstack-unslop`
 
 - `skills/pstack-unslop/SKILL.md`
+
+### T2.7 main skill merge
+
+- `skills/pstack/SKILL.md`
+- `docs/port-notes/poteto-mode-diff.md`

@@ -159,3 +159,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T4.1 playbook `eval` and judge cross-check
 
 - `skills/pstack/playbooks/eval.md`
+
+### T4.2 playbook `hillclimb`
+
+- `skills/pstack/playbooks/hillclimb.md`

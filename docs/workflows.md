@@ -129,3 +129,18 @@ freeze variants, organic prompt, and weighted rubric
 ```
 
 Workers never see the rubric or other worker identities. Candidate votes do not transfer to a synthesized artifact.
+
+## Hillclimb
+
+Use `hillclimb` for iterative improvement of one metric. Freeze the workload and harness first:
+
+```text
+ground workload and one metric
+→ prove the harness separates realistic cases
+→ capture baseline and regression gate
+→ run one hypothesis and one bounded change
+→ measure, inspect, keep or revert
+→ record evidence and commit accepted wins
+```
+
+Never claim a win from code inspection. A first improvement is not the stop condition when cheap hypotheses remain.

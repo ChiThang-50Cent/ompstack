@@ -528,4 +528,26 @@
     "kind": "near-miss",
     "nearMissOf": "eval"
   }
+  ,
+  {
+    "id": "hillclimb-metric",
+    "title": "Measured iterative improvement",
+    "prompt": "Run a hillclimb to improve one metric through measured iterations.",
+    "expectedPlaybook": "hillclimb",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-hillclimb-performance",
+    "title": "One performance measurement",
+    "prompt": "Measure and reduce endpoint latency with one baseline.",
+    "expectedPlaybook": "performance",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "hillclimb"
+  }
 ]

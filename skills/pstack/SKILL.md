@@ -46,6 +46,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Package/runtime/toolchain update | `dependency-upgrade` |
 | Documentation as the primary artifact | `documentation` |
 | Evaluation design, blinded variants, one frozen rubric | `eval` |
+| One metric, repeated hypothesis/measurement loop | `hillclimb` |
 
 ## Non-negotiable execution contract
 

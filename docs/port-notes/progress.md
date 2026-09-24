@@ -425,3 +425,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: OMP `task` batches and OMP-owned isolation replace Cursor worktree/task syntax; both judge roles use the same structured rubric and sanitized labels.
 - Deviations from spec: no separate judge-b map entry because it is a local copy of the existing judge contract; host proof remains T5.5.
 - Open questions: none.
+
+### T4.2 Playbook `hillclimb` {#t42}
+- Status: done
+- Files: `skills/pstack/playbooks/hillclimb.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 53/53, and asset validation with 12 agents and 18 playbooks; `npm run check:upstream` remained current.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/hillclimb.md`, `spec3_1.md:542`
+- Decisions: one frozen metric/harness, one hypothesis per iteration, pstack evidence and decision trail, explicit keep/revert gate.
+- Deviations from spec: OMP `task`, pstack evidence, and OMP goal mode replace Cursor-specific child model and wake syntax.
+- Open questions: none.

@@ -9,7 +9,7 @@ The central contract is simple:
 ## What is included
 
 - A sticky `off`, `auto`, or `strict` session mode.
-- Seventeen task playbooks, twelve reusable operators, and twenty-three engineering principles.
+- Eighteen task playbooks, twelve reusable operators, and twenty-three engineering principles.
 - Twelve custom agents with separated capabilities:
   - inspect-only scout and architect;
   - builder and synthesizer with OMP-owned task isolation;

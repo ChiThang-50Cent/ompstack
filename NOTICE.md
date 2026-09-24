@@ -167,3 +167,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T4.3 playbook `trace-forensics`
 
 - `skills/pstack/playbooks/trace-forensics.md`
+
+### T4.4 playbook `runtime-forensics`
+
+- `skills/pstack/playbooks/runtime-forensics.md`

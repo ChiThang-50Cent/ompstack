@@ -28,6 +28,7 @@ export const PLAYBOOKS = [
   "eval",
   "hillclimb",
   "trace-forensics",
+  "runtime-forensics",
 ] as const;
 export type Playbook = (typeof PLAYBOOKS)[number];
 

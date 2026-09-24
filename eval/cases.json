@@ -572,4 +572,26 @@
     "kind": "near-miss",
     "nearMissOf": "trace-forensics"
   }
+  ,
+  {
+    "id": "runtime-live-process",
+    "title": "Live process diagnosis",
+    "prompt": "Run runtime forensics by instrumenting the live process to diagnose a memory leak.",
+    "expectedPlaybook": "runtime-forensics",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-runtime-trace",
+    "title": "Existing heap capture",
+    "prompt": "Analyze a captured heapsnapshot and map the retained object to source.",
+    "expectedPlaybook": "trace-forensics",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "runtime-forensics"
+  }
 ]

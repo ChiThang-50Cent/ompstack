@@ -159,3 +159,17 @@ identify format and load artifact
 ```
 
 Without a paired capture, report the strongest artifact-supported hypothesis rather than a confirmed cause.
+
+## Runtime forensics
+
+Use `runtime-forensics` when the process is live and the signal must be captured rather than inferred:
+
+```text
+capture CPU/heap/CDP signal on the real surface
+→ reduce it to the smoking gun
+→ prove the mechanism with safe runtime instrumentation
+→ map the finding to source
+→ return a cited diagnosis without applying a fix
+```
+
+Distinguish this from `trace-forensics`, which reads a capture that already exists.

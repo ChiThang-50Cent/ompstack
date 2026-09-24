@@ -48,6 +48,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Evaluation design, blinded variants, one frozen rubric | `eval` |
 | One metric, repeated hypothesis/measurement loop | `hillclimb` |
 | Captured trace/profile artifact diagnosis | `trace-forensics` |
+| Live-process instrumentation and runtime diagnosis | `runtime-forensics` |
 
 ## Non-negotiable execution contract
 

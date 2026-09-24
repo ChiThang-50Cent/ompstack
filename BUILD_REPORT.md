@@ -15,8 +15,8 @@
 - Seven capability-separated custom agents.
 - Parent-owned durable state and human-readable audit snapshots.
 - Strict child structured-result ingestion; child agents never write parent pstack state.
-- Child-session runtime guards for leaked parent-state, mutation, Hub, nested-task, and shell tools according to role.
-- Builder/synthesizer worktree isolation, provenance, concurrent/background task lifecycle reconciliation, artifact fingerprints, role-based model routing, independent verification, and completion gates.
+- Child-session runtime guards for parent-state `pstack_*` and `hub`; OMP `tools:` admission handles other capabilities.
+- Builder/synthesizer isolation requests, provenance, and warnings when OMP does not apply task isolation; concurrent/background task lifecycle reconciliation, artifact fingerprints, role-based model routing, independent verification, and completion gates.
 - Eight strict structured-output schemas, two project-verification examples, twelve seeded negative topology fixtures, and a thirty-three-case router evaluation corpus.
 
 ## Offline verification results

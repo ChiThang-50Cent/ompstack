@@ -18,7 +18,7 @@ Threat-model and implement a security-sensitive change with explicit trust bound
 
 ### 2. Trace attack paths
 
-- Use read-only scouts/reviewers to follow untrusted sources to controls and sinks.
+- Use inspect-only scouts and treat reviewer Bash as shell-capable while following untrusted sources to controls and sinks.
 - Inspect default-deny behavior, confused deputy risks, tenant/user boundaries, and failure paths.
 - Require a credible execution path for every candidate issue.
 

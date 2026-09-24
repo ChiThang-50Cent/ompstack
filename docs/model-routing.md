@@ -38,7 +38,7 @@ Pstack still works with one model. Use process separation:
 
 - fresh subagent context;
 - frozen objective/criteria;
-- read-only verifier tools;
+  - a verifier with no `edit`/`write` tools but explicit host capabilities;
 - actual artifact, not writer rationale;
 - deterministic evidence and fingerprint gates.
 

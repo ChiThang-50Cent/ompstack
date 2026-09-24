@@ -25,7 +25,7 @@ Trusted to interpret event payloads and persist accurate state. It does not exec
 
 ### Models and subagents
 
-Untrusted for factual correctness and instruction compliance. Child sessions do not own parent pstack state and the bundled definitions declare no `pstack_*` tools. Because OMP may add baseline or extension tools beyond that declaration, pstack-OMP also intercepts child tool calls and blocks parent-state tools, nested `task`/`hub` orchestration, and direct file mutation for non-writing roles. Reviewer/verifier Bash and browser/external systems remain powerful and are not sandboxed. Claims still require evidence and independent checking.
+Untrusted for factual correctness and instruction compliance. Child sessions do not own parent pstack state and the bundled definitions declare no `pstack_*` tools. Because OMP may add baseline or extension tools beyond that declaration, OMP enforces the agent `tools:` allowlist and pstack-OMP intercepts child calls to block parent-state tools and `hub`. Reviewer/verifier Bash and browser/external systems remain powerful and are not sandboxed. Claims still require evidence and independent checking.
 
 ### Repository content
 

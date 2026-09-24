@@ -32,7 +32,7 @@ child agent session
 
 Child sessions are detected from OMP's persisted `session_init` contract and, as a fallback, its `<parent-session>/<agent>.jsonl` artifact layout. Parent-only hooks return without injecting policy or writing state when running inside a child.
 
-This is why the custom agents intentionally expose **no `pstack_*` tools**. Because OMP can add baseline/extension tools outside an agent's declared list, the child `tool_call` hook also blocks parent-state tools, nested `task`/`hub` orchestration, direct file mutation for non-writing roles, and shell access for roles that did not request Bash. The verifier produces a verdict report; the parent runtime validates and records it. This guard is still not an operating-system sandbox.
+This is why the custom agents intentionally expose **no `pstack_*` tools**. Because OMP can add baseline/extension tools outside an agent's declared list, the child `tool_call` hook blocks parent-state tools and `hub`; OMP's `tools:` admission handles undeclared `edit`, `write`, `task`, and shell capabilities. Reviewer/verifier Bash remains capable of workspace or external mutation, so this guard is not an operating-system sandbox.
 
 ## 3. Major components
 
@@ -222,15 +222,19 @@ Owns objective interpretation, decomposition, integration, acceptance, and workf
 
 ### Writer
 
-May mutate one isolated artifact/worktree. It can return focused test evidence but cannot grant final PASS or mutate parent run state.
+May mutate one assigned artifact or isolated worktree when OMP task isolation is enabled. It can return focused test evidence but cannot grant final PASS or mutate parent run state.
 
-### Reviewer and judge
+### Reviewer
 
-May inspect and run safe diagnostics. They identify defects or compare candidates against frozen intent, but do not modify the target or grant final verification.
+The reviewer is shell-capable through Bash but has no `edit`/`write` tools; Bash can still mutate the workspace or external state. It identifies defects and does not grant final verification.
+
+### Judge
+
+The judge is inspect-only and compares candidates against frozen intent. It does not modify the target or grant final verification.
 
 ### Verifier
 
-Has no edit/write tools. It evaluates the exact target artifact and returns a schema-valid report. The parent runtime—not the child—records the resulting evidence, acceptance outcomes, and verdict.
+The verifier has no `edit`/`write` tools but is shell-capable through Bash (and may have browser/computer capabilities when enabled). Those tools can mutate the workspace or external systems; the verifier must use controlled surfaces and return a schema-valid report. The parent runtime—not the child—records evidence, acceptance outcomes, and verdict.
 
 ### Extension
 

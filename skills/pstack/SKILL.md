@@ -95,13 +95,13 @@ Proceed autonomously with local, reversible investigation, edits, tests, prototy
 
 ## Agent topology
 
-- `pstack-scout`: read-only current-system and history evidence.
-- `pstack-architect`: read-only design, data shapes, boundaries, alternatives.
-- `pstack-builder`: one isolated bounded implementation.
-- `pstack-reviewer`: read-only adversarial defect review of actual artifact.
-- `pstack-judge`: blinded same-rubric arena evaluation.
-- `pstack-synthesizer`: one isolated integration of selected base and grafts.
-- `pstack-verifier`: read-only real-surface verifier that returns a strict artifact-bound report; the parent runtime validates and records the verdict.
+- `pstack-scout`: inspect-only current-system and history evidence.
+- `pstack-architect`: inspect-only design, data shapes, boundaries, alternatives.
+- `pstack-builder`: one bounded implementation; task isolation is owned by OMP.
+- `pstack-reviewer`: shell-capable adversarial defect review of the actual artifact; no `edit`/`write` tools.
+- `pstack-judge`: inspect-only blinded same-rubric arena evaluation.
+- `pstack-synthesizer`: one bounded integration; task isolation is owned by OMP.
+- `pstack-verifier`: shell-capable real-surface verifier with no `edit`/`write` tools; the parent runtime validates and records the report.
 
 The coordinator remains accountable for reviewing diffs, reconciling conflicts, and deciding what proceeds. Delegation never transfers correctness ownership.
 

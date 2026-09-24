@@ -11,14 +11,14 @@ The central contract is simple:
 - A sticky `off`, `auto`, or `strict` session mode.
 - Sixteen task playbooks, twelve reusable operators, and twenty-three engineering principles.
 - Seven custom agents with separated capabilities:
-  - read-only scout and architect;
-  - isolated builder and synthesizer;
-  - read-only reviewer and arena judge;
-  - blocking, read-only final verifier (writers are blocking too, so their structured evidence reaches the parent);
+  - inspect-only scout and architect;
+  - builder and synthesizer with OMP-owned task isolation;
+  - shell-capable reviewer and inspect-only arena judge;
+  - blocking, shell-capable final verifier with no edit/write tools (Bash/browser/computer remain host capabilities);
 - A TypeScript OMP extension that:
   - injects a compact workflow policy;
   - routes role-specific model patterns;
-  - forces builder/synthesizer isolation;
+  - requests builder/synthesizer isolation and warns when OMP does not apply it;
   - attaches frozen review and verification contracts;
   - tracks synchronous, concurrent, and background task lifecycles;
   - detects OMP child-agent sessions and keeps parent run state authoritative;
@@ -236,10 +236,10 @@ The tests cover:
 - state reduction and completion gates;
 - workspace/Git fingerprint behavior;
 - model-family routing;
-- builder isolation and contract injection;
+- writer isolation requests and warning behavior;
 - end-to-end mock extension flow;
 - parent/child extension-instance isolation;
-- child-session guards against leaked `pstack_*`, `write`, `edit`, `hub`, and nested `task` calls;
+- child-session guards against leaked parent-state `pstack_*` and `hub` calls; OMP owns other tool admission;
 - idempotent structured result ingestion;
 - stale verifier PASS downgrade to `INCONCLUSIVE`;
 - concurrent task correlation by `toolCallId`;

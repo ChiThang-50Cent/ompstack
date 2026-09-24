@@ -2,7 +2,7 @@
 
 ## Verification is a product adapter
 
-The generic verifier knows how to remain read-only, bind evidence to an artifact, and return a structured verdict. It cannot know how every product starts or what observable success means. A repository should therefore define:
+The generic verifier knows how to avoid direct source editing, bind evidence to an artifact, and return a structured verdict. Its declared shell/browser/computer capabilities can still mutate the environment, so the project skill must define safe surfaces and cleanup. It cannot know how every product starts or what observable success means. A repository should therefore define:
 
 ```text
 .omp/skills/verify-<project>/SKILL.md

@@ -125,3 +125,15 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: `mock` is the default opt-in smoke provider; `real` preserves the provider-backed flow and explicitly enables `--pstack-mode auto`.
 - Deviations from spec: none
 - Open questions: none
+
+### T1.3 Documentation truth pass {#t13}
+- Status: done
+- Files: `README.md`, `BUILD_REPORT.md`, `CHANGELOG.md`, `docs/architecture.md`, `docs/limitations.md`, `docs/security-model.md`, `docs/development.md`, `docs/model-routing.md`, `docs/verification.md`, `docs/configuration.md`, `skills/pstack/SKILL.md`, `skills/pstack/operators/verification.md`, `skills/pstack/playbooks/security.md`, `agents/pstack-reviewer.md`, `agents/pstack-verifier.md`
+- Proof:
+  - Reviewed every requested isolation, child-guard, and `read-only` claim with repository grep.
+  - `npm run check` → 46 tests passed, router 33/33, asset validation passed.
+  - `npm run test:host:matrix` → 9 PASS and 2 XFAIL per OMP version; no behavior regression.
+- Sources read: `src/child-policy.ts`, `src/task/read-only-policy.ts`, `test/host/capture-report.mjs`, `docs/port-notes/child-tool-capture.md`
+- Decisions: OMP owns tool admission and task isolation; pstack blocks parent-state `pstack_*`/`hub`, warns on non-isolated writers, and documents reviewer/verifier Bash as shell-capable.
+- Deviations from spec: none
+- Open questions: none

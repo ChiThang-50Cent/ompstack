@@ -69,7 +69,7 @@ A playbook should define phase goal, required outputs, delegation, evidence, ski
 5. Add asset and integration tests.
 6. Decide whether its unfinished lifecycle should block completion.
 
-Never add edit/write tools or `pstack_*` parent-state tools to a child agent. The final verifier must remain read-only and return strict structured output.
+Never add edit/write or `pstack_*` parent-state tools to a child agent. The final verifier must remain non-edit/write, return strict structured output, and document safe handling for any shell/browser/computer capability it declares.
 
 ## State changes
 

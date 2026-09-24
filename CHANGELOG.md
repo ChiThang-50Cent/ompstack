@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Documentation corrections
+
+- OMP owns builder/synthesizer task isolation; pstack requests isolation and warns when OMP runs a writer without it.
+- `pstack-reviewer` and `pstack-verifier` are shell-capable and can mutate through Bash despite having no `edit`/`write` tools; the child guard blocks parent-state `pstack_*` and `hub`, while OMP owns other tool admission.
+
+
 ## 0.4.0 - 2026-09-24
 
 This release continues the pre-migration 0.3.9 line as the `pstack-omp` 0.4.0 release.

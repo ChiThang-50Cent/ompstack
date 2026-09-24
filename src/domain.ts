@@ -226,6 +226,11 @@ export interface RouterDecision {
   playbook: Playbook;
   ceremony: CeremonyLevel;
   confidence: number;
+  /**
+   * True when a playbook-specific signal (score >= ROUTER_GROUNDED_SCORE) selected the playbook.
+   * False means `playbook` is only the fallback; the model must choose from the skill's routing table.
+   */
+  grounded: boolean;
   reasons: string[];
   verificationRequired: boolean;
 }

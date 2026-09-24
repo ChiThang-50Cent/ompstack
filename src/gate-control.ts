@@ -72,6 +72,9 @@ export async function initGate(
       run.goalRef
         ? `Gates OMP goal ${run.goalRef}: goal op=complete is refused until all gates pass.`
         : "Gate-only mode (auto/strict; no active OMP goal): close it with pstack_gate action=check once gates pass.",
+      ...(input.playbook === undefined && !routed.grounded
+        ? [`Playbook defaulted to ${run.playbook}: the objective carried no routing signal. If another skill://pstack row fits, abandon this run and re-init with an explicit playbook.`]
+        : []),
       ...(run.acceptance.length === 0 ? ["No acceptance criteria yet: add them with pstack_acceptance."] : []),
     ].join("\n"),
     details: run,

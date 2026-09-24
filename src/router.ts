@@ -64,13 +64,21 @@ const PROGRAM_PATTERNS = [
 
 const DIRECT_PATTERNS = [
   /\btypo\b/i,
-  /rename (?:a |the )?(?:local )?(?:variable|symbol)/i,
+  /rename (?:a |an |the |this |that )?(?:local )?(?:variable|symbol|function|parameter)/i,
   /format(?:ting)? only/i,
   /one[- ]line/i,
   /update (?:a |the )?comment/i,
   /change (?:a |the )?(?:label|string|copy)/i,
   /docs? only/i,
 ];
+
+/**
+ * Minimum playbook score that counts as a real routing signal. The weakest
+ * specific playbooks (investigation, multi-phase) score 2 per match and the
+ * generic `feature` verbs score 1, so a lone "build"/"create" or no match at
+ * all leaves the choice to the model and the skill's routing table.
+ */
+export const ROUTER_GROUNDED_SCORE = 2;
 
 export function defaultVerificationRequired(playbook: Playbook, ceremony: CeremonyLevel): boolean {
   if (ceremony === "direct") return false;
@@ -132,11 +140,16 @@ export function classifyTask(prompt: string): RouterDecision {
     ...matchedReasons.slice(0, 6),
   ];
 
-  const confidence = clamp(0.45 + Math.min(bestScore, 8) * 0.05 + (highRiskMatches + programMatches) * 0.04, 0.45, 0.96);
+  const grounded = bestScore >= ROUTER_GROUNDED_SCORE;
+  const confidence = grounded
+    ? clamp(0.45 + Math.min(bestScore, 8) * 0.05 + (highRiskMatches + programMatches) * 0.04, 0.45, 0.96)
+    : clamp(0.2 + (highRiskMatches + programMatches) * 0.04, 0.2, 0.4);
+  if (!grounded) reasons.unshift("no playbook signal: fallback only; the model chooses from the routing table");
   return {
     playbook,
     ceremony,
     confidence,
+    grounded,
     reasons,
     verificationRequired: defaultVerificationRequired(playbook, ceremony),
   };

@@ -37,10 +37,21 @@ function routerPolicy(decision: RouterDecision): string {
       "Still verify the changed behavior proportionately before reporting completion.",
     ].join("\n");
   }
+  if (!decision.grounded) {
+    const floor = decision.ceremony === "strict" || decision.ceremony === "program"
+      ? `Risk signals set a ${decision.ceremony} ceremony floor: open proof state with pstack_gate action=init and an explicit playbook before implementation.`
+      : "Size it yourself: a small, local, reversible edit stays direct (no pstack run; verify proportionately). Anything larger opens proof state with pstack_gate action=init and an explicit playbook before implementation.";
+    return [
+      "Router: no playbook signal in this request (keyword router; it cannot read intent or non-English text).",
+      "Choose the playbook yourself from the routing table in skill://pstack; if no row fits, use its no-playbook-fits path instead of defaulting to feature.",
+      floor,
+      "Ground observable facts before design. Resolve empirical uncertainty by running or measuring, not by asking the user.",
+    ].join("\n");
+  }
   return [
     `Router suggestion: ${decision.playbook}/${decision.ceremony} (${Math.round(decision.confidence * 100)}% confidence).`,
-    "Load skill://pstack and open proof state with pstack_gate action=init before implementation.",
-    `Load skill://pstack/playbooks/${decision.playbook}.md for the exact workflow.`,
+    `Load skill://pstack/playbooks/${decision.playbook}.md for the workflow, unless a better row in the skill://pstack routing table fits the request; then use that one.`,
+    "Open proof state with pstack_gate action=init, naming the playbook you chose, before implementation.",
     "Ground observable facts before design. Resolve empirical uncertainty by running or measuring, not by asking the user.",
     "Delegate bounded artifacts only; use an independent verifier for final acceptance.",
   ].join("\n");

@@ -27,6 +27,8 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 
 ## Router
 
+The injected router line is a keyword hint, not a decision. When it says there is no playbook signal, or its suggestion fits worse than a row below, choose the row yourself and name it in `pstack_gate action=init`.
+
 | Signal | Playbook |
 |---|---|
 | Explain current behavior, trace ownership, answer from evidence | `investigation` |
@@ -59,6 +61,7 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Multi-day program with durable queue, tracks, and coordinator | `orchestrate` |
 | Independent PR owners with full merge authority | `autopilot-full` |
 | Sequenced PR stack for operator review before landing | `autopilot-stack` |
+| No row fits, or the work spans several rows with no clear owner | load `skill://pstack-figure-it-out` and design the playbook; do not default to `feature` |
 
 ## Non-negotiable execution contract
 

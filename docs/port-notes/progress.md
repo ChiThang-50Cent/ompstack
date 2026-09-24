@@ -23,3 +23,14 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+
+### T0.3 Mock LLM {#t03}
+- Status: done
+- Files: `test/host/mock-llm.mjs`
+- Proof:
+  - `node --check test/host/mock-llm.mjs` → exit 0
+  - `npm run check` → `# pass 44`, `# fail 0`
+- Sources read: `.upstream/oh-my-pi/packages/coding-agent/src/tools/yield.ts` (`buildYieldParameters`: `{ type?, data, error? }`) for the `yield` step sugar
+- Decisions: none
+- Deviations from spec: none
+- Open questions: none

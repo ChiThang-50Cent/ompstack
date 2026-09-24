@@ -1,0 +1,60 @@
+{
+  "name": "gate-blocks-strict",
+  "mode": "strict",
+  "prompt": "gate smoke",
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Smoke gate",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": false,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "smoke criterion"
+              }
+            ]
+          }
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "check"
+          }
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "abandon",
+            "reason": "smoke complete"
+          }
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "toolResultContains",
+      "text": "ACCEPTANCE_OPEN",
+      "rule": "main"
+    },
+    {
+      "type": "eventsContain",
+      "event": "start_run"
+    },
+    {
+      "type": "eventsContain",
+      "event": "gate_abandoned"
+    },
+    {
+      "type": "eventsLack",
+      "event": "gate_closed"
+    }
+  ]
+}

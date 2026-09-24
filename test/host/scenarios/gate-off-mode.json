@@ -1,0 +1,45 @@
+{
+  "name": "gate-off-mode",
+  "mode": "off",
+  "prompt": "gate smoke",
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Smoke gate",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": false,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "smoke criterion"
+              }
+            ]
+          }
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "check"
+          }
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "toolResultLacks",
+      "text": "all gates passed",
+      "rule": "main"
+    },
+    {
+      "type": "eventsLack",
+      "event": "gate_closed"
+    }
+  ]
+}

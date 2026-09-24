@@ -1,0 +1,100 @@
+{
+  "name": "async-pending",
+  "mode": "auto",
+  "prompt": "spawn a scout",
+  "rules": [
+    {
+      "id": "child-scout",
+      "matchSystem": "Investigate the assigned question without modifying the workspace.",
+      "steps": [
+        {
+          "yield": {
+            "question": "q",
+            "summary": "s",
+            "architecture": "a",
+            "confidence": "low",
+            "facts": [],
+            "files": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "o",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": false,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "t"
+              }
+            ]
+          }
+        },
+        {
+          "tool": "task",
+          "args": {
+            "context": "host test",
+            "tasks": [
+              {
+                "name": "scout1",
+                "agent": "pstack-scout",
+                "task": "What is in README.md?"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "check"
+          }
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-scout"
+    },
+    {
+      "type": "toolResultLacks",
+      "rule": "main",
+      "text": "AGENT_PENDING"
+    },
+    {
+      "type": "jsonWhere",
+      "file": ".omp/pstack/runs/*/state.json",
+      "where": {
+        "activeRun.agents.0.actorId": "scout1",
+        "activeRun.agents.0.status": "completed"
+      }
+    }
+  ],
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false
+}

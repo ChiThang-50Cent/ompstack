@@ -1,0 +1,119 @@
+{
+  "name": "verifier-pass",
+  "mode": "strict",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "prompt": "verify it",
+  "rules": [
+    {
+      "id": "child-verifier",
+      "matchSystem": "Verify the frozen acceptance criteria against the exact target artifact.",
+      "captures": [
+        {
+          "name": "fp",
+          "from": "user",
+          "regex": "Target fingerprint: ([0-9a-f]{64})"
+        }
+      ],
+      "steps": [
+        {
+          "yield": {
+            "verdict": "PASS",
+            "scope": "README",
+            "tested_fingerprint": {
+              "kind": "git",
+              "digest": "{{fp}}",
+              "partial": false
+            },
+            "surface": "file",
+            "observations": [
+              "README present"
+            ],
+            "evidence": [
+              {
+                "kind": "observation",
+                "claim": "README contains fixture",
+                "ref": "README.md"
+              }
+            ],
+            "limitations": [],
+            "acceptance_results": [
+              {
+                "id": "AC-1",
+                "outcome": "passed",
+                "evidence_refs": [
+                  "README.md"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "o",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": true,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "README exists"
+              }
+            ]
+          }
+        },
+        {
+          "tool": "task",
+          "args": {
+            "context": "host test",
+            "tasks": [
+              {
+                "name": "verify1",
+                "agent": "pstack-verifier",
+                "task": "Verify AC-1."
+              }
+            ]
+          }
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "check"
+          }
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-verifier"
+    },
+    {
+      "type": "userContains",
+      "rule": "child-verifier",
+      "text": "PSTACK VERIFICATION CONTRACT"
+    },
+    {
+      "type": "jsonlWhere",
+      "file": ".omp/pstack/runs/*/verdicts.jsonl",
+      "where": {
+        "verdict": "PASS"
+      }
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "all gates passed"
+    }
+  ]
+}

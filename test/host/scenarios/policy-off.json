@@ -1,0 +1,28 @@
+{
+  "name": "policy-off",
+  "mode": "off",
+  "prompt": "status please",
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_status",
+          "args": {}
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "Pstack mode: off"
+    },
+    {
+      "type": "systemLacks",
+      "rule": "main",
+      "text": "pstack-omp-policy:start"
+    }
+  ]
+}

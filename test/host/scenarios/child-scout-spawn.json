@@ -1,0 +1,99 @@
+{
+  "name": "child-scout-spawn",
+  "mode": "auto",
+  "prompt": "spawn a scout",
+  "rules": [
+    {
+      "id": "child-scout",
+      "matchSystem": "Investigate the assigned question without modifying the workspace.",
+      "steps": [
+        {
+          "tool": "pstack_status",
+          "args": {}
+        },
+        {
+          "yield": {
+            "question": "q",
+            "summary": "s",
+            "architecture": "a",
+            "confidence": "low",
+            "facts": [],
+            "files": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "task",
+          "args": {
+            "context": "host test",
+            "tasks": [
+              {
+                "name": "scout1",
+                "agent": "pstack-scout",
+                "task": "What is in README.md?"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-scout"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-scout",
+      "text": "Pstack child agents cannot call parent-state"
+    },
+    {
+      "type": "toolsInclude",
+      "rule": "child-scout",
+      "tools": [
+        "yield"
+      ]
+    },
+    {
+      "type": "toolsExclude",
+      "rule": "child-scout",
+      "tools": [
+        "edit",
+        "bash",
+        "task"
+      ]
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "schema valid"
+    },
+    {
+      "type": "fileUnchanged",
+      "path": "README.md"
+    }
+  ],
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false
+}

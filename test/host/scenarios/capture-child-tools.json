@@ -1,0 +1,484 @@
+{
+  "name": "capture-child-tools",
+  "mode": "auto",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "prompt": "capture",
+  "timeoutSec": 150,
+  "rules": [
+    {
+      "id": "child-scout",
+      "matchSystem": "Investigate the assigned question without modifying the workspace.",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo scout-BASH >> README.md"
+          }
+        },
+        {
+          "tool": "edit",
+          "args": {
+            "path": "README.md",
+            "edits": [
+              {
+                "old": "fixture",
+                "new": "scout-EDIT"
+              }
+            ]
+          }
+        },
+        {
+          "yield": {
+            "question": "q",
+            "summary": "s",
+            "architecture": "a",
+            "confidence": "low",
+            "facts": [],
+            "files": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-architect",
+      "matchSystem": "Design the smallest coherent system that satisfies the frozen objective.",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo architect-BASH >> README.md"
+          }
+        },
+        {
+          "tool": "edit",
+          "args": {
+            "path": "README.md",
+            "edits": [
+              {
+                "old": "fixture",
+                "new": "architect-EDIT"
+              }
+            ]
+          }
+        },
+        {
+          "yield": {
+            "problem_frame": "p",
+            "recommended_design": "d",
+            "data_shape": [],
+            "boundaries": [],
+            "alternatives": [],
+            "implementation_slices": [],
+            "verification_plan": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-reviewer",
+      "matchSystem": "Review the actual patch or artifact, not the builder's summary or confidence.",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo reviewer-BASH >> README.md"
+          }
+        },
+        {
+          "tool": "edit",
+          "args": {
+            "path": "README.md",
+            "edits": [
+              {
+                "old": "fixture",
+                "new": "reviewer-EDIT"
+              }
+            ]
+          }
+        },
+        {
+          "yield": {
+            "scope": "s",
+            "overall_correctness": "inconclusive",
+            "explanation": "probe",
+            "confidence": 0.1,
+            "reviewed_paths": [
+              "README.md"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-judge",
+      "matchSystem": "Judge all candidate artifacts against the same frozen objective, constraints, and rubric.",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo judge-BASH >> README.md"
+          }
+        },
+        {
+          "tool": "edit",
+          "args": {
+            "path": "README.md",
+            "edits": [
+              {
+                "old": "fixture",
+                "new": "judge-EDIT"
+              }
+            ]
+          }
+        },
+        {
+          "yield": {
+            "rubric": [],
+            "evaluations": [],
+            "base_candidate": "none",
+            "selection_reason": "probe",
+            "graft_plan": [],
+            "confidence": "low"
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-verifier",
+      "matchSystem": "Verify the frozen acceptance criteria against the exact target artifact.",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo verifier-BASH >> README.md"
+          }
+        },
+        {
+          "tool": "edit",
+          "args": {
+            "path": "README.md",
+            "edits": [
+              {
+                "old": "fixture",
+                "new": "verifier-EDIT"
+              }
+            ]
+          }
+        },
+        {
+          "yield": {
+            "verdict": "INCONCLUSIVE",
+            "scope": "probe",
+            "tested_fingerprint": {
+              "kind": "git",
+              "digest": "0000000000000000000000000000000000000000000000000000000000000000",
+              "partial": true
+            },
+            "surface": "none",
+            "observations": [],
+            "evidence": [],
+            "limitations": [
+              "probe"
+            ],
+            "acceptance_results": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "task",
+          "args": {
+            "context": "capture",
+            "tasks": [
+              {
+                "name": "scout1",
+                "agent": "pstack-scout",
+                "task": "probe scout"
+              },
+              {
+                "name": "architect1",
+                "agent": "pstack-architect",
+                "task": "probe architect"
+              },
+              {
+                "name": "reviewer1",
+                "agent": "pstack-reviewer",
+                "task": "probe reviewer"
+              },
+              {
+                "name": "judge1",
+                "agent": "pstack-judge",
+                "task": "probe judge"
+              },
+              {
+                "name": "verifier1",
+                "agent": "pstack-verifier",
+                "task": "probe verifier"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-scout"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-scout",
+      "text": "Tool bash not found"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-scout",
+      "text": "Tool edit not found"
+    },
+    {
+      "type": "toolsExclude",
+      "rule": "child-scout",
+      "tools": [
+        "bash",
+        "edit",
+        "task"
+      ]
+    },
+    {
+      "type": "fileLacks",
+      "path": "README.md",
+      "text": "scout-BASH"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "child-architect"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-architect",
+      "text": "Tool bash not found"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-architect",
+      "text": "Tool edit not found"
+    },
+    {
+      "type": "toolsExclude",
+      "rule": "child-architect",
+      "tools": [
+        "bash",
+        "edit",
+        "task"
+      ]
+    },
+    {
+      "type": "fileLacks",
+      "path": "README.md",
+      "text": "architect-BASH"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "child-judge"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-judge",
+      "text": "Tool bash not found"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-judge",
+      "text": "Tool edit not found"
+    },
+    {
+      "type": "toolsExclude",
+      "rule": "child-judge",
+      "tools": [
+        "bash",
+        "edit",
+        "task"
+      ]
+    },
+    {
+      "type": "fileLacks",
+      "path": "README.md",
+      "text": "judge-BASH"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "child-reviewer"
+    },
+    {
+      "type": "toolsInclude",
+      "rule": "child-reviewer",
+      "tools": [
+        "bash"
+      ]
+    },
+    {
+      "type": "toolsExclude",
+      "rule": "child-reviewer",
+      "tools": [
+        "edit",
+        "task"
+      ]
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-reviewer",
+      "text": "Tool edit not found"
+    },
+    {
+      "type": "fileContains",
+      "path": "README.md",
+      "text": "reviewer-BASH"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "child-verifier"
+    },
+    {
+      "type": "toolsInclude",
+      "rule": "child-verifier",
+      "tools": [
+        "bash"
+      ]
+    },
+    {
+      "type": "toolsExclude",
+      "rule": "child-verifier",
+      "tools": [
+        "edit",
+        "task"
+      ]
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-verifier",
+      "text": "Tool edit not found"
+    },
+    {
+      "type": "fileContains",
+      "path": "README.md",
+      "text": "verifier-BASH"
+    },
+    {
+      "type": "toolsInclude",
+      "rule": "child-scout",
+      "tools": [
+        "yield",
+        "pstack_status",
+        "pstack_gate",
+        "write"
+      ]
+    },
+    {
+      "type": "toolsInclude",
+      "rule": "child-architect",
+      "tools": [
+        "yield",
+        "pstack_status",
+        "pstack_gate",
+        "write"
+      ]
+    },
+    {
+      "type": "toolsInclude",
+      "rule": "child-reviewer",
+      "tools": [
+        "yield",
+        "pstack_status",
+        "pstack_gate",
+        "write"
+      ]
+    },
+    {
+      "type": "toolsInclude",
+      "rule": "child-judge",
+      "tools": [
+        "yield",
+        "pstack_status",
+        "pstack_gate",
+        "write"
+      ]
+    },
+    {
+      "type": "toolsInclude",
+      "rule": "child-verifier",
+      "tools": [
+        "yield",
+        "pstack_status",
+        "pstack_gate",
+        "write"
+      ]
+    },
+    {
+      "type": "fileChanged",
+      "path": "README.md"
+    }
+  ]
+}

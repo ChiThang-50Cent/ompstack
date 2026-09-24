@@ -46,3 +46,28 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+
+### T0.5 Baseline scenarios {#t05}
+- Status: done
+- Files: `test/host/scenarios/*.json` (11), `test/host/known-failing.json` (`async-pending`, `gate-off-mode`), `test/host/live-smoke/verify-with-omp.json`
+- Proof (`npm run test:host`, OMP 18.3.0, exit 0):
+
+  | Scenario | Result |
+  |---|---|
+  | async-pending | XFAIL — `AGENT_PENDING` after `wait`; actor `scout1` not `completed` in state.json (BUG-7) |
+  | capture-child-tools | PASS |
+  | child-scout-spawn | PASS |
+  | child-xd-guard | PASS |
+  | gate-blocks-auto | PASS |
+  | gate-blocks-strict | PASS |
+  | gate-off-mode | XFAIL — `all gates passed`, `gate_closed` present (BUG-1) |
+  | policy-off | PASS |
+  | status-auto | PASS |
+  | verifier-pass | PASS |
+  | verifier-stale | PASS |
+
+  - `npm run check` → `# pass 44`, `# fail 0`
+- Sources read: `.upstream/oh-my-pi/docs/tools/task.md:29-44` (batch shape), `.upstream/oh-my-pi/docs/task-agent-discovery.md` (plugin agents require an installed/linked plugin; confirmed on host: with `-e` only, `Unknown agent "pstack-scout"`)
+- Decisions: child-agent scenarios use `setup: ["plugin-link"]` with `loadExtension: false`
+- Deviations from spec: none
+- Open questions: none

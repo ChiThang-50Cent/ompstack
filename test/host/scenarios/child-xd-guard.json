@@ -1,0 +1,88 @@
+{
+  "name": "child-xd-guard",
+  "mode": "auto",
+  "prompt": "spawn a scout",
+  "rules": [
+    {
+      "id": "child-scout",
+      "matchSystem": "Investigate the assigned question without modifying the workspace.",
+      "steps": [
+        {
+          "tool": "write",
+          "args": {
+            "path": "xd://pstack_decision",
+            "content": "{\"decision\":\"CHILD_WROTE_THIS\",\"why\":\"probe\"}"
+          }
+        },
+        {
+          "tool": "write",
+          "args": {
+            "path": "xd://pstack_evidence",
+            "content": "{\"action\":\"record\",\"kind\":\"observation\",\"claim\":\"CHILD_EVIDENCE\",\"ref\":\"x\",\"producedBy\":\"scout1\"}"
+          }
+        },
+        {
+          "yield": {
+            "question": "q",
+            "summary": "s",
+            "architecture": "a",
+            "confidence": "low",
+            "facts": [],
+            "files": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "task",
+          "args": {
+            "context": "host test",
+            "tasks": [
+              {
+                "name": "scout1",
+                "agent": "pstack-scout",
+                "task": "What is in README.md?"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-scout"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "child-scout",
+      "text": "Pstack child agents cannot call parent-state"
+    },
+    {
+      "type": "pathAbsent",
+      "path": ".omp/pstack/runs"
+    }
+  ],
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false
+}

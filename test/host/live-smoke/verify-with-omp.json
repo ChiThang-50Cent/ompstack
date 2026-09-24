@@ -1,0 +1,91 @@
+{
+  "name": "verify-with-omp",
+  "mode": "auto",
+  "runs": [
+    {
+      "prompt": "Call the pstack_status tool exactly once. Return its tool text verbatim and do nothing else."
+    },
+    {
+      "prompt": "Call pstack_gate with action=init, objective='Smoke gate', playbook='feature', ceremony='standard', verificationRequired=false, acceptance=[{id:'AC-1', text:'smoke criterion'}]. Then call pstack_gate with action=check. Then call pstack_gate with action=abandon and reason='smoke complete'. Return the check tool text verbatim."
+    }
+  ],
+  "rules": [
+    {
+      "id": "status",
+      "matchUser": "Call the pstack_status tool exactly once",
+      "steps": [
+        {
+          "tool": "pstack_status",
+          "args": {}
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "matchUser": "Call pstack_gate with action=init",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Smoke gate",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": false,
+            "acceptance": [
+              {
+                "id": "AC-1",
+                "text": "smoke criterion"
+              }
+            ]
+          }
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "check"
+          }
+        },
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "abandon",
+            "reason": "smoke complete"
+          }
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "status"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "status",
+      "text": "Pstack mode: auto"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "gate"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "gate",
+      "text": "ACCEPTANCE_OPEN"
+    },
+    {
+      "type": "eventsContain",
+      "event": "start_run"
+    },
+    {
+      "type": "eventsContain",
+      "event": "gate_abandoned"
+    },
+    {
+      "type": "eventsLack",
+      "event": "gate_closed"
+    }
+  ]
+}

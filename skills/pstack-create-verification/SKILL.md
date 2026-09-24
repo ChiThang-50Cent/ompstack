@@ -81,6 +81,7 @@ Fix every failure and run cleanup after every failed iteration so broken attempt
 ## 5. Maintenance
 
 When the product changes, update the project skill and its `features/` map together. Re-run the project validator and at least one representative mapped path. Keep unreachable entry points explicit instead of claiming coverage through a different path.
+- For the periodic source-and-live maintenance pass, load `skill://pstack-maintain-verification`.
 
 ## Verification map conventions
 

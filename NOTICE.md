@@ -123,3 +123,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack-create-verification/references/feature-map-example/README.md`
 - `skills/pstack-create-verification/references/feature-map-example/create-note.md`
 - `skills/pstack-create-verification/references/feature-map-example/search.md`
+
+### T3.7 skill `pstack-maintain-verification`
+
+- `skills/pstack-maintain-verification/SKILL.md`

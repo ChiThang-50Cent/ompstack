@@ -339,3 +339,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: no generator; the repository ships the format, upstream examples, two checked-in feature maps with two features each, and validator coverage for missing states and nonexistent index links.
 - Deviations from spec: fixed the latent validator slug-regex escape so the required feature fixtures validate their filenames.
 - Open questions: none.
+
+### T3.7 Skill `pstack-maintain-verification` {#t37}
+- Status: done
+- Files: `skills/pstack-maintain-verification/SKILL.md`, `skills/pstack-create-verification/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` → 56 tests passed, router 33/33, asset validation passed with 11 agents and four feature fixtures; `npm run check:upstream` → map current at pinned Cursor commit `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/maintain-verification-skill/SKILL.md`, `spec3_1.md:465-469`
+- Decisions: OMP source review uses one `task` batch of read-only `pstack-scout` items; feature changes explicitly update `features/` and rerun `validate` before live re-proof.
+- Deviations from spec: replaced native command and Cursor paths with OMP skill links and `.omp` project paths.
+- Open questions: none.

@@ -190,17 +190,26 @@ export async function validate(repoRoot, options = {}) {
   const exists = relative => fileExists(root, relative);
   const text = relative => readFile(path.join(root, relative), "utf8");
   const packageJson = await readJson(root, "package.json", errors);
+  const pluginJson = await readJson(root, ".omp-plugin/plugin.json", errors);
   assert(errors, packageJson?.name === "pstack-omp", "package.json: name must be pstack-omp");
   assert(errors, packageJson?.omp?.extensions?.includes("./src/index.ts"), "package.json: omp.extensions must include ./src/index.ts");
   assert(errors, packageJson?.peerDependencies?.["@oh-my-pi/pi-coding-agent"] === ">=18.2.11", "package.json: OMP peer target must be >=18.2.11");
+  assert(errors, packageJson?.version === pluginJson?.version, "package.json.version must equal .omp-plugin/plugin.json.version");
   for (const required of ["src", "dist", "agents", "skills", "scripts", "test", "types", "tsconfig.json", "tsconfig.test.json"]) {
     assert(errors, packageJson?.files?.includes(required), `package.json: files whitelist missing ${required}`);
   }
 
   const marketplace = await readJson(root, ".omp-plugin/marketplace.json", errors);
+  const marketplacePlugin = Array.isArray(marketplace?.plugins)
+    ? marketplace.plugins.find(plugin => plugin.name === "pstack-omp")
+    : undefined;
+  assert(errors, pluginJson?.name === "pstack-omp", ".omp-plugin/plugin.json: name must be pstack-omp");
+  assert(errors, typeof pluginJson?.version === "string", ".omp-plugin/plugin.json: version is required");
   assert(errors, marketplace?.name === "pstack-omp", ".omp-plugin/marketplace.json: name must be pstack-omp");
   assert(errors, typeof marketplace?.owner?.name === "string", ".omp-plugin/marketplace.json: owner.name is required");
-  assert(errors, Array.isArray(marketplace?.plugins) && marketplace.plugins.some(plugin => plugin.name === "pstack-omp"), ".omp-plugin/marketplace.json: pstack-omp entry missing");
+  assert(errors, Boolean(marketplacePlugin), ".omp-plugin/marketplace.json: pstack-omp entry missing");
+  assert(errors, marketplace?.metadata?.version === marketplacePlugin?.version, ".omp-plugin/marketplace.json: metadata.version must equal plugin version");
+  assert(errors, marketplacePlugin?.source?.ref === `v${marketplacePlugin?.version}`, ".omp-plugin/marketplace.json: source.ref must match plugin version");
   for (const file of REQUIRED_FILES) assert(errors, await exists(file), `${file}: required file missing`);
 
   const agentFiles = await readdir(path.join(root, "agents")).catch(() => []);

@@ -2,7 +2,7 @@
 
 ## Release identity
 
-- Package: `pstack-omp` 0.4.0
+- Package: `pstack-omp` 0.5.0
 - Delivery date: 2026-09-24
 - Minimum supported OMP: 18.2.11
 - State schema: version 2

@@ -1,12 +1,26 @@
 ---
 name: pstack-principle-minimize-reader-load
-description: Minimize Reader Load. Use when code is hard to trace or review.
+description: "Apply when reviewing or shaping code that's hard to trace. Count layers between question and answer, and hidden state in the reader's head; collapse one-caller wrappers and shrink mutable scope."
+disable-model-invocation: true
 ---
+
 # Minimize Reader Load
 
-**Trigger:** Use when code is hard to trace or review.
+Maintainability is the work a reader must do to understand code. Track two axes:
+1. **Layers to trace.** How many indirections sit between the question and the answer.
+2. **State to hold.** How much hidden or mutable context the reader must keep in their head.
 
-Reduce layers, hidden state, indirection, and mutable scope. Collapse one-caller wrappers that add no semantic boundary. Put decisions near the data they govern. Optimize for the next reader’s ability to predict behavior, not for abstract elegance.
+**Why:** Code is read far more than it is written. LOC, cyclomatic complexity, and "clean architecture" are proxies. Reader load is the thing that matters. The two axes are independent. A flat file with 50 globals can be as hard to reason about as a 6-layer adapter stack. Guard both. This is the human analog of [Guard the Context Window](guard-context-window.md). Working memory is finite for readers too.
+
+**The pattern:**
+- **Collapse layers** that cost more than they save: wrappers with one caller, adapters with no second implementation, speculative indirection that was never needed. Inline them.
+- **Make adjacent layers change the abstraction.** A layer that repeats the same methods and arguments adds reader load without compression. Collapse pass-through layers.
+- **Demand interface compression.** A broad interface that hides little complexity makes readers learn both the surface and the implementation. Prefer boundaries that hide meaningful decisions.
+- **Shrink state scope:** prefer pure functions (returns over mutations), locals over fields, fields over module state, and module state over globals. Derive instead of sync.
+- **Name the invariant at the boundary,** not in every consumer, so the reader learns it once.
+- Before adding a layer or a piece of state, ask: does this reduce reader load somewhere else by at least as much?
+
+**The test:** Can a new reader answer "where does X come from?" and "what can change X?" in under 30 seconds? If not, cut layers or cut state.
 
 ## Application record
 

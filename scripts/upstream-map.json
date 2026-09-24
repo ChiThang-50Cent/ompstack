@@ -5,7 +5,7 @@
     "upstreamWords": 253,
     "target": "skills/pstack/principles/attack-the-premise.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -14,7 +14,7 @@
     "upstreamWords": 238,
     "target": "skills/pstack/principles/boundary-discipline.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -23,7 +23,7 @@
     "upstreamWords": 341,
     "target": "skills/pstack/principles/build-the-lever.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -32,7 +32,7 @@
     "upstreamWords": 300,
     "target": "skills/pstack/principles/encode-lessons-in-structure.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -41,7 +41,7 @@
     "upstreamWords": 136,
     "target": "skills/pstack/principles/exhaust-the-design-space.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -50,7 +50,7 @@
     "upstreamWords": 148,
     "target": "skills/pstack/principles/experience-first.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -59,7 +59,7 @@
     "upstreamWords": 165,
     "target": "skills/pstack/principles/fix-root-causes.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -68,7 +68,7 @@
     "upstreamWords": 172,
     "target": "skills/pstack/principles/foundational-thinking.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -77,7 +77,7 @@
     "upstreamWords": 101,
     "target": "skills/pstack/principles/guard-context-window.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -86,7 +86,7 @@
     "upstreamWords": 180,
     "target": "skills/pstack/principles/laziness-protocol.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -95,7 +95,7 @@
     "upstreamWords": 170,
     "target": "skills/pstack/principles/make-operations-idempotent.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -104,7 +104,7 @@
     "upstreamWords": 135,
     "target": "skills/pstack/principles/migrate-callers-then-delete-legacy-apis.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -113,7 +113,7 @@
     "upstreamWords": 288,
     "target": "skills/pstack/principles/minimize-reader-load.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -122,7 +122,7 @@
     "upstreamWords": 288,
     "target": "skills/pstack/principles/model-the-domain.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -131,7 +131,7 @@
     "upstreamWords": 132,
     "target": "skills/pstack/principles/never-block-on-the-human.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -140,7 +140,7 @@
     "upstreamWords": 105,
     "target": "skills/pstack/principles/outcome-oriented-execution.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -149,7 +149,7 @@
     "upstreamWords": 172,
     "target": "skills/pstack/principles/prove-it-works.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -158,7 +158,7 @@
     "upstreamWords": 91,
     "target": "skills/pstack/principles/redesign-from-first-principles.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -167,7 +167,7 @@
     "upstreamWords": 182,
     "target": "skills/pstack/principles/separate-before-serializing-shared-state.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -176,7 +176,7 @@
     "upstreamWords": 227,
     "target": "skills/pstack/principles/sequence-verifiable-units.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -185,7 +185,7 @@
     "upstreamWords": 128,
     "target": "skills/pstack/principles/subtract-before-you-add.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -194,7 +194,7 @@
     "upstreamWords": 325,
     "target": "skills/pstack/principles/test-behavior-not-implementation.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -203,7 +203,7 @@
     "upstreamWords": 727,
     "target": "skills/pstack/principles/type-system-discipline.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

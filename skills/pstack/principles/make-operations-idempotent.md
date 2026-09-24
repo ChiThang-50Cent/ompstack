@@ -1,12 +1,27 @@
 ---
 name: pstack-principle-make-operations-idempotent
-description: Make Operations Idempotent. Use for commands, migrations, retries, queues, and lifecycle hooks.
+description: "Apply when designing commands, lifecycle steps, or processing loops that run amid crashes, restarts, and retries. Converge to the same end state regardless of partial prior runs."
+disable-model-invocation: true
 ---
+
 # Make Operations Idempotent
 
-**Trigger:** Use for commands, migrations, retries, queues, and lifecycle hooks.
+Design operations so they converge to the correct state regardless of how many times they run or where they start from. Every state-mutating operation should answer: "What happens if this runs twice? What happens if the previous run crashed halfway?"
 
-Design repeated execution to converge on the same correct state. Record checkpoints and stable identities; distinguish create/update/complete states. Test crash/retry boundaries. Idempotency does not mean swallowing errors—it means safe, observable repetition.
+**Why:** Commands, lifecycle operations, and processing loops run where crashes, restarts, and retries are normal. If partial state changes the next run's outcome, every restart becomes a debugging session.
+
+**The pattern:**
+- Convergent startup: scan for existing state, clean stale artifacts, adopt live sessions
+- Content-based cleanup: compare by content equivalence, not creation order
+- Self-healing locks: use PID-based stale lock detection
+- Idempotent scheduling: failed work respawns cleanly, fresh input regenerated after each cycle
+
+**The test:**
+1. What happens if this runs twice in a row?
+2. What happens if the previous run crashed at every possible point?
+3. Does re-execution converge to the same end state?
+
+If any answer is "it depends on what state was left behind," the operation needs a reconciliation step.
 
 ## Application record
 

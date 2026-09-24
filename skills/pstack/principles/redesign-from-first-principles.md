@@ -1,12 +1,19 @@
 ---
 name: pstack-principle-redesign-from-first-principles
-description: Redesign from First Principles. Use when a new requirement conflicts with an existing design.
+description: "Apply when integrating a new requirement into an existing design. Redesign as if the requirement had been a foundational assumption from day one, instead of bolting it on."
+disable-model-invocation: true
 ---
-# Redesign from First Principles
 
-**Trigger:** Use when a new requirement conflicts with an existing design.
+# Redesign From First Principles
 
-Sketch the system as though the new requirement had existed from day one. Compare that target with the current system, then migrate toward it deliberately. Do not bolt another exception onto an architecture whose premise has changed.
+When integrating a change, don't bolt it onto the existing design. Redesign as if the requirement had been there from the start.
+
+- Read all affected files and understand the current design
+- Ask: "if we were writing this from scratch with this new requirement, what would we build?"
+- Propagate the change through every reference: types, docs, examples, rationale sections
+- Think about the whole redesign, then deliver it incrementally
+
+This is the method for preserving option value when integrating changes into an existing design.
 
 ## Application record
 

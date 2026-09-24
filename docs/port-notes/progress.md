@@ -205,3 +205,15 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: `validate(repoRoot, options)` owns all checks and returns `{ errors, warnings, summary }`; the CLI only renders/exits. `verify-*` links remain project-local external skill references; all repository-owned links are resolved. Map generation preserves imported status/reason while refreshing pinned hashes and word counts.
 - Deviations from spec: none
 - Open questions: none
+
+### T2.1 Principles corpus {#t21}
+- Status: done
+- Files: `skills/pstack/principles/*.md` (23), `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run check` → 53 tests passed, router 33/33, asset validation passed with 23 principles.
+  - `npm run check:upstream` → map current at pinned Cursor commit `12d587d`; all 23 principle entries are `imported`.
+  - `type-system-discipline.md` contains the required illegal-state, branded-primitive, and test headings/bullets.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/principle-*/SKILL.md`, `spec3_1.md:386-390`
+- Decisions: copied upstream principle bodies, adapted only local relative links and retained the OMP `Application record` section; `guard-the-context-window` keeps the existing local filename `guard-context-window.md`.
+- Deviations from spec: none
+- Open questions: none

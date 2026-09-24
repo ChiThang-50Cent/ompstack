@@ -25,6 +25,19 @@ npm run check
 
 The package avoids network-dependent development tooling in the core test path. `tsc` may be supplied globally or through the declared development dependency.
 
+## Host scenarios
+
+`npm run check` never needs OMP. Host scenarios run the extension inside a real OMP binary against a scripted mock LLM, so they need a globally installed OMP (`bun add -g @oh-my-pi/pi-coding-agent`) but no API key or network:
+
+```bash
+npm run test:host                                      # every test/host/scenarios/*.json on the host OMP
+npm run test:host -- test/host/scenarios/status-auto.json
+PSTACK_HOST_KEEP=1 npm run test:host -- <scenario>     # keep the temp home/workspace/mock log for inspection
+PSTACK_OMP_BIN=/path/to/omp npm run test:host          # pick a specific OMP binary
+```
+
+`scripts/host-smoke.sh` resolves OMP with `scripts/lib/resolve-omp.sh`, which skips `node_modules/.bin`, so the type-checking devDependency is never used as the host. The scenario schema, mock rule steps and assertion types are documented in [test/host/README.md](../test/host/README.md). To add a scenario, drop a JSON file into `test/host/scenarios/`; route child agent sessions with `matchSystem` set to a line unique to the agent body, and give every child assertion a `rule` so it fails when the child never ran.
+
 ## Type strategy
 
 `types/oh-my-pi.d.ts` models the API subset used by the plugin so logic can compile offline. It is not published as a replacement for OMP types. Real host compatibility must be checked with `npm run verify:omp` and against OMP's current official type definitions/source.

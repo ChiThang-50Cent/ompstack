@@ -34,3 +34,15 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+
+### T0.4 Runner and `test:host` {#t04}
+- Status: done
+- Files: `test/host/run.mjs`, `test/host/README.md`, `scripts/host-smoke.sh`, `test/host/scenarios/status-auto.json`, `package.json` (`test:host`), `docs/development.md` (§ Host scenarios)
+- Proof:
+  - `npm run test:host` (inside npm, where `node_modules/.bin` precedes PATH) → `Host OMP: /home/claude/.npm-global/bin/omp (omp/18.3.0)`, `status-auto PASS`
+  - `npm run check` → `# pass 44`, `# fail 0`
+- Runner guarantees reviewed in the diff: per-scenario temp root (`home/`, `PI_CODING_AGENT_DIR`, fresh git `ws/`, mock log, free port, `NO_PROXY`); `runs[]` share one workspace; `setup` whitelist = `plugin-link`; a run that times out or exits non-zero fails the scenario; rule-scoped assertions fail when the rule never ran; `known-failing.json` → XFAIL/XPASS; exit 1 on FAIL or XPASS.
+- Sources read: `.upstream/oh-my-pi/docs/environment-variables.md` (`PI_CODING_AGENT_DIR`)
+- Decisions: none
+- Deviations from spec: none
+- Open questions: none

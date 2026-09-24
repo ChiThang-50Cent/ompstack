@@ -1,0 +1,33 @@
+{
+  "name": "status-auto",
+  "mode": "auto",
+  "prompt": "status please",
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_status",
+          "args": {}
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "toolResultContains",
+      "text": "Pstack mode: auto"
+    },
+    {
+      "type": "systemContains",
+      "text": "pstack-omp-policy:start"
+    },
+    {
+      "type": "toolsInclude",
+      "tools": [
+        "pstack_status",
+        "pstack_gate"
+      ]
+    }
+  ]
+}

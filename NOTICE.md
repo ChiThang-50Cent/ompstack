@@ -133,3 +133,12 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack-recall/SKILL.md`
 - `docs/session.md`
 - `docs/tools/recall.md`
+
+### T3.9 skill `pstack-reflect` and reviewer prompts
+
+- `skills/pstack-reflect/SKILL.md`
+- `skills/pstack-reflect/references/divergent-reviewer.md`
+- `skills/pstack-reflect/references/judgment-reviewer.md`
+- `skills/pstack-reflect/references/synthesizer.md`
+- `skills/pstack-reflect/references/tooling-reviewer.md`
+- `docs/tools/reflect.md`

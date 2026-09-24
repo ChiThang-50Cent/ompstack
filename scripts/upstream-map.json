@@ -329,7 +329,7 @@
     "upstreamWords": 604,
     "target": "skills/pstack-reflect/references/divergent-reviewer.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -338,7 +338,7 @@
     "upstreamWords": 506,
     "target": "skills/pstack-reflect/references/judgment-reviewer.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -347,7 +347,7 @@
     "upstreamWords": 632,
     "target": "skills/pstack-reflect/references/synthesizer.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -356,7 +356,7 @@
     "upstreamWords": 734,
     "target": "skills/pstack-reflect/references/tooling-reviewer.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -636,7 +636,7 @@
     "upstreamWords": 678,
     "target": "skills/pstack-reflect/SKILL.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

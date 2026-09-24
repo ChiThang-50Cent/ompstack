@@ -1,5 +1,6 @@
 import type { ArtifactFingerprint, PstackRun } from "./domain.js";
 import { isRecord } from "./utils.js";
+import { roleForAgent } from "./model-routing.js";
 
 const CONTRACT_START = "<!-- pstack-task-contract:start -->";
 const CONTRACT_END = "<!-- pstack-task-contract:end -->";
@@ -34,6 +35,7 @@ export interface RewriteResult {
 
 function rewriteItem(item: Record<string, unknown>, options: RewriteOptions, reasons: string[]): Record<string, unknown> {
   const agent = typeof item.agent === "string" ? item.agent.trim().toLowerCase() : "";
+  const role = roleForAgent(agent);
   let changed = false;
   const next = { ...item };
 
@@ -43,7 +45,7 @@ function rewriteItem(item: Record<string, unknown>, options: RewriteOptions, rea
     reasons.push(`${agent}: forced strict structured-output validation`);
   }
 
-  if (agent === "pstack-verifier" && options.run) {
+  if (role === "verifier" && options.run) {
     const rawTask = typeof next.task === "string" ? next.task : "Verify the active pstack run.";
     const contract = [
       "PSTACK VERIFICATION CONTRACT",
@@ -65,7 +67,7 @@ function rewriteItem(item: Record<string, unknown>, options: RewriteOptions, rea
     }
   }
 
-  if (agent === "pstack-reviewer" && options.run) {
+  if (role === "reviewer" && options.run) {
     const rawTask = typeof next.task === "string" ? next.task : "Review the active pstack artifact.";
     const contract = [
       "PSTACK REVIEW CONTRACT",

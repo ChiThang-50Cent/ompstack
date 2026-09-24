@@ -12,6 +12,9 @@ test('never rewrites isolation and attaches verifier/reviewer contracts', () => 
     { name: 'build', agent: 'pstack-builder', task: 'Implement it', isolated: false },
     { name: 'verify', agent: 'pstack-verifier', task: 'Check it' },
     { name: 'review', agent: 'pstack-reviewer', task: 'Review it' },
+    { name: 'review-a', agent: 'pstack-reviewer-a', task: 'Review it' },
+    { name: 'review-b', agent: 'pstack-reviewer-b', task: 'Review it' },
+    { name: 'review-c', agent: 'pstack-reviewer-c', task: 'Review it' },
   ]};
   const result = rewriteTaskInput(input, { run, fingerprint: fp });
   assert.equal(result.changed, true);
@@ -22,6 +25,10 @@ test('never rewrites isolation and attaches verifier/reviewer contracts', () => 
   assert.match(result.input.tasks[1].task, /Writers: writer-a/);
   assert.match(result.input.tasks[1].task, /Do not edit files or call pstack_\* tools/);
   assert.match(result.input.tasks[2].task, /frozen intent/i);
+  for (const index of [2, 3, 4, 5]) {
+    assert.equal(result.input.tasks[index].schemaMode, 'strict');
+    assert.match(result.input.tasks[index].task, /frozen intent/i);
+  }
 });
 
 test('contract replacement is idempotent rather than duplicating markers', () => {

@@ -239,3 +239,15 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: repository/code and in-repository incident evidence use one `pstack-scout` task batch; MCP-backed categories remain parent-owned and unavailable categories are explicit gaps. Added `docs/mcp-runtime-lifecycle.md` to make that capability boundary auditable. Synthesis stays in the parent by default, with `pstack-synthesizer` optional.
 - Deviations from spec: none
 - Open questions: none
+
+### T2.4 Panel reviewers and operator `interrogate` {#t24}
+- Status: done
+- Files: `skills/pstack/operators/interrogate.md`, `skills/pstack/operators/references/interrogate/*`, `agents/pstack-reviewer-{a,b,c}.md`, `src/model-routing.ts`, `src/task-rewrite.ts`, `src/child-policy.ts`, `src/commands.ts`, `test/model-routing.test.mjs`, `test/task-rewrite.test.mjs`, `test/child-policy.test.mjs`, `test/extension.test.mjs`, `examples/omp-config.example.yml`, `docs/model-routing.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run check` → 54 tests passed, router 33/33, validator passed with 10 agents.
+  - Tests cover reviewer-role mapping for a/b/c, frozen review contracts for a/b/c batches, child-policy blocking, and `/pstack doctor` resolution rows.
+  - `npm run check:upstream` → map current at pinned Cursor commit `12d587d`; five interrogate entries are `imported`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/interrogate/**`, `spec3_1.md:405-434`
+- Decisions: panel reviewers are copies of the read-only reviewer contract with ordered OMP panel-role fallbacks; `task-rewrite` and child policy use `roleForAgent`, not exact agent names. Model roles live in `examples/omp-config.example.yml`; a single-model panel is reported explicitly.
+- Deviations from spec: none
+- Open questions: host panel runtime proof is the scheduled T5.1 `panel-interrogate` scenario.

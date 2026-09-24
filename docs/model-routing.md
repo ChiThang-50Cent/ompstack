@@ -12,7 +12,9 @@ Agent definitions request ordered OMP patterns:
 | `pstack-architect` | `@pstack_reason, @slow` |
 | `pstack-builder` | `@pstack_code, @task, @smol` |
 | `pstack-reviewer` | `@pstack_review, @slow` |
-| `pstack-judge` | `@pstack_reason, @slow` |
+| `pstack-reviewer-a` | `@pstack_panel_a, @pstack_review` |
+| `pstack-reviewer-b` | `@pstack_panel_b, @pstack_review` |
+| `pstack-reviewer-c` | `@pstack_panel_c, @pstack_review` |
 | `pstack-synthesizer` | `@pstack_code, @task, @smol` |
 | `pstack-verifier` | `@pstack_verify, @slow` |
 

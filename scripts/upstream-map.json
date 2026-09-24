@@ -284,7 +284,7 @@
     "upstreamWords": 784,
     "target": "skills/pstack/operators/references/interrogate/code-quality-review.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -293,7 +293,7 @@
     "upstreamWords": 547,
     "target": "skills/pstack/operators/references/interrogate/lead-judgment.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -302,7 +302,7 @@
     "upstreamWords": 391,
     "target": "skills/pstack/operators/references/interrogate/reviewer-prompt.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -311,7 +311,7 @@
     "upstreamWords": 809,
     "target": "skills/pstack/operators/references/interrogate/rubric.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -509,7 +509,7 @@
     "upstreamWords": 728,
     "target": "skills/pstack/operators/interrogate.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

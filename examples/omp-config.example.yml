@@ -1,0 +1,11 @@
+# OMP model-role configuration consumed by the host harness.
+# Replace each placeholder with a provider/model accepted by your profile.
+modelRoles:
+  pstack_fast: <provider/model>
+  pstack_code: <provider/model>
+  pstack_reason: <provider/model>
+  pstack_review: <provider/model>
+  pstack_verify: <provider/model>
+  pstack_panel_a: <provider/model>
+  pstack_panel_b: <provider/model>
+  pstack_panel_c: <provider/model>

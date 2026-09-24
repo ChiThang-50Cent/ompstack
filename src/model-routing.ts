@@ -9,7 +9,9 @@ const ROLE_BY_AGENT: Record<string, AgentRole> = {
   "pstack-architect": "architect",
   "pstack-builder": "builder",
   "pstack-reviewer": "reviewer",
-  "pstack-judge": "judge",
+  "pstack-reviewer-a": "reviewer",
+  "pstack-reviewer-b": "reviewer",
+  "pstack-reviewer-c": "reviewer",
   "pstack-synthesizer": "synthesizer",
   "pstack-verifier": "verifier",
 };

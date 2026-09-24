@@ -64,3 +64,15 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack/operators/references/why/sources/notion.md`
 - `skills/pstack/operators/references/why/sources/sentry.md`
 - `skills/pstack/operators/references/why/sources/slack.md`
+
+### T2.4 panel reviewers and `interrogate`
+
+- `skills/pstack/operators/interrogate.md`
+- `skills/pstack/operators/references/interrogate/code-quality-review.md`
+- `skills/pstack/operators/references/interrogate/lead-judgment.md`
+- `skills/pstack/operators/references/interrogate/reviewer-prompt.md`
+- `skills/pstack/operators/references/interrogate/rubric.md`
+- `agents/pstack-reviewer-a.md`
+- `agents/pstack-reviewer-b.md`
+- `agents/pstack-reviewer-c.md`
+- `examples/omp-config.example.yml`

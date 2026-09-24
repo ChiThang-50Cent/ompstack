@@ -1,0 +1,841 @@
+[
+  {
+    "upstream": "pstack/skills/principle-attack-the-premise/SKILL.md",
+    "upstreamSha256": "c87bd7536f772f8a403ad8155535ee17a1bbec9a353156693eb3bb1520c87ae3",
+    "upstreamWords": 253,
+    "target": "skills/pstack/principles/attack-the-premise.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-boundary-discipline/SKILL.md",
+    "upstreamSha256": "62ac2862c2caa22dd14531f51c9c6bb445ceb198ca98a687e25b4d47c1f10a28",
+    "upstreamWords": 238,
+    "target": "skills/pstack/principles/boundary-discipline.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-build-the-lever/SKILL.md",
+    "upstreamSha256": "458b269eab8e95a1573276955312f7d2a13ae8599879a9efc748248f6bc34b56",
+    "upstreamWords": 341,
+    "target": "skills/pstack/principles/build-the-lever.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-encode-lessons-in-structure/SKILL.md",
+    "upstreamSha256": "77044c83a9ac6df78fc643887ea5f1f11f082adaf14b717c060cdaed03cce863",
+    "upstreamWords": 300,
+    "target": "skills/pstack/principles/encode-lessons-in-structure.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-exhaust-the-design-space/SKILL.md",
+    "upstreamSha256": "8583310d7297b7823d75494faa57b003564d436807febecdecbd8321abe5cf6e",
+    "upstreamWords": 136,
+    "target": "skills/pstack/principles/exhaust-the-design-space.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-experience-first/SKILL.md",
+    "upstreamSha256": "58903529d733b1c1a7c9ccf127d45ef3c7d0d9f0b81164a4dc6b80efe6f2912b",
+    "upstreamWords": 148,
+    "target": "skills/pstack/principles/experience-first.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-fix-root-causes/SKILL.md",
+    "upstreamSha256": "ba4cd38da1dcc8fe5432feb64457cba95594736a9b21b2ebf8f8c52aee068707",
+    "upstreamWords": 165,
+    "target": "skills/pstack/principles/fix-root-causes.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-foundational-thinking/SKILL.md",
+    "upstreamSha256": "864b827e8199d946ce58beca0f89c4ed4099ed6e426fb698a3aaa45de2a9eea2",
+    "upstreamWords": 172,
+    "target": "skills/pstack/principles/foundational-thinking.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-guard-the-context-window/SKILL.md",
+    "upstreamSha256": "d2cef147862576e3d709b7afc149d85196245e8338b9c7eef337c95fba412b3e",
+    "upstreamWords": 101,
+    "target": "skills/pstack/principles/guard-context-window.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-laziness-protocol/SKILL.md",
+    "upstreamSha256": "9006579e9e3f33955d17569733db688ae65f22577dc3b21803d219a5a8445aff",
+    "upstreamWords": 180,
+    "target": "skills/pstack/principles/laziness-protocol.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-make-operations-idempotent/SKILL.md",
+    "upstreamSha256": "540738217c3da7bf513b9886924ad6a2bc77e58be867f5bd2e1831c74bf2ce70",
+    "upstreamWords": 170,
+    "target": "skills/pstack/principles/make-operations-idempotent.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
+    "upstreamSha256": "09978915a4a11990cf0a9a02d9c08cc59e0b7a04c5c24b83aa560fbe4146f75b",
+    "upstreamWords": 135,
+    "target": "skills/pstack/principles/migrate-callers-then-delete-legacy-apis.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-minimize-reader-load/SKILL.md",
+    "upstreamSha256": "42551c5dc74cd578163c148da552db3ff67d29b78600ef216bfd311fb828fe69",
+    "upstreamWords": 288,
+    "target": "skills/pstack/principles/minimize-reader-load.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-model-the-domain/SKILL.md",
+    "upstreamSha256": "bbadbb9a723fac3f76e782ae45665eb94058ec10993e4bae36d4dc6b0e4eac07",
+    "upstreamWords": 288,
+    "target": "skills/pstack/principles/model-the-domain.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-never-block-on-the-human/SKILL.md",
+    "upstreamSha256": "f2764bb9338cbfc788c903cf4b9cd0a5f4042d3a04dd6d59cbd525d9beaadd0a",
+    "upstreamWords": 132,
+    "target": "skills/pstack/principles/never-block-on-the-human.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-outcome-oriented-execution/SKILL.md",
+    "upstreamSha256": "10eb91633aa570355ba4bb37088fcade2b22e498df7a58edc749e65bc5a78e2d",
+    "upstreamWords": 105,
+    "target": "skills/pstack/principles/outcome-oriented-execution.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-prove-it-works/SKILL.md",
+    "upstreamSha256": "ec79a15025bac8d33d62011c54f3b612733fd2a024e623b531b3637aa75070e2",
+    "upstreamWords": 172,
+    "target": "skills/pstack/principles/prove-it-works.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-redesign-from-first-principles/SKILL.md",
+    "upstreamSha256": "a1c7fd0a96b40e12a74bceb0e6bb20a9666dd844dcabfb624acb27da23b929fe",
+    "upstreamWords": 91,
+    "target": "skills/pstack/principles/redesign-from-first-principles.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md",
+    "upstreamSha256": "05294b40448e927c5da1c7b6f5c6b9fed3744637e3833d2d948b9154a9dd00bb",
+    "upstreamWords": 182,
+    "target": "skills/pstack/principles/separate-before-serializing-shared-state.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-sequence-verifiable-units/SKILL.md",
+    "upstreamSha256": "2ccbbacc56ace5afdfb8670cef19d7bd009fb2a0033b9a741cbdf2b6baf72187",
+    "upstreamWords": 227,
+    "target": "skills/pstack/principles/sequence-verifiable-units.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-subtract-before-you-add/SKILL.md",
+    "upstreamSha256": "a983a50e732c1ed315eba7aaf47a61329e31c4794eb1ab9d25d9945265b31e03",
+    "upstreamWords": 128,
+    "target": "skills/pstack/principles/subtract-before-you-add.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-test-behavior-not-implementation/SKILL.md",
+    "upstreamSha256": "87e40efe4e486f7ea639d2ed1fc0abe6c93b8fd0e89a81218086909d2470a52e",
+    "upstreamWords": 325,
+    "target": "skills/pstack/principles/test-behavior-not-implementation.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/principle-type-system-discipline/SKILL.md",
+    "upstreamSha256": "c83da8031ffb4c86410030d3e261f659598fca2b7d8158fd9dc269d70a3a025e",
+    "upstreamWords": 727,
+    "target": "skills/pstack/principles/type-system-discipline.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/architect/references/design-red-flags.md",
+    "upstreamSha256": "905066f9bbac81c573c2b325be47751d2c0f9325e0a0772bd4384e82dafe9336",
+    "upstreamWords": 292,
+    "target": "skills/pstack/operators/references/architect/design-red-flags.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/architect/references/rationale-template.md",
+    "upstreamSha256": "0cedfccdc7b47fc881febd5a8293eecbc542c20f8df825639904a8102d2eb5d3",
+    "upstreamWords": 466,
+    "target": "skills/pstack/operators/references/architect/rationale-template.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/architect/references/runner-prompt.md",
+    "upstreamSha256": "983bf2820cc14ed8ecab6e448e1033e5cfe6031967d0a9287b48c7fa9c33d925",
+    "upstreamWords": 466,
+    "target": "skills/pstack/operators/references/architect/runner-prompt.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/create-verification-skill/references/feature-map-example/README.md",
+    "upstreamSha256": "cb7bd782cf89968a4ba3d58a5151db837430db92d19a6f52a906973b77b516ba",
+    "upstreamWords": 406,
+    "target": "skills/pstack-create-verification/references/feature-map-example/README.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/create-verification-skill/references/feature-map-example/create-note.md",
+    "upstreamSha256": "644a44c74f35d38c2feb7cd05a0121fdebbb623e8dc376c185b565a581d1ccf7",
+    "upstreamWords": 445,
+    "target": "skills/pstack-create-verification/references/feature-map-example/create-note.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/create-verification-skill/references/feature-map-example/search.md",
+    "upstreamSha256": "6e87b9e7f2791a7776ba1bb83f371cd285c306c67f19d245cc4dd6ca3015c823",
+    "upstreamWords": 516,
+    "target": "skills/pstack-create-verification/references/feature-map-example/search.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/how/references/explainer-prompt.md",
+    "upstreamSha256": "ddb89cebefc24e2b54517a331aedfe045b6971e101f45c71b8cef4cccff45bff",
+    "upstreamWords": 471,
+    "target": "skills/pstack/operators/references/how/explainer-prompt.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/how/references/explorer-prompt.md",
+    "upstreamSha256": "a3b44a6e5bb16a6d4d1cac19db8ed5322ffd5f5f5d45baca4e73990ca096f8be",
+    "upstreamWords": 416,
+    "target": "skills/pstack/operators/references/how/explorer-prompt.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/interrogate/references/code-quality-review.md",
+    "upstreamSha256": "79162fda183eafd40d51661fbb5e151c7ba250f89e506ba17f5bd135dcbd50a8",
+    "upstreamWords": 784,
+    "target": "skills/pstack/operators/references/interrogate/code-quality-review.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/interrogate/references/lead-judgment.md",
+    "upstreamSha256": "6e5bdf5670eb34017692e9b6c546f36ac7552e6bb9f3f2f3429164fcc46a9361",
+    "upstreamWords": 547,
+    "target": "skills/pstack/operators/references/interrogate/lead-judgment.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/interrogate/references/reviewer-prompt.md",
+    "upstreamSha256": "e0598e254792b56de39bb16b1e6db559b03a522fdc54b98f942d254090920ae6",
+    "upstreamWords": 391,
+    "target": "skills/pstack/operators/references/interrogate/reviewer-prompt.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/interrogate/references/rubric.md",
+    "upstreamSha256": "a85aa801abbaf14434f00579440abc0d8e2723227ba8bf57de7cca8d6e7d2f25",
+    "upstreamWords": 809,
+    "target": "skills/pstack/operators/references/interrogate/rubric.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/references/bugbot-triage.md",
+    "upstreamSha256": "b2d146c770d8d3593e1ef3d77b668039b8e1f78093ea1a86f1d45d7f99614309",
+    "upstreamWords": 1489,
+    "target": "skills/pstack/playbooks/references/bugbot-triage.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/reflect/references/divergent-reviewer.md",
+    "upstreamSha256": "221dfc0abf7cbcd25e1da3cd87323f5d1050fc3bf652e096d093584e183c98fb",
+    "upstreamWords": 604,
+    "target": "skills/pstack-reflect/references/divergent-reviewer.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/reflect/references/judgment-reviewer.md",
+    "upstreamSha256": "a40ecb9b28bd2a3491e11a541157fe58efe158e0eda7b61a5006c14590aabe61",
+    "upstreamWords": 506,
+    "target": "skills/pstack-reflect/references/judgment-reviewer.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/reflect/references/synthesizer.md",
+    "upstreamSha256": "2f76c847eb45b182dc6fbcbf7d96c8ee7e2986ecfd9e0d640fec44e3cc5a617c",
+    "upstreamWords": 632,
+    "target": "skills/pstack-reflect/references/synthesizer.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/reflect/references/tooling-reviewer.md",
+    "upstreamSha256": "bc49ced90fa81eaba3083b88aeb430d900a6d8f14ff40c1d6b52263bacfc77b6",
+    "upstreamWords": 734,
+    "target": "skills/pstack-reflect/references/tooling-reviewer.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/show-me-your-work/references/decision-log-template.tsv",
+    "upstreamSha256": "6779378006a2f5225e8c06deb84f1d913fb532041ebbb6e50d94600bfe3f4b76",
+    "upstreamWords": 6,
+    "target": "skills/pstack-show-me-your-work/references/decision-log-template.tsv",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/typescript-best-practices/references/patterns.md",
+    "upstreamSha256": "62e9cd32d2fa066a35d0d1349aac22dce31a48ad7d5eaf142570770cfe707384",
+    "upstreamWords": 1316,
+    "target": "skills/pstack-typescript-best-practices/references/patterns.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/epistemics.md",
+    "upstreamSha256": "fcc0f559c072832c869a5ada72434b4849320a637ae63c09e8ee14f7ad787059",
+    "upstreamWords": 1289,
+    "target": "skills/pstack/operators/references/why/epistemics.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/investigator-prompt.md",
+    "upstreamSha256": "6892956a7ab0b5ee6c4babaf4f793703abe89b350ea7cb9463b4a56eea1c8266",
+    "upstreamWords": 1084,
+    "target": "skills/pstack/operators/references/why/investigator-prompt.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/source-playbook.md",
+    "upstreamSha256": "9ae9dcb9d09111c9facc68510331c5aba4aed9b1b057314ff1fc0e166ad3993a",
+    "upstreamWords": 174,
+    "target": "skills/pstack/operators/references/why/source-playbook.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/sources/code-archaeology.md",
+    "upstreamSha256": "8c14aa382f0de40829b2668d43e3f54814480bb93a486c9282ada4003f6b9dbd",
+    "upstreamWords": 549,
+    "target": "skills/pstack/operators/references/why/sources/code-archaeology.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/sources/databricks.md",
+    "upstreamSha256": "236ede7aab6454662a992db088a5393537a5233a4c26719c93188f9e174488f6",
+    "upstreamWords": 947,
+    "target": "skills/pstack/operators/references/why/sources/databricks.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/sources/datadog.md",
+    "upstreamSha256": "ebe9c07bac28e47757ee7f16fb93b0c01d427a08c501957d047f395a2f37b7e7",
+    "upstreamWords": 770,
+    "target": "skills/pstack/operators/references/why/sources/datadog.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/sources/incident-postmortem.md",
+    "upstreamSha256": "a899470f05f86029630a13a2696491cc708ca7b56a6e822a69ff6e954d6ff8cf",
+    "upstreamWords": 282,
+    "target": "skills/pstack/operators/references/why/sources/incident-postmortem.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/sources/linear.md",
+    "upstreamSha256": "01304e7f1badfcfb78babbb0edcadeb3cc8dd3f713793420cdff24ba190f907c",
+    "upstreamWords": 456,
+    "target": "skills/pstack/operators/references/why/sources/linear.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/sources/notion.md",
+    "upstreamSha256": "3bcfa695c49dfad4ac036d5d7181c12585f55ac04f1936198d16ab75a2788997",
+    "upstreamWords": 449,
+    "target": "skills/pstack/operators/references/why/sources/notion.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/sources/sentry.md",
+    "upstreamSha256": "6f292bc4fb1548e956f95e1900b9481abf5134254419f1cd9edec95428c82d73",
+    "upstreamWords": 749,
+    "target": "skills/pstack/operators/references/why/sources/sentry.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/sources/slack.md",
+    "upstreamSha256": "58fee61d024b3700b407e7acbed367944720ff05adfddb6954d36c88368f3ba7",
+    "upstreamWords": 485,
+    "target": "skills/pstack/operators/references/why/sources/slack.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/references/synthesizer-prompt.md",
+    "upstreamSha256": "733a3e9cf897b1aca56aaddeae01a3832e4bfed024c2f602db2d1bf807d7a73b",
+    "upstreamWords": 1191,
+    "target": "skills/pstack/operators/references/why/synthesizer-prompt.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/how/SKILL.md",
+    "upstreamSha256": "d31805589c7f6a63a6db6c9fadebbd79fb9660682cf1654e9b2e5e1e7cd30bc0",
+    "upstreamWords": 413,
+    "target": "skills/pstack/operators/how.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/why/SKILL.md",
+    "upstreamSha256": "2a852ec8680920109d2b56538b027c52867896a597250ac5d18a13e0b42e5b06",
+    "upstreamWords": 1437,
+    "target": "skills/pstack/operators/why.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/interrogate/SKILL.md",
+    "upstreamSha256": "59d498c3e9848a24b2d105eb3f05b808aa4152adf4cb1de7bbb6aff4f4cd9b68",
+    "upstreamWords": 728,
+    "target": "skills/pstack/operators/interrogate.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/architect/SKILL.md",
+    "upstreamSha256": "691cd39f52c7b613866e6baf9ea0b05451ffa21a6a9b4102f166418b89178fde",
+    "upstreamWords": 764,
+    "target": "skills/pstack/operators/architect.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/arena/SKILL.md",
+    "upstreamSha256": "e3a1f6c49a08b7e0b92134e53300d146f1f22ba83386d2019926e736df421851",
+    "upstreamWords": 737,
+    "target": "skills/pstack/operators/arena.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/swarm/SKILL.md",
+    "upstreamSha256": "e28057fbbd1113257b2e953c6e891c41f535dbb01400b6bfd3eb9a85a2ab861f",
+    "upstreamWords": 466,
+    "target": "skills/pstack/operators/swarm.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/unslop/SKILL.md",
+    "upstreamSha256": "195411d320b5b328f9f642baf59757ed19aaf0931c0838740e0aca273d538dc1",
+    "upstreamWords": 891,
+    "target": "skills/pstack-unslop/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/SKILL.md",
+    "upstreamSha256": "7645c9ee27ef9798c48a84060b6df409f8593d1058c7c25cbec28dce976195f9",
+    "upstreamWords": 2689,
+    "target": "skills/pstack/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null,
+    "aggregate": true
+  },
+  {
+    "upstream": "pstack/skills/no-comments/SKILL.md",
+    "upstreamSha256": "5c5b0882297d704c3a9720c52b7a793c68b013eaf717989f0945624efdfe2b05",
+    "upstreamWords": 362,
+    "target": "skills/pstack-no-comments/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/tdd/SKILL.md",
+    "upstreamSha256": "eeb868e2dfebee528d730a67d7b17498fac4bb85dec2e38bc5c5176aca4d5d2f",
+    "upstreamWords": 443,
+    "target": "skills/pstack-tdd/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/blast-radius/SKILL.md",
+    "upstreamSha256": "5f02db9101ccf26c20254718f0fcd5c2c7ac5d4292b0e0923d0944ac47237aff",
+    "upstreamWords": 647,
+    "target": "skills/pstack-blast-radius/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/technical-writing/SKILL.md",
+    "upstreamSha256": "10c74685e1639cc4f8ff096007e5405b25ca0e824b65aaa17105c238faf6a1e8",
+    "upstreamWords": 1652,
+    "target": "skills/pstack-technical-writing/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/typescript-best-practices/SKILL.md",
+    "upstreamSha256": "28f9e61710e205f6f3c5476f333483cff0e988f6a5b639e2faad536344b40c5e",
+    "upstreamWords": 400,
+    "target": "skills/pstack-typescript-best-practices/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/create-verification-skill/SKILL.md",
+    "upstreamSha256": "644f2551403c1bca01a2855b34611b6e7be0ce0dc5b204514c376c0f6a6e6ac4",
+    "upstreamWords": 889,
+    "target": "skills/pstack-create-verification/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/maintain-verification-skill/SKILL.md",
+    "upstreamSha256": "515c0eaa054b3f6be1b1fb06f2c2f173c80fddb58bbcac57576f89c479bc68e8",
+    "upstreamWords": 720,
+    "target": "skills/pstack-maintain-verification/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/recall/SKILL.md",
+    "upstreamSha256": "d265b0e5b6dc5b89c0407f3387d24462c988e1990a37d5359735137908128c5a",
+    "upstreamWords": 801,
+    "target": "skills/pstack-recall/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/reflect/SKILL.md",
+    "upstreamSha256": "36efa48cc4ec2ba6f8131651aae24c6321682b098ed47a1069a7509462bf4a84",
+    "upstreamWords": 678,
+    "target": "skills/pstack-reflect/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/automate-me/SKILL.md",
+    "upstreamSha256": "1510979b0b71b54284427a19c09918f8b1fdfc168f9b7f9e30098793a5ec88ef",
+    "upstreamWords": 1002,
+    "target": "skills/pstack-automate-me/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/figure-it-out/SKILL.md",
+    "upstreamSha256": "0eb9485f0e7d84fee56b5d0f0af0faf4635e3ca87c8cba3970c01293b76ecc19",
+    "upstreamWords": 583,
+    "target": "skills/pstack-figure-it-out/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/teach/SKILL.md",
+    "upstreamSha256": "bd286e5a6290673be2cd28aef7af2ec7f1fb138e6bce156ea657368c7e7fc8a4",
+    "upstreamWords": 967,
+    "target": "skills/pstack-teach/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/bro/SKILL.md",
+    "upstreamSha256": "aa329d0ceeeecb6822a7174ad76bb07a7826a3c52ceb6a588dec4138815084bb",
+    "upstreamWords": 22,
+    "target": "skills/pstack-bro/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/show-me-your-work/SKILL.md",
+    "upstreamSha256": "bcff5f7f9fd23f92c12b251f9cd6b947e9485e1055cfacb6fdd9cae0789d7550",
+    "upstreamWords": 1017,
+    "target": "skills/pstack-show-me-your-work/SKILL.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/prototype.md",
+    "upstreamSha256": "7aa1f52c691c3d46d5afc527b23f90977fce869ce33573c73c81a4c7f0cde962",
+    "upstreamWords": 334,
+    "target": "skills/pstack/playbooks/empirical-prototype.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null,
+    "aggregate": true
+  },
+  {
+    "upstream": "pstack/agents/comment-sicko.md",
+    "upstreamSha256": "c0fd0383008da45fc78cfac17b9007d62c42f87ad1c8d5c2fb658b1fd01f7c82",
+    "upstreamWords": 347,
+    "target": "agents/pstack-comment-sicko.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/show-me-your-work/scripts/log.sh",
+    "upstreamSha256": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e",
+    "upstreamWords": 225,
+    "target": "scripts/log.sh",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/authoring-a-skill.md",
+    "upstreamSha256": "f6a13a445c360b48d6cd72780ac01955f45b82826476efe0e67c7559329407aa",
+    "upstreamWords": 127,
+    "target": "skills/pstack/playbooks/authoring-a-skill.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/autonomous-run.md",
+    "upstreamSha256": "15e54ad3ac92565613980772d8708de6e19cc4690bfd4bb3fb8836522407377b",
+    "upstreamWords": 297,
+    "target": "skills/pstack/playbooks/autonomous-run.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/autopilot-full.md",
+    "upstreamSha256": "975439613b9073b637a88c6df762b474dbd745f0e86150bb07d2121e32eb48e7",
+    "upstreamWords": 1458,
+    "target": "skills/pstack/playbooks/autopilot-full.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/autopilot-stack.md",
+    "upstreamSha256": "f626f4ed17725de5ea96ac22597a1c298c46c36015e844bf86a68f6d38d57fbf",
+    "upstreamWords": 823,
+    "target": "skills/pstack/playbooks/autopilot-stack.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/babysit.md",
+    "upstreamSha256": "a0346c37c2313f36a863b80f66ee7b98059c2242adf74fc7b3e48abdb9ec6f5a",
+    "upstreamWords": 1333,
+    "target": "skills/pstack/playbooks/babysit.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/eval.md",
+    "upstreamSha256": "b862bfa2fae2399abf047a8e80d3e3dddb64003af96fb1cebb625216131e36bb",
+    "upstreamWords": 390,
+    "target": "skills/pstack/playbooks/eval.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/hillclimb.md",
+    "upstreamSha256": "41980da135de2579bb38570e4b3373e015029148734ab5dc7d6103417b499af6",
+    "upstreamWords": 641,
+    "target": "skills/pstack/playbooks/hillclimb.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/opening-a-pr.md",
+    "upstreamSha256": "1c0281f84348aa5dc6f10defbcdd8357f4b0786d874f340ba34bfc169dc6c26f",
+    "upstreamWords": 879,
+    "target": "skills/pstack/playbooks/opening-a-pr.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/orchestrate.md",
+    "upstreamSha256": "d42b4375f1bd4ce23da0b575a198571a2117df7eea10c3c9fc6d92ae1053f7be",
+    "upstreamWords": 2636,
+    "target": "skills/pstack/playbooks/orchestrate.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/pause-safely.md",
+    "upstreamSha256": "77968cfe5f4a71a8cd33e0ae8ffcdbd88dd693a212c240457773e6c40c96c21d",
+    "upstreamWords": 202,
+    "target": "skills/pstack/playbooks/pause-safely.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/runtime-forensics.md",
+    "upstreamSha256": "594f02c40c243a346e1f57b688ecf2ed5e882f21b3d24ed2204d1ac6f1c24a8a",
+    "upstreamWords": 198,
+    "target": "skills/pstack/playbooks/runtime-forensics.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/trace-forensics.md",
+    "upstreamSha256": "137ce3984fb96e45971fdff4d3c79fa4ccc647c5b30ae4945783b9fb23f8cec7",
+    "upstreamWords": 315,
+    "target": "skills/pstack/playbooks/trace-forensics.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/visual-parity.md",
+    "upstreamSha256": "950ca51999a6454c98eee6bcbc3d1bbe501a4e3a5d5439b6f6ddc378991b256c",
+    "upstreamWords": 182,
+    "target": "skills/pstack/playbooks/visual-parity.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  },
+  {
+    "upstream": "pstack/skills/poteto-mode/playbooks/worktree-cleanup.md",
+    "upstreamSha256": "fc464dc4121926df1704f483c5feca83717c0a40b4651d3e11bd3aedd89441b6",
+    "upstreamWords": 444,
+    "target": "skills/pstack/playbooks/worktree-cleanup.md",
+    "minRatio": 0.85,
+    "status": "planned",
+    "reason": null
+  }
+]

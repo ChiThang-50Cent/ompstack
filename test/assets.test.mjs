@@ -1,77 +1,71 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
-import { PLAYBOOKS } from '../dist/src/domain.js';
+import { validate } from '../scripts/lib/validate.mjs';
 
-const root = process.cwd();
+const root = path.resolve(new URL('..', import.meta.url).pathname);
+const EXCLUDED = new Set(['node_modules', '.git', '.upstream', 'dist']);
 
-function frontmatter(text) {
-  const match = text.match(/^---\n([\s\S]*?)\n---/);
-  assert.ok(match, 'missing frontmatter');
-  const fields = {};
-  for (const line of match[1].split('\n')) {
-    const m = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (m) fields[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
+async function copyRepository(t) {
+  const destination = await mkdtemp(path.join(os.tmpdir(), 'pstack-assets-'));
+  t.after(() => rm(destination, { recursive: true, force: true }));
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    if (EXCLUDED.has(entry.name)) continue;
+    await cp(path.join(root, entry.name), path.join(destination, entry.name), { recursive: true });
   }
-  return fields;
+  return destination;
 }
 
-test('all specialist agents exist and verifier declares a non-writing surface', async () => {
-  const expected = ['pstack-scout','pstack-architect','pstack-builder','pstack-reviewer','pstack-judge','pstack-synthesizer','pstack-verifier'];
-  const files = (await readdir(path.join(root, 'agents'))).filter(f => f.endsWith('.md')).sort();
-  assert.equal(files.length, expected.length);
-  const seen = [];
-  for (const file of files) {
-    const text = await readFile(path.join(root, 'agents', file), 'utf8');
-    const fm = frontmatter(text);
-    seen.push(fm.name);
-    assert.ok(fm.description);
-    assert.ok(fm.tools);
-    assert.match(text, /output:/);
-    assert.doesNotMatch(fm.tools, /\bpstack_/);
-    if (fm.name === 'pstack-verifier') {
-      assert.doesNotMatch(fm.tools, /\b(edit|write)\b/);
-      assert.equal(fm.blocking, 'true');
-      assert.match(text, /parent extension records evidence/i);
-    }
-    if (fm.name === 'pstack-builder' || fm.name === 'pstack-synthesizer') {
-      assert.match(fm.tools, /\bedit\b/);
-      assert.match(fm.tools, /\bwrite\b/);
-    }
-  }
-  assert.deepEqual(seen.sort(), expected.sort());
+async function assertInvalid(t, mutate, message) {
+  const copy = await copyRepository(t);
+  await mutate(copy);
+  const result = await validate(copy);
+  assert.ok(result.errors.length > 0, message);
+}
+
+test('validator accepts an unmodified repository copy', async t => {
+  const copy = await copyRepository(t);
+  const result = await validate(copy);
+  assert.deepEqual(result.errors, []);
 });
 
-test('no pstack agent can orchestrate: no task tool and no spawns', async () => {
-  for (const file of (await readdir(path.join(root, 'agents'))).filter(f => f.endsWith('.md'))) {
-    const fm = frontmatter(await readFile(path.join(root, 'agents', file), 'utf8'));
-    assert.doesNotMatch(fm.tools, /\btask\b/, file);
-    assert.equal(fm.spawns, undefined, file);
-  }
+test('validator rejects a broken pstack skill link', async t => {
+  await assertInvalid(t, async copy => {
+    const file = path.join(copy, 'skills/pstack/SKILL.md');
+    await writeFile(file, `${await readFile(file, 'utf8')}\nSee skill://pstack/operators/references/nope.md\n`);
+  }, 'broken skill link must fail validation');
 });
 
-test('proof-producing agents are blocking: async spawns deliver no structured output', async () => {
-  for (const name of ['pstack-builder', 'pstack-synthesizer', 'pstack-verifier']) {
-    const fm = frontmatter(await readFile(path.join(root, 'agents', `${name}.md`), 'utf8'));
-    assert.equal(fm.blocking, 'true', name);
-  }
+test('validator rejects Cursor subagent_type leftovers', async t => {
+  await assertInvalid(t, async copy => {
+    const file = path.join(copy, 'skills/pstack/SKILL.md');
+    await writeFile(file, `${await readFile(file, 'utf8')}\nsubagent_type: scout\n`);
+  }, 'subagent_type must fail validation');
 });
 
-test('playbook corpus exactly covers runtime playbooks', async () => {
-  const files = (await readdir(path.join(root, 'skills/pstack/playbooks'))).filter(f => f.endsWith('.md')).sort();
-  assert.deepEqual(files, [...PLAYBOOKS].map(name => `${name}.md`).sort());
-  for (const file of files) {
-    const text = await readFile(path.join(root, 'skills/pstack/playbooks', file), 'utf8');
-    assert.match(text, /## Completion gate/);
-    assert.match(text, /pstack_gate action=check|goal op=complete/);
-  }
+test('validator rejects model slugs in assets', async t => {
+  await assertInvalid(t, async copy => {
+    const file = path.join(copy, 'skills/pstack/SKILL.md');
+    await writeFile(file, `${await readFile(file, 'utf8')}\nmodel: claude-opus-5-5-max\n`);
+  }, 'provider model slugs must fail validation');
 });
 
-test('principles and schemas are complete and parseable', async () => {
-  const principleFiles = (await readdir(path.join(root, 'skills/pstack/principles'))).filter(f => f.endsWith('.md'));
-  assert.equal(principleFiles.length, 23);
-  const schemaFiles = (await readdir(path.join(root, 'skills/pstack/schemas'))).filter(f => f.endsWith('.json'));
-  assert.ok(schemaFiles.length >= 8);
-  for (const file of schemaFiles) JSON.parse(await readFile(path.join(root, 'skills/pstack/schemas', file), 'utf8'));
+test('validator rejects unknown agent tool names', async t => {
+  await assertInvalid(t, async copy => {
+    const file = path.join(copy, 'agents/pstack-scout.md');
+    const source = await readFile(file, 'utf8');
+    await writeFile(file, source.replace(/^tools:.*$/m, 'tools: read, frobnicate'));
+  }, 'unknown OMP tools must fail validation');
+});
+
+test('validator rejects imported content below the fidelity ratio', async t => {
+  await assertInvalid(t, async copy => {
+    const mapFile = path.join(copy, 'scripts/upstream-map.json');
+    const map = JSON.parse(await readFile(mapFile, 'utf8'));
+    map[0].status = 'imported';
+    await writeFile(mapFile, `${JSON.stringify(map, null, 2)}\n`);
+    await writeFile(path.join(copy, map[0].target), 'truncated\n');
+  }, 'truncated imported content must fail fidelity validation');
 });

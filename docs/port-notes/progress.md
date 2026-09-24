@@ -193,3 +193,15 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: devDependency and lockfile use 18.3.0; peer range remains `>=18.2.11` so the compatibility matrix remains required.
 - Deviations from spec: none
 - Open questions: none
+
+### T2.0 Validator API, upstream map, and fixtures {#t20}
+- Status: done
+- Files: `scripts/lib/validate.mjs`, `scripts/validate-assets.mjs`, `scripts/build-upstream-map.mjs`, `scripts/upstream-map.json`, `test/assets.test.mjs`, `package.json`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run check` → 53 tests passed, router 33/33, asset validation passed.
+  - `npm run check:upstream` → upstream map current: 93 entries from pinned commit `12d587d`.
+  - `test/assets.test.mjs` → six fixture checks: clean copy, broken `skill://`, Cursor leftovers, model slug, unknown agent tool, and imported fidelity truncation.
+- Sources read: `spec3_1.md:355-384`, `.upstream/cursor-plugins` inventory for Appendix A and Phase 2–4 targets
+- Decisions: `validate(repoRoot, options)` owns all checks and returns `{ errors, warnings, summary }`; the CLI only renders/exits. `verify-*` links remain project-local external skill references; all repository-owned links are resolved. Map generation preserves imported status/reason while refreshing pinned hashes and word counts.
+- Deviations from spec: none
+- Open questions: none

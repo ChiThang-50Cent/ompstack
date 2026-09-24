@@ -46,6 +46,24 @@ The verifier declares OMP `eval`, not `browser` or `computer`: those names are E
 9. Cleanup and data preservation.
 10. Known limitations requiring `INCONCLUSIVE`.
 
+## Feature maps
+
+Project verification skills maintain user-facing coverage in `.omp/skills/verify-<project>/features/`. The index is `features/README.md`; each feature has one `<slug>.md` file. The index links every feature exactly once.
+
+Each feature file has frontmatter with:
+
+- `feature`: human-readable feature name;
+- `slug`: filename without `.md`;
+- `surface`: `ui`, `cli`, `api`, or `tui`;
+- `reach`: ordered steps from a fresh start;
+- `handles`: selectors, commands, endpoints, or other automation handles;
+- `states`: non-empty observable states a verifier can assert;
+- optional `last_verified`: ISO date.
+
+The body records user entry points, exact drive commands, edge cases, fixtures, and proof expectations. A feature map is not a generator and does not replace running the real product. `skill://pstack-create-verification` explains how to create the map. The repository examples include [`examples/verify-web-app/features/`](../examples/verify-web-app/features/) and [`examples/verify-go-api/features/`](../examples/verify-go-api/features/).
+
+`npm run validate` checks every `examples/*/features/` directory. It requires all frontmatter keys, a matching slug, a supported surface, non-empty `reach`, `handles`, and `states`, and an index whose links are exactly the feature files. A missing entry or extra link fails validation.
+
 ## Verifier output contract
 
 The bundled verifier schema requires:

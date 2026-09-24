@@ -31,6 +31,20 @@ test('validator accepts an unmodified repository copy', async t => {
   assert.deepEqual(result.errors, []);
 });
 
+test('validator rejects a feature map missing states', async t => {
+  await assertInvalid(t, async copy => {
+    const file = path.join(copy, 'examples/verify-web-app/features/password-reset.md');
+    const source = await readFile(file, 'utf8');
+    await writeFile(file, source.replace(/^states:\n(?:  - .*\n)+/m, 'states:\n'));
+  }, 'feature maps must declare non-empty states');
+});
+
+test('validator rejects a feature index with a nonexistent slug', async t => {
+  await assertInvalid(t, async copy => {
+    const file = path.join(copy, 'examples/verify-web-app/features/README.md');
+    await writeFile(file, `${await readFile(file, 'utf8')}\n- [Missing](missing.md)\n`);
+  }, 'feature indexes must link only existing feature files');
+});
 test('validator rejects a broken pstack skill link', async t => {
   await assertInvalid(t, async copy => {
     const file = path.join(copy, 'skills/pstack/SKILL.md');

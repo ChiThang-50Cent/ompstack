@@ -330,3 +330,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: kept the upstream rule table and examples, and linked the OMP skill from the type-system principle.
 - Deviations from spec: none.
 - Open questions: none.
+
+### T3.6 Feature map in `pstack-create-verification` {#t36}
+- Status: done
+- Files: `skills/pstack-create-verification/SKILL.md`, `skills/pstack-create-verification/references/feature-map-example/*`, `examples/verify-web-app/features/*`, `examples/verify-go-api/features/*`, `docs/verification.md`, `test/assets.test.mjs`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` → 56 tests passed, including missing-state and nonexistent-index fixtures; router 33/33, asset validation passed with 11 agents and four example features; `npm run check:upstream` → map current at pinned Cursor commit `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/create-verification-skill/SKILL.md`, `.upstream/cursor-plugins/pstack/skills/create-verification-skill/references/feature-map-example/*`, `spec3_1.md:473-509`
+- Decisions: no generator; the repository ships the format, upstream examples, two checked-in feature maps with two features each, and validator coverage for missing states and nonexistent index links.
+- Deviations from spec: fixed the latent validator slug-regex escape so the required feature fixtures validate their filenames.
+- Open questions: none.

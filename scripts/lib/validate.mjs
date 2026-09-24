@@ -111,7 +111,7 @@ async function validateFeatureMaps(root, errors) {
       for (const key of ["feature", "slug", "surface", "reach", "handles", "states"]) {
         assert(errors, new RegExp(`^${key}:`, "m").test(fm), `${relative}: feature frontmatter missing ${key}`);
       }
-      assert(errors, new RegExp(`^slug:\s*${file.slice(0, -3)}\s*$`, "m").test(fm), `${relative}: slug must match filename`);
+      assert(errors, new RegExp(`^slug:\\s*${file.slice(0, -3)}\\s*$`, "m").test(fm), `${relative}: slug must match filename`);
       assert(errors, /^(?:surface:\s*)(ui|cli|api|tui)\s*$/m.test(fm), `${relative}: invalid surface`);
       for (const key of ["reach", "handles", "states"]) {
         const section = new RegExp(`^${key}:\\n((?:\\s+- .*(?:\\n|$))+)`, "m").exec(fm);

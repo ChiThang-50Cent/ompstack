@@ -116,3 +116,10 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 
 - `skills/pstack-typescript-best-practices/SKILL.md`
 - `skills/pstack-typescript-best-practices/references/patterns.md`
+
+### T3.6 skill `pstack-create-verification` and feature-map examples
+
+- `skills/pstack-create-verification/SKILL.md`
+- `skills/pstack-create-verification/references/feature-map-example/README.md`
+- `skills/pstack-create-verification/references/feature-map-example/create-note.md`
+- `skills/pstack-create-verification/references/feature-map-example/search.md`

@@ -239,7 +239,7 @@
     "upstreamWords": 406,
     "target": "skills/pstack-create-verification/references/feature-map-example/README.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -248,7 +248,7 @@
     "upstreamWords": 445,
     "target": "skills/pstack-create-verification/references/feature-map-example/create-note.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -257,7 +257,7 @@
     "upstreamWords": 516,
     "target": "skills/pstack-create-verification/references/feature-map-example/search.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -609,7 +609,7 @@
     "upstreamWords": 889,
     "target": "skills/pstack-create-verification/SKILL.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

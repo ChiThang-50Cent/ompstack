@@ -13,6 +13,7 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+- Re-verified on `/home/vmn` with Node/npm and OMP 18.3.0: both fetch runs pinned `cursor-plugins` at `12d587d` and `oh-my-pi` at `62bc57b`; `npm run check` passed (44 tests, 33/33 router, asset validation).
 
 ### T0.2 Host OMP resolver {#t02}
 - Status: done
@@ -23,6 +24,7 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+- Re-verified on `/home/vmn` with Node/npm: `npm run check` passed (both resolver tests, 44 tests).
 
 ### T0.3 Mock LLM {#t03}
 - Status: done
@@ -34,6 +36,7 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+- Re-verified on `/home/vmn` with Node/npm: `node --check test/host/mock-llm.mjs` passed and `npm run check` passed (44 tests).
 
 ### T0.4 Runner and `test:host` {#t04}
 - Status: done
@@ -46,6 +49,7 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+- Re-verified on `/home/vmn` with host OMP `/home/vmn/.bun/bin/omp` (`omp/18.3.0`): the status scenario passed.
 
 ### T0.5 Baseline scenarios {#t05}
 - Status: done
@@ -71,6 +75,7 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: child-agent scenarios use `setup: ["plugin-link"]` with `loadExtension: false`
 - Deviations from spec: none
 - Open questions: none
+- Re-verified on `/home/vmn` with host OMP 18.3.0: `npm run test:host` passed with 9 PASS and 2 XFAIL (`async-pending`, `gate-off-mode`), exit 0.
 
 ### T0.6 Host compatibility matrix {#t06}
 - Status: done
@@ -82,6 +87,7 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: none
 - Deviations from spec: none
 - Open questions: none
+- Re-verified on `/home/vmn`: `npm run test:host:matrix` passed for OMP 18.2.11 and 18.3.0 with 9 PASS and 2 XFAIL per version, exit 0.
 
 ### T0.7 Child-tool capture document {#t07}
 - Status: done
@@ -93,3 +99,4 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: D-CHILD and D-EXPOSE confirmed by the capture (no difference from the spec's expected table)
 - Deviations from spec: `test/host/run.mjs` now resolves a relative `--omp`/`PSTACK_OMP_BIN` against the invoking directory (runs use the scenario workspace as cwd, so a relative path crashed the runner) and turns spawn errors into scenario failures instead of an unhandled exception. Found while generating the 18.2.11 capture; included here because the capture could not be produced without it.
 - Open questions: none
+- Re-verified on `/home/vmn`: `capture-child-tools` passed on OMP 18.2.11 and 18.3.0; `capture-report.mjs` reproduced both tables from kept directories.

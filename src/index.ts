@@ -31,6 +31,14 @@ function toolNameOf(event: ToolCallEvent | ToolResultEvent): string {
   return event.toolName.trim().toLowerCase();
 }
 
+function toolResultText(event: ToolResultEvent): string {
+  return event.content
+    .map(item => isRecord(item) && typeof item.text === "string" ? item.text : "")
+    .filter(Boolean)
+    .join("\n");
+}
+
+
 function sessionKey(ctx: ExtensionContext): string {
   try {
     return ctx.sessionManager.getSessionId();
@@ -42,6 +50,9 @@ function sessionKey(ctx: ExtensionContext): string {
 export default function pstackExtension(api: ExtensionAPI): void {
   const store = new PstackStore(api);
   const lifecycle = new TaskLifecycleTracker();
+  const reconcile = async (ctx: ExtensionContext): Promise<void> => {
+    await lifecycle.reconcile(ctx, store);
+  };
 
   api.registerFlag("pstack-mode", {
     description: "Override pstack mode for this OMP session: off, auto, or strict",
@@ -49,8 +60,8 @@ export default function pstackExtension(api: ExtensionAPI): void {
     default: "",
   });
 
-  registerPstackTools(api, store);
-  registerCommands(api, store);
+  registerPstackTools(api, store, reconcile);
+  registerCommands(api, store, reconcile);
 
   const hydrate = async (_event: unknown, ctx: ExtensionContext): Promise<void> => {
     if (!isMainSession(ctx)) return;
@@ -167,7 +178,22 @@ export default function pstackExtension(api: ExtensionAPI): void {
 
   api.on("tool_result", async (event: ToolResultEvent, ctx: ExtensionContext) => {
     if (!isMainSession(ctx)) return undefined;
-    if (toolNameOf(event) !== "task") return undefined;
+    const toolName = toolNameOf(event);
+    const isWaitResult = toolName === "wait"
+      || (toolName === "hub" && isRecord(event.input) && event.input.op === "wait");
+    if (isWaitResult) {
+      try {
+        await lifecycle.reconcile(ctx, store);
+        const actors = await lifecycle.reconcileTaskResultText(toolResultText(event), ctx, store);
+        if (actors.length > 0) {
+          await store.checkpoint(ctx, "task_result_reconciled", { actors, toolName });
+        }
+      } catch (error) {
+        api.logger.warn("pstack: failed to reconcile async wait result", { error: String(error) });
+      }
+      return undefined;
+    }
+    if (toolName !== "task") return undefined;
     try {
       const actors = await lifecycle.applyTaskResult(sessionKey(ctx), event, ctx, store);
       const ingestion = await ingestStructuredTaskResults(event, ctx, store, api);

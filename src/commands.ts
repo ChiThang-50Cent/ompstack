@@ -113,7 +113,11 @@ async function doctor(api: ExtensionAPI, store: PstackStore, ctx: ExtensionComma
   ].join("\n");
 }
 
-export function registerCommands(api: ExtensionAPI, store: PstackStore): void {
+export function registerCommands(
+  api: ExtensionAPI,
+  store: PstackStore,
+  reconcile?: (ctx: ExtensionCommandContext) => Promise<void>,
+): void {
   api.registerCommand("pstack", {
     description: "Control pstack evidence-first workflows (/pstack help)",
     getArgumentCompletions: (prefix: string) => {
@@ -136,10 +140,10 @@ export function registerCommands(api: ExtensionAPI, store: PstackStore): void {
         if ((PSTACK_MODES as readonly string[]).includes(command)) {
           const mode = command as PstackMode;
           await store.mutate(ctx, { type: "set_mode", mode, at });
-          notify(ctx, `pstack mode set to ${mode}.`);
           return;
         }
 
+        await reconcile?.(ctx);
         const bucket = await store.get(ctx);
         if (command === "status") {
           notify(ctx, renderState(bucket.state, bucket.config));

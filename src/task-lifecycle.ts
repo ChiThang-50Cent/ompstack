@@ -130,6 +130,35 @@ function snapshotRows(snapshot: unknown): Array<{ id?: string; agentId?: string;
   return rows;
 }
 
+export interface TaskResultSummary {
+  id: string;
+  agentName?: string;
+  status: string;
+}
+
+export function parseTaskResultSummaries(text: string): TaskResultSummary[] {
+  const rows: TaskResultSummary[] = [];
+  const tagPattern = /<task-result\b([^>]*)>/g;
+  for (const match of text.matchAll(tagPattern)) {
+    const attributes: Record<string, string> = {};
+    for (const attribute of (match[1] ?? "").matchAll(/([A-Za-z][\w-]*)="([^"]*)"/g)) {
+      const key = attribute[1];
+      const value = attribute[2];
+      if (!key || value === undefined) continue;
+      attributes[key] = value;
+    }
+    const id = attributes.id?.trim();
+    const status = attributes.status?.trim();
+    if (!id || !status) continue;
+    rows.push({
+      id,
+      ...(attributes.agent?.trim() ? { agentName: attributes.agent.trim() } : {}),
+      status,
+    });
+  }
+  return rows;
+}
+
 /**
  * Correlates task tool calls, before_subagent_spawn hooks, task results, and the
  * async job registry. OMP's spawn hook does not currently carry toolCallId, so
@@ -283,6 +312,56 @@ export class TaskLifecycleTracker {
     }
     return touched;
   }
+  async reconcileTaskResultText(
+    text: string,
+    ctx: ExtensionContext,
+    store: PstackStore,
+  ): Promise<string[]> {
+    const summaries = parseTaskResultSummaries(text);
+    if (summaries.length === 0) return [];
+    const bucket = await store.get(ctx);
+    const run = bucket.state.activeRun;
+    if (!run) return [];
+    const pending = run.agents.filter(actor => actor.invocationKind === "task" && !terminal(actor.status));
+    const touched: string[] = [];
+    const used = new Set<string>();
+    const at = nowIso();
+
+    for (const summary of summaries) {
+      const normalizedId = summary.id.trim();
+      const normalizedAgent = normalizeAgentName(summary.agentName);
+      const status = normalizeStatus(summary.status);
+      if (!normalizedId || !status) continue;
+      const byId = pending.find(actor =>
+        !used.has(actor.actorId)
+        && [actor.actorId, actor.runtimeAgentId, actor.jobId].some(value => value === normalizedId),
+      );
+      const actor = byId
+        ?? pending.find(candidate =>
+          !used.has(candidate.actorId)
+          && normalizedAgent !== undefined
+          && normalizeAgentName(candidate.agentName) === normalizedAgent,
+        );
+      if (!actor) continue;
+      used.add(actor.actorId);
+      if (status === actor.status) continue;
+      await store.mutate(ctx, {
+        type: "update_agent",
+        actorId: actor.actorId,
+        patch: {
+          status,
+          ...(actor.runtimeAgentId ? {} : { runtimeAgentId: normalizedId }),
+          lastSeenAt: at,
+          ...(terminal(status) ? { completedAt: at } : {}),
+          lifecycleNote: `reconciled from task-result marker (${summary.status})`,
+        },
+        at,
+      }, "subagent_task_result_marker");
+      touched.push(actor.actorId);
+    }
+    return touched;
+  }
+
 }
 
 export function pendingTaskAgents(agents: AgentRecord[]): AgentRecord[] {

@@ -137,3 +137,16 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: OMP owns tool admission and task isolation; pstack blocks parent-state `pstack_*`/`hub`, warns on non-isolated writers, and documents reviewer/verifier Bash as shell-capable.
 - Deviations from spec: none
 - Open questions: none
+
+### T1.4 Async wait/hub reconciliation {#t14}
+- Status: done
+- Files: `src/task-lifecycle.ts`, `src/index.ts`, `src/tools.ts`, `src/commands.ts`, `test/task-lifecycle.test.mjs`, `test/host/known-failing.json`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run check` → 46 tests passed, router 33/33, asset validation passed.
+  - `node --test test/task-lifecycle.test.mjs` → both OMP wait/hub fixtures pass; unknown marker IDs are ignored; replay is idempotent.
+  - `npm run test:host -- test/host/scenarios/async-pending.json` → PASS on OMP 18.3.0.
+  - `PSTACK_OMP_BIN=.upstream/omp-18.2.11/node_modules/.bin/omp npm run test:host -- test/host/scenarios/async-pending.json` → PASS on OMP 18.2.11.
+- Sources read: `.upstream/oh-my-pi/packages/coding-agent/src/async/job-control.ts:241-246` (wait includes result text then consumes terminal job results), `.upstream/oh-my-pi/packages/coding-agent/src/async/job-manager.ts:775-790` (consumed-result state), `.upstream/oh-my-pi/packages/coding-agent/src/prompts/tools/task-summary.md:1-23` (marker envelope)
+- Decisions: reconcile at pstack status/gate/check command boundaries; reconcile after `wait` and `hub op=wait`; parse the host's `<task-result>` marker as a fallback because wait consumes terminal rows from the async snapshot.
+- Deviations from spec: none
+- Open questions: none

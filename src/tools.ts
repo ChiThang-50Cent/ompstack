@@ -91,7 +91,11 @@ function activeRunOrError(bucket: Awaited<ReturnType<PstackStore["get"]>>): NonN
   return bucket.state.activeRun;
 }
 
-export function registerPstackTools(api: ExtensionAPI, store: PstackStore): void {
+export function registerPstackTools(
+  api: ExtensionAPI,
+  store: PstackStore,
+  reconcile?: (ctx: ExtensionContext) => Promise<void>,
+): void {
   const { Type } = api.typebox;
 
   api.registerTool({
@@ -103,6 +107,7 @@ export function registerPstackTools(api: ExtensionAPI, store: PstackStore): void
     loadMode: "essential",
     strict: true,
     execute: async (_id: string, _params: unknown, _signal: AbortSignal | undefined, _update: unknown, ctx: ExtensionContext) => {
+      await reconcile?.(ctx);
       const bucket = await store.get(ctx);
       const fingerprint = bucket.state.activeRun ? await computeArtifactFingerprint(api, ctx.cwd, bucket.config) : undefined;
       const gate = evaluateCompletionGates(bucket.state, fingerprint, bucket.config);
@@ -153,6 +158,7 @@ export function registerPstackTools(api: ExtensionAPI, store: PstackStore): void
     strict: true,
     execute: async (_id: string, raw: GateParams, _signal: AbortSignal | undefined, _update: unknown, ctx: ExtensionContext) => {
       try {
+        if (raw.action === "check") await reconcile?.(ctx);
         const outcome = raw.action === "init"
           ? await initGate(api, store, ctx, raw)
           : raw.action === "check"

@@ -262,3 +262,14 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: arena uses one OMP `task` batch of `pstack-builder` candidates, checks `task.isolation.enabled` before claiming `isolated: true`, judges with `pstack-judge`, and preserves synthesis-bound verification. Swarm uses named OMP agents and disjoint output ownership.
 - Deviations from spec: none
 - Open questions: no host arena scenario is required before later runtime proof.
+
+### T2.6 Skill `pstack-unslop` {#t26}
+- Status: done
+- Files: `skills/pstack-unslop/SKILL.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof:
+  - `npm run validate` → asset validation passed.
+  - `npm run check:upstream` → map current at pinned Cursor commit `12d587d`; the unslop entry is `imported`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/unslop/SKILL.md`, `spec3_1.md:443-446`
+- Decisions: changed only the skill frontmatter name to `pstack-unslop`; retained the numbered rule corpus and `disable-model-invocation: true`.
+- Deviations from spec: none
+- Open questions: none

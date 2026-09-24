@@ -85,3 +85,7 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 - `skills/pstack/operators/references/architect/runner-prompt.md`
 - `skills/pstack/operators/arena.md`
 - `skills/pstack/operators/swarm.md`
+
+### T2.6 skill `pstack-unslop`
+
+- `skills/pstack-unslop/SKILL.md`

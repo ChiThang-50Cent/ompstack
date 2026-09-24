@@ -324,6 +324,15 @@
     "reason": null
   },
   {
+    "upstream": "pstack/skills/poteto-mode/scripts/worktree-audit.sh",
+    "upstreamSha256": "95b8530f3c0ccada8cabc4b0727c052fbc85c141531375aaace65c427af8aecc",
+    "upstreamWords": 582,
+    "target": "scripts/worktree-audit.sh",
+    "minRatio": 0.85,
+    "status": "imported",
+    "reason": null
+  },
+  {
     "upstream": "pstack/skills/reflect/references/divergent-reviewer.md",
     "upstreamSha256": "221dfc0abf7cbcd25e1da3cd87323f5d1050fc3bf652e096d093584e183c98fb",
     "upstreamWords": 604,
@@ -727,7 +736,7 @@
     "upstreamWords": 297,
     "target": "skills/pstack/playbooks/autonomous-run.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -799,7 +808,7 @@
     "upstreamWords": 202,
     "target": "skills/pstack/playbooks/pause-safely.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -835,7 +844,7 @@
     "upstreamWords": 444,
     "target": "skills/pstack/playbooks/worktree-cleanup.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   }
 ]

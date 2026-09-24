@@ -188,3 +188,10 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 ### T4.8 playbook `visual-parity`
 
 - `skills/pstack/playbooks/visual-parity.md`
+
+### T4.9 playbooks `autonomous-run`, `pause-safely`, and `worktree-cleanup`
+
+- `skills/pstack/playbooks/autonomous-run.md`
+- `skills/pstack/playbooks/pause-safely.md`
+- `skills/pstack/playbooks/worktree-cleanup.md`
+- `scripts/worktree-audit.sh`

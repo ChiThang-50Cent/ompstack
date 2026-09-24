@@ -33,6 +33,9 @@ export const PLAYBOOKS = [
   "opening-a-pr",
   "babysit",
   "visual-parity",
+  "autonomous-run",
+  "pause-safely",
+  "worktree-cleanup",
 ] as const;
 export type Playbook = (typeof PLAYBOOKS)[number];
 

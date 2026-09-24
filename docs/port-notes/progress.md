@@ -488,3 +488,30 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: immutable screenshot baseline, one component per unit, nonzero pixel diff is failure, Eval browser is optional and limitations are explicit.
 - Deviations from spec: OMP Eval/browser prelude and project verification driver replace Cursor control-skill references.
 - Open questions: none.
+
+### T4.9a Playbook `autonomous-run` {#t49a}
+- Status: done
+- Files: `skills/pstack/playbooks/autonomous-run.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 71/71, and asset validation with 12 agents and 27 playbooks.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/autonomous-run.md`, `spec3_1.md:549`
+- Decisions: OMP goal wake and scheduled status replace Cursor loop syntax; every iteration has a declared predicate, artifact check, and decision checkpoint.
+- Deviations from spec: reversible autonomous choices stay in scope; irreversible actions and genuine dead ends remain explicit pause boundaries.
+- Open questions: none.
+
+### T4.9b Playbook `pause-safely` {#t49b}
+- Status: done
+- Files: `skills/pstack/playbooks/pause-safely.md`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` passed 58 tests, router 71/71, and asset validation with 12 agents and 27 playbooks.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/pause-safely.md`, `spec3_1.md:549`
+- Decisions: only an explicit pause stops the run; the resume note, `wip:` checkpoint, and pstack decision trail are durable handoff state.
+- Deviations from spec: OMP goal state and `pstack_decision` replace Cursor-specific loop/session controls.
+- Open questions: none.
+
+### T4.9c Playbook `worktree-cleanup` and audit script {#t49c}
+- Status: done
+- Files: `skills/pstack/playbooks/worktree-cleanup.md`, `scripts/worktree-audit.sh`, `scripts/build-upstream-map.mjs`, `scripts/upstream-map.json`, `src/domain.ts`, `src/router.ts`, `scripts/lib/validate.mjs`, `eval/cases.json`, `docs/workflows.md`, `skills/pstack/SKILL.md`, `README.md`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `scripts/worktree-audit.sh "$PWD"` produced a dry-run classification; `npm run check` passed 58 tests, router 71/71, asset validation with 12 agents and 27 playbooks; `npm run check:upstream` reported 94 current entries.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/poteto-mode/playbooks/worktree-cleanup.md`, `.upstream/cursor-plugins/pstack/skills/poteto-mode/scripts/worktree-audit.sh`, `docs/session.md`, `spec3_1.md:549`
+- Decisions: audit is read-only and maps OMP's profile-aware current-cwd session bucket; active, dirty, or uncertain worktrees are held for explicit review before deletion.
+- Deviations from spec: remote fetch and deletion were intentionally omitted from the audit script; stale refs and deletion authority stay visible rather than being changed by a dry run.
+- Open questions: none.

@@ -231,3 +231,25 @@ freeze current-state screenshots
 ```
 
 No screenshot baseline means no parity claim.
+
+## Autonomous run
+
+Use `autonomous-run` only after stating a checkable exit predicate:
+
+```text
+declare predicate
+→ arm OMP goal and wake mechanism
+→ make one evidence-backed change
+→ verify and checkpoint
+→ continue until the predicate or a genuine dead end
+```
+
+An idle worker or a plateau is not success. Reconcile OMP job state and artifacts before replacing work.
+
+## Pause safely
+
+Use `pause-safely` only for an explicit stop request. Finish or back out the atomic step, commit a clear `wip:` checkpoint, write a resume note, and leave irreversible actions for their authorization boundary.
+
+## Worktree cleanup
+
+Use `worktree-cleanup` for a dry-run audit before any deletion. It reads current-cwd OMP session paths, holds active or dirty worktrees, and requires explicit authority before pruning.

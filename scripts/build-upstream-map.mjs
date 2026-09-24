@@ -32,6 +32,7 @@ const referenceMappings = [
   ["skills/interrogate/references/reviewer-prompt.md", "skills/pstack/operators/references/interrogate/reviewer-prompt.md"],
   ["skills/interrogate/references/rubric.md", "skills/pstack/operators/references/interrogate/rubric.md"],
   ["skills/poteto-mode/references/bugbot-triage.md", "skills/pstack/playbooks/references/bugbot-triage.md"],
+  ["skills/poteto-mode/scripts/worktree-audit.sh", "scripts/worktree-audit.sh"],
   ["skills/reflect/references/divergent-reviewer.md", "skills/pstack-reflect/references/divergent-reviewer.md"],
   ["skills/reflect/references/judgment-reviewer.md", "skills/pstack-reflect/references/judgment-reviewer.md"],
   ["skills/reflect/references/synthesizer.md", "skills/pstack-reflect/references/synthesizer.md"],

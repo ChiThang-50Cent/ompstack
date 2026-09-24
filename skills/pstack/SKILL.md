@@ -53,6 +53,9 @@ Escalate ceremony when new evidence increases blast radius. De-escalate when gro
 | Create a reviewable pull request or ordered PR stack | `opening-a-pr` |
 | Watch one PR or stack to a forge-confirmed merge-ready state | `babysit` |
 | Pixel-exact UI migration with screenshot diff | `visual-parity` |
+| Long-running OMP goal with a declared exit predicate | `autonomous-run` |
+| Explicit cold-start checkpoint and safe stop | `pause-safely` |
+| Dry-run audit and gated worktree pruning | `worktree-cleanup` |
 
 ## Non-negotiable execution contract
 

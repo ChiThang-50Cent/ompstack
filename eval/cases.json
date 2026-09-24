@@ -682,4 +682,68 @@
     "kind": "near-miss",
     "nearMissOf": "visual-parity"
   }
+  ,
+  {
+    "id": "autonomous-exit-predicate",
+    "title": "Goal-driven long run",
+    "prompt": "Run an autonomous run to the declared exit predicate.",
+    "expectedPlaybook": "autonomous-run",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-autonomous-multiphase",
+    "title": "Phased work without autonomy",
+    "prompt": "Run a long multi-phase migration with checkpoints.",
+    "expectedPlaybook": "migration",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "autonomous-run"
+  },
+  {
+    "id": "pause-cold-start",
+    "title": "Safe cold-start checkpoint",
+    "prompt": "Pause safely and write a resume note for a cold-start agent.",
+    "expectedPlaybook": "pause-safely",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-pause-multiphase",
+    "title": "Checkpointed phase run",
+    "prompt": "Run this multi-phase work with several checkpoints.",
+    "expectedPlaybook": "multi-phase",
+    "expectedCeremony": "strict",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "pause-safely"
+  },
+  {
+    "id": "worktree-dry-run",
+    "title": "Audit stale worktrees",
+    "prompt": "Run a dry-run worktree audit before pruning stale worktrees.",
+    "expectedPlaybook": "worktree-cleanup",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "positive"
+  },
+  {
+    "id": "near-worktree-refactor",
+    "title": "Code cleanup without worktrees",
+    "prompt": "Clean up the parser to remove duplication.",
+    "expectedPlaybook": "refactor",
+    "expectedCeremony": "standard",
+    "expectedVerificationRequired": true,
+    "class": "near-miss",
+    "kind": "near-miss",
+    "nearMissOf": "worktree-cleanup"
+  }
 ]

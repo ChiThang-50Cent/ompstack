@@ -28,7 +28,7 @@ test('pstack child cannot touch parent gate state or hub; OMP owns the rest of a
 });
 
 test('panel reviewer children use the reviewer role policy', () => {
-  for (const agent of ['pstack-reviewer-a', 'pstack-reviewer-b', 'pstack-reviewer-c']) {
+  for (const agent of ['pstack-reviewer-a', 'pstack-reviewer-b', 'pstack-reviewer-c', 'pstack-comment-sicko']) {
     const decision = enforcePstackChildToolPolicy({ toolName: 'hub' }, child(agent));
     assert.equal(decision.result?.block, true, agent);
   }

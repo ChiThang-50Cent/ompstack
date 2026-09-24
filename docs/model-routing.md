@@ -15,6 +15,7 @@ Agent definitions request ordered OMP patterns:
 | `pstack-reviewer-a` | `@pstack_panel_a, @pstack_review` |
 | `pstack-reviewer-b` | `@pstack_panel_b, @pstack_review` |
 | `pstack-reviewer-c` | `@pstack_panel_c, @pstack_review` |
+| `pstack-comment-sicko` | `@pstack_review, @slow` |
 | `pstack-synthesizer` | `@pstack_code, @task, @smol` |
 | `pstack-verifier` | `@pstack_verify, @slow` |
 

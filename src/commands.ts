@@ -84,6 +84,7 @@ const AGENT_MODEL_PATTERNS: ReadonlyArray<{ name: string; patterns: readonly str
   { name: "pstack-reviewer-a", patterns: ["@pstack_panel_a", "@pstack_review"] },
   { name: "pstack-reviewer-b", patterns: ["@pstack_panel_b", "@pstack_review"] },
   { name: "pstack-reviewer-c", patterns: ["@pstack_panel_c", "@pstack_review"] },
+  { name: "pstack-comment-sicko", patterns: ["@pstack_review", "@slow"] },
   { name: "pstack-judge", patterns: ["@pstack_reason", "@slow"] },
   { name: "pstack-synthesizer", patterns: ["@pstack_code", "@task", "@smol"] },
   { name: "pstack-verifier", patterns: ["@pstack_verify", "@slow"] },

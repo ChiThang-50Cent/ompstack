@@ -94,3 +94,8 @@ These files import or adapt material from the pinned Cursor `pstack` source. The
 
 - `skills/pstack/SKILL.md`
 - `docs/port-notes/poteto-mode-diff.md`
+
+### T3.1 skill `pstack-no-comments` and agent `pstack-comment-sicko`
+
+- `skills/pstack-no-comments/SKILL.md`
+- `agents/pstack-comment-sicko.md`

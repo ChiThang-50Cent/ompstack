@@ -564,7 +564,7 @@
     "upstreamWords": 362,
     "target": "skills/pstack-no-comments/SKILL.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {
@@ -700,7 +700,7 @@
     "upstreamWords": 347,
     "target": "agents/pstack-comment-sicko.md",
     "minRatio": 0.85,
-    "status": "planned",
+    "status": "imported",
     "reason": null
   },
   {

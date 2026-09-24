@@ -99,6 +99,8 @@ Proceed autonomously with local, reversible investigation, edits, tests, prototy
 - `pstack-architect`: inspect-only design, data shapes, boundaries, alternatives.
 - `pstack-builder`: one bounded implementation; task isolation is owned by OMP.
 - `pstack-reviewer`: shell-capable adversarial defect review of the actual artifact; no `edit`/`write` tools.
+- `pstack-reviewer-a`, `pstack-reviewer-b`, and `pstack-reviewer-c`: independent panel reviewers using the reviewer contract.
+- `pstack-comment-sicko`: read-only comment review using the reviewer schema; it never edits application files.
 - `pstack-judge`: inspect-only blinded same-rubric arena evaluation.
 - `pstack-synthesizer`: one bounded integration; task isolation is owned by OMP.
 - `pstack-verifier`: shell-capable real-surface verifier with no `edit`/`write` tools; the parent runtime validates and records the report.

@@ -285,3 +285,12 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: merged applicable autonomy, classify-before-asking, OMP delegation defaults, unslop reply style, sticky `off`/`auto`/`strict` semantics, and playbook sequencing into the existing OMP skill. Kept `src/policy.ts` unchanged. Deferred Cursor-only or not-yet-imported skills are recorded row-by-row in the diff table without forward links.
 - Deviations from spec: no runtime policy output growth; upstream aggregate is intentionally below 0.85 because the target preserves the existing OMP runtime contract.
 - Open questions: no remaining T2 content-fidelity questions.
+
+### T3.1 Skills `pstack-no-comments` and `pstack-comment-sicko` {#t31}
+- Status: done
+- Files: `skills/pstack-no-comments/SKILL.md`, `agents/pstack-comment-sicko.md`, `src/model-routing.ts`, `src/commands.ts`, `skills/pstack/SKILL.md`, `README.md`, `docs/model-routing.md`, `test/model-routing.test.mjs`, `test/task-rewrite.test.mjs`, `test/child-policy.test.mjs`, `test/extension.test.mjs`, `scripts/upstream-map.json`, `NOTICE.md`, `docs/port-notes/progress.md`
+- Proof: `npm run check` → 54 tests passed, router 33/33, asset validation passed with 11 agents; `npm run check:upstream` → map current at pinned Cursor commit `12d587d`.
+- Sources read: `.upstream/cursor-plugins/pstack/skills/no-comments/SKILL.md`, `.upstream/cursor-plugins/pstack/agents/comment-sicko.md`, `spec3_1.md:455-461`
+- Decisions: OMP task/reviewer contracts replace Cursor task mechanics; comment-sicko is read-only with `read, grep, glob` and emits one reviewer-schema finding per comment.
+- Deviations from spec: none.
+- Open questions: none.

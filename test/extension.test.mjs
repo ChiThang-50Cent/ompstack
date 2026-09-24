@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -274,6 +274,37 @@ test('doctor reports model resolution for every pstack agent', async t => {
     assert.match(message, new RegExp(`${agent}:`));
   }
   assert.match(message, /pstack-builder: .*@smol=/);
+});
+
+
+test('non-isolated writer warning is persisted as an audit checkpoint', async t => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-writer-warning-'));
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+  const mock = createMock(cwd);
+  pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'auto');
+  await mock.emit('session_start');
+  await execute(mock.tools.get('pstack_gate'), {
+    action: 'init',
+    objective: 'Record writer isolation',
+    playbook: 'feature',
+    ceremony: 'standard',
+    verificationRequired: false,
+  }, mock.ctx);
+
+  await mock.emit('tool_result', {
+    toolCallId: 'writer-warning-1',
+    toolName: 'task',
+    isError: false,
+    input: { tasks: [{ agent: 'pstack-builder', isolated: false }] },
+    details: { results: [] },
+  });
+
+  const runId = latestRun(mock).id;
+  const events = (await readFile(path.join(cwd, '.omp/pstack/runs', runId, 'events.jsonl'), 'utf8'))
+    .trim().split('\n').map(line => JSON.parse(line));
+  const checkpoint = events.find(event => event.type === 'writer_not_isolated');
+  assert.deepEqual(checkpoint?.data, { agents: ['pstack-builder'] });
 });
 
 

@@ -1,0 +1,163 @@
+{
+  "name": "judge-b",
+  "mode": "auto",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "prompt": "judge panel",
+  "timeoutSec": 180,
+  "ompConfig": "modelRoles:\n  pstack_panel_b: mock/mock-2\n  pstack_reason: mock/mock-1\n",
+  "files": {
+    "README.md": "fixture\n"
+  },
+  "rules": [
+    {
+      "id": "child-judge-a",
+      "matchSystem": "Use the frozen arena rubric without a panel-specific override.",
+      "matchUser": "JUDGE_A_TASK",
+      "steps": [
+        {
+          "yield": {
+            "rubric": [
+              {
+                "criterion": "correctness",
+                "weight": 1
+              }
+            ],
+            "evaluations": [
+              {
+                "candidate": "A",
+                "score": 9,
+                "evidence": "README.md",
+                "risks": []
+              }
+            ],
+            "base_candidate": "A",
+            "selection_reason": "A matches the frozen objective.",
+            "graft_plan": [],
+            "confidence": "high"
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-judge-b",
+      "matchSystem": "Use the same frozen arena rubric as the secondary panel judge.",
+      "matchUser": "JUDGE_B_TASK",
+      "steps": [
+        {
+          "yield": {
+            "rubric": [
+              {
+                "criterion": "correctness",
+                "weight": 1
+              }
+            ],
+            "evaluations": [
+              {
+                "candidate": "B",
+                "score": 8,
+                "evidence": "README.md",
+                "risks": []
+              }
+            ],
+            "base_candidate": "B",
+            "selection_reason": "B is the safer alternative.",
+            "graft_plan": [],
+            "confidence": "medium"
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Compare two blinded arena judges",
+            "playbook": "arena",
+            "ceremony": "standard",
+            "verificationRequired": false
+          }
+        },
+        {
+          "tool": "task",
+          "args": {
+            "context": "judge panel probe",
+            "tasks": [
+              {
+                "name": "judge-a",
+                "agent": "pstack-judge",
+                "task": "JUDGE_A_TASK assess candidate A"
+              },
+              {
+                "name": "judge-b",
+                "agent": "pstack-judge-b",
+                "task": "JUDGE_B_TASK assess candidate B"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-judge-a"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "child-judge-b"
+    },
+    {
+      "type": "eventWhere",
+      "rule": "main",
+      "event": "subagent_spawn",
+      "where": {
+        "data.agent.agentName": "pstack-judge",
+        "data.agent.modelPatterns.0": "mock/mock-1"
+      }
+    },
+    {
+      "type": "eventWhere",
+      "rule": "main",
+      "event": "subagent_spawn",
+      "where": {
+        "data.agent.agentName": "pstack-judge-b",
+        "data.agent.modelPatterns.0": "mock/mock-2"
+      }
+    }
+  ]
+}

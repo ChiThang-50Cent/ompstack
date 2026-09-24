@@ -1,0 +1,113 @@
+{
+  "name": "builder-isolation-off",
+  "mode": "auto",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "prompt": "builder isolation off",
+  "timeoutSec": 180,
+  "commitFiles": true,
+  "ompConfig": "task.isolation.enabled: false\n",
+  "files": {
+    "README.md": "fixture\n"
+  },
+  "rules": [
+    {
+      "id": "child-builder",
+      "matchSystem": "Implement only the assigned artifact and respect its ownership boundary.",
+      "matchUser": "BUILDER_ISOLATION_OFF",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo BUILDER_ISOLATION_OFF >> README.md"
+          }
+        },
+        {
+          "yield": {
+            "artifact": "README.md",
+            "summary": "BUILDER_ISOLATION_OFF_MARKER",
+            "changed_files": [
+              {
+                "path": "README.md",
+                "change": "modified"
+              }
+            ],
+            "commands": [],
+            "evidence": [],
+            "status": "implemented"
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Observe an intentionally exposed builder",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": false
+          }
+        },
+        {
+          "tool": "task",
+          "args": {
+            "context": "writer isolation probe",
+            "tasks": [
+              {
+                "name": "build1",
+                "agent": "pstack-builder",
+                "task": "BUILDER_ISOLATION_OFF modify the README",
+                "isolated": true
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-builder"
+    },
+    {
+      "type": "fileContains",
+      "rule": "main",
+      "path": "README.md",
+      "text": "BUILDER_ISOLATION_OFF"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "BUILDER_ISOLATION_OFF_MARKER"
+    },
+    {
+      "type": "eventWhere",
+      "rule": "main",
+      "event": "writer_not_isolated",
+      "where": {
+        "data.agents.0": "pstack-builder"
+      }
+    }
+  ]
+}

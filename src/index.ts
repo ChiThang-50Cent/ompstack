@@ -210,6 +210,7 @@ export default function pstackExtension(api: ExtensionAPI): void {
           `pstack: ${exposedWriters.join(", ")} ran without OMP task isolation and may mutate the primary worktree. Enable task.isolation.enabled for isolated writers.`,
           "warning",
         );
+        await store.checkpoint(ctx, "writer_not_isolated", { agents: exposedWriters });
       }
       if (actors.length > 0) {
         await store.checkpoint(ctx, "task_result", {

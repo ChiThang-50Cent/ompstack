@@ -541,3 +541,48 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Decisions: topology has one writer, verification precedes append, and the operator—not an owner—lands the final linear chain.
 - Deviations from spec: OMP goal wakes and task snapshots replace terminal loop/sleeper controls; no unsupported stack CLI is required.
 - Open questions: none.
+
+### T5.1 Live panel interrogate {#t51}
+- Status: done
+- Files: `test/host/scenarios/panel-interrogate.json`, `agents/pstack-reviewer-a.md`, `agents/pstack-reviewer-b.md`, `agents/pstack-reviewer-c.md`, `src/audit.ts`, `docs/limitations.md`, `docs/port-notes/progress.md`
+- Proof: `panel-interrogate PASS` on OMP 18.2.11 and 18.3.0; the three child rules, frozen review contracts, three spawn events, and three waits were asserted.
+- Sources read: `spec3_1.md:558-562`, `test/host/run.mjs`, `src/store.ts`, `src/audit.ts`
+- Decisions: audit temp files use unique names so concurrent panel spawn checkpoints cannot overwrite one another; panel lenses are unique system lines.
+- Deviations from spec: none.
+- Open questions: none.
+
+### T5.2 Non-isolated writer warning checkpoint {#t52}
+- Status: done
+- Files: `src/index.ts`, `test/extension.test.mjs`, `test/host/scenarios/builder-isolation-off.json`, `docs/port-notes/progress.md`
+- Proof: unit suite includes `non-isolated writer warning is persisted as an audit checkpoint`; `builder-isolation-off PASS` on OMP 18.2.11 and 18.3.0; the builder changed `README.md` and `writer_not_isolated` exposed `pstack-builder`.
+- Sources read: `spec3_1.md:563`, `src/index.ts:199-213`, `src/store.ts:90-100`
+- Decisions: keep the existing UI warning and append a structured `writer_not_isolated` checkpoint with the exposed writer names.
+- Deviations from spec: none.
+- Open questions: none.
+
+### T5.3 Isolated writer branch retention {#t53}
+- Status: done
+- Files: `test/host/scenarios/builder-isolation-branch.json`, `docs/limitations.md`, `docs/port-notes/progress.md`
+- Proof: `builder-isolation-branch PASS` on OMP 18.2.11 and 18.3.0; primary `README.md` stayed unchanged, `omp/task/*` existed, no warning event was emitted, and the builder reached a terminal state.
+- Sources read: `spec3_1.md:564`, `.upstream/oh-my-pi/docs/tools/task.md:44,96-98`, `.upstream/oh-my-pi/packages/coding-agent/src/config/settings-schema.ts:4961-5048`
+- Decisions: scenario uses nested OMP YAML `task.isolation`/`isolation` settings, matching the host's parsed configuration shape; `apply: false` retains the branch artifact.
+- Deviations from spec: the host config uses nested YAML rather than a dotted pseudo-object spelling so OMP actually parses the settings.
+- Open questions: none.
+
+### T5.4 Comment sicko live review {#t54}
+- Status: done
+- Files: `test/host/scenarios/comment-sicko.json`, `docs/limitations.md`, `docs/port-notes/progress.md`
+- Proof: `comment-sicko PASS` on OMP 18.2.11 and 18.3.0; child tools excluded `bash` and `edit`, `SICKO_MARKER_DELETE` reached the parent, and `commented.js` was unchanged.
+- Sources read: `spec3_1.md:565`, `agents/pstack-comment-sicko.md`
+- Decisions: structured finding payload is the contract assertion; source immutability is checked independently.
+- Deviations from spec: none.
+- Open questions: none.
+
+### T5.5 Judge-b live routing {#t55}
+- Status: done
+- Files: `agents/pstack-judge.md`, `agents/pstack-judge-b.md`, `src/model-routing.ts`, `test/model-routing.test.mjs`, `test/host/scenarios/judge-b.json`, `docs/limitations.md`, `docs/port-notes/progress.md`
+- Proof: `judge-b PASS` on OMP 18.2.11 and 18.3.0; both judge rules hit, both spawn events were present, and `mock/mock-1` versus `mock/mock-2` model patterns were asserted.
+- Sources read: `spec3_1.md:566`, `agents/pstack-judge.md`, `agents/pstack-judge-b.md`, `src/model-routing.ts`
+- Decisions: `pstack-judge` and `pstack-judge-b` both map to the judge role; panel-b and reason aliases are deliberately resolved to distinct mock models.
+- Deviations from spec: none.
+- Open questions: none.

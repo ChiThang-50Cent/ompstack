@@ -1,0 +1,121 @@
+{
+  "name": "builder-isolation-branch",
+  "mode": "auto",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "prompt": "builder isolation branch",
+  "ompConfig": "task:\n  isolation:\n    enabled: true\n    merge: branch\n    apply: false\nisolation:\n  backend: rcopy\n",
+  "commitFiles": true,
+  "files": {
+    "README.md": "fixture\n"
+  },
+  "rules": [
+    {
+      "id": "child-builder",
+      "matchSystem": "Implement only the assigned artifact and respect its ownership boundary.",
+      "matchUser": "BUILDER_ISOLATION_BRANCH",
+      "steps": [
+        {
+          "tool": "bash",
+          "args": {
+            "command": "echo BUILDER_ISOLATION_BRANCH >> README.md"
+          }
+        },
+        {
+          "yield": {
+            "artifact": "README.md",
+            "summary": "BUILDER_ISOLATION_BRANCH_MARKER",
+            "changed_files": [
+              {
+                "path": "README.md",
+                "change": "modified"
+              }
+            ],
+            "commands": [],
+            "evidence": [],
+            "status": "implemented"
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Retain an isolated builder branch artifact",
+            "playbook": "feature",
+            "ceremony": "standard",
+            "verificationRequired": false
+          }
+        },
+        {
+          "tool": "task",
+          "args": {
+            "context": "writer isolation branch probe",
+            "tasks": [
+              {
+                "name": "build1",
+                "agent": "pstack-builder",
+                "task": "BUILDER_ISOLATION_BRANCH modify the README",
+                "isolated": true
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-builder"
+    },
+    {
+      "type": "eventsLack",
+      "rule": "main",
+      "event": "writer_not_isolated"
+    },
+    {
+      "type": "fileUnchanged",
+      "rule": "main",
+      "path": "README.md"
+    },
+    {
+      "type": "gitBranchExists",
+      "rule": "main",
+      "pattern": "omp/task/*"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "BUILDER_ISOLATION_BRANCH_MARKER"
+    },
+    {
+      "type": "jsonWhere",
+      "rule": "main",
+      "file": ".omp/pstack/runs/*/state.json",
+      "where": {
+        "activeRun.agents.0.status": "completed"
+      }
+    }
+  ]
+}

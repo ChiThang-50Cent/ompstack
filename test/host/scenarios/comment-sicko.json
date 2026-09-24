@@ -1,0 +1,112 @@
+{
+  "name": "comment-sicko",
+  "mode": "auto",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "prompt": "comment review",
+  "timeoutSec": 180,
+  "files": {
+    "commented.js": "const value = 1;\n// old workaround\n"
+  },
+  "rules": [
+    {
+      "id": "child-sicko",
+      "matchSystem": "You hate comments.",
+      "matchUser": "SICKO_TASK",
+      "steps": [
+        {
+          "yield": {
+            "scope": "commented.js",
+            "overall_correctness": "incorrect",
+            "explanation": "The commented workaround is dead code.",
+            "confidence": 0.95,
+            "reviewed_paths": [
+              "commented.js"
+            ],
+            "findings": [
+              {
+                "title": "SICKO_MARKER_DELETE",
+                "severity": "medium",
+                "confidence": "high",
+                "location": "commented.js:2",
+                "trigger": "The comment is not executable code.",
+                "impact": "Dead context remains in the source.",
+                "evidence": "commented.js:2",
+                "remediation": ""
+              }
+            ],
+            "limitations": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Review comments without editing source",
+            "playbook": "review",
+            "ceremony": "standard",
+            "verificationRequired": false
+          }
+        },
+        {
+          "tool": "task",
+          "args": {
+            "context": "comment review probe",
+            "tasks": [
+              {
+                "name": "sicko1",
+                "agent": "pstack-comment-sicko",
+                "task": "SICKO_TASK review commented.js without editing"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-sicko"
+    },
+    {
+      "type": "toolsExclude",
+      "rule": "child-sicko",
+      "tools": [
+        "bash",
+        "edit"
+      ]
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "SICKO_MARKER_DELETE"
+    },
+    {
+      "type": "fileUnchanged",
+      "rule": "main",
+      "path": "commented.js"
+    }
+  ]
+}

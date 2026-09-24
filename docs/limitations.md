@@ -12,11 +12,13 @@
 - agent/skill/schema/manifest integrity;
 - negative-topology fixture coverage.
 
-## Not verified in the delivery container
+## Verified on host OMP 18.2.11 and 18.3.0
 
-The delivery container could not resolve GitHub and did not contain an installed OMP/Bun runtime or configured model provider. Therefore a true host process was not launched there. The repository includes `npm run verify:omp` so the target machine can perform version/API preflight and an opt-in model-backed smoke.
+The real host matrix passed `panel-interrogate`, `builder-isolation-off`, `builder-isolation-branch`, `comment-sicko`, and `judge-b` on both supported OMP versions. The scenarios exercised plugin-link setup, parent gate activation, panel fan-out and waits, writer warning/checkpointing, retained branch artifacts, read-only comment review, structured judge output, and model-role separation. `test/host/known-failing.json` is empty.
 
-Do not interpret mock integration tests as proof against every future OMP release.
+## Still unverified
+
+These host results use the offline mock provider and do not prove behavior for every future OMP release, provider, model, forge, or production repository. Browser/computer headless operation remains unverified because this matrix has no real UI target. Provider-backed behavior remains opt-in through `npm run verify:omp`.
 
 ## Spawn-to-tool correlation
 

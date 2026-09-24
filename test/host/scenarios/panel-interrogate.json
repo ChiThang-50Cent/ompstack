@@ -1,0 +1,205 @@
+{
+  "name": "panel-interrogate",
+  "mode": "auto",
+  "setup": [
+    "plugin-link"
+  ],
+  "loadExtension": false,
+  "prompt": "panel review",
+  "ompConfig": "modelRoles:\n  pstack_panel_a: mock/mock-1\n  pstack_panel_b: mock/mock-2\n  pstack_panel_c: mock/mock-1\n  pstack_review: mock/mock-1\n",
+  "files": {
+    "README.md": "fixture\n"
+  },
+  "rules": [
+    {
+      "id": "child-panel-a",
+      "matchSystem": "Panel lens: prioritize consumer parity and boundary compatibility.",
+      "matchUser": "PANEL_A_TASK",
+      "steps": [
+        {
+          "yield": {
+            "scope": "README.md",
+            "overall_correctness": "correct",
+            "explanation": "Panel A found no consumer parity defect.",
+            "confidence": 0.9,
+            "reviewed_paths": [
+              "README.md"
+            ],
+            "findings": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-panel-b",
+      "matchSystem": "Panel lens: prioritize races and lifecycle transitions.",
+      "matchUser": "PANEL_B_TASK",
+      "steps": [
+        {
+          "yield": {
+            "scope": "README.md",
+            "overall_correctness": "correct",
+            "explanation": "Panel B found no lifecycle defect.",
+            "confidence": 0.9,
+            "reviewed_paths": [
+              "README.md"
+            ],
+            "findings": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-panel-c",
+      "matchSystem": "Panel lens: prioritize data, configuration, and security safety.",
+      "matchUser": "PANEL_C_TASK",
+      "steps": [
+        {
+          "yield": {
+            "scope": "README.md",
+            "overall_correctness": "correct",
+            "explanation": "Panel C found no data or configuration defect.",
+            "confidence": 0.9,
+            "reviewed_paths": [
+              "README.md"
+            ],
+            "findings": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "pstack_gate",
+          "args": {
+            "action": "init",
+            "objective": "Review one artifact with a frozen panel contract",
+            "playbook": "review",
+            "ceremony": "standard",
+            "verificationRequired": false
+          }
+        },
+        {
+          "tool": "task",
+          "args": {
+            "context": "PANEL_CONTRACT",
+            "tasks": [
+              {
+                "name": "panel-a",
+                "agent": "pstack-reviewer-a",
+                "task": "PANEL_A_TASK review the README artifact"
+              },
+              {
+                "name": "panel-b",
+                "agent": "pstack-reviewer-b",
+                "task": "PANEL_B_TASK review the README artifact"
+              },
+              {
+                "name": "panel-c",
+                "agent": "pstack-reviewer-c",
+                "task": "PANEL_C_TASK review the README artifact"
+              }
+            ]
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "tool": "wait",
+              "args": {}
+            },
+            {
+              "tool": "hub",
+              "args": {
+                "op": "wait"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "ruleHit",
+      "rule": "child-panel-a"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "child-panel-b"
+    },
+    {
+      "type": "ruleHit",
+      "rule": "child-panel-c"
+    },
+    {
+      "type": "userContains",
+      "rule": "child-panel-a",
+      "text": "PSTACK REVIEW CONTRACT"
+    },
+    {
+      "type": "userContains",
+      "rule": "child-panel-b",
+      "text": "PSTACK REVIEW CONTRACT"
+    },
+    {
+      "type": "userContains",
+      "rule": "child-panel-c",
+      "text": "PSTACK REVIEW CONTRACT"
+    },
+    {
+      "type": "eventWhere",
+      "rule": "main",
+      "event": "subagent_spawn",
+      "where": {
+        "data.agent.agentName": "pstack-reviewer-a"
+      }
+    },
+    {
+      "type": "eventWhere",
+      "rule": "main",
+      "event": "subagent_spawn",
+      "where": {
+        "data.agent.agentName": "pstack-reviewer-b"
+      }
+    },
+    {
+      "type": "eventWhere",
+      "rule": "main",
+      "event": "subagent_spawn",
+      "where": {
+        "data.agent.agentName": "pstack-reviewer-c"
+      }
+    }
+  ]
+}

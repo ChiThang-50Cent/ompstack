@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { appendFile, mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { PstackConfig, PstackSessionState } from "./domain.js";
@@ -14,7 +15,7 @@ export function auditRunDirectory(cwd: string, config: PstackConfig, runId: stri
 }
 
 async function atomicJson(filePath: string, value: unknown): Promise<void> {
-  const temporary = `${filePath}.tmp-${process.pid}-${Date.now()}`;
+  const temporary = `${filePath}.tmp-${process.pid}-${randomUUID()}`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
   await rename(temporary, filePath);
 }

@@ -594,4 +594,21 @@ Commit SHAs are not recorded here; find a task's commit with `git log --grep='^T
 - Sources read: `spec3_1.md:576-581`, `docs/port-notes/child-tool-capture.md`, `test/host/known-failing.json`
 - Decisions: NOTICE is generated from imported upstream-map entries and validator checks both imported source paths and local targets; README, BUILD_REPORT, and limitations use measured tree/host counts.
 - Deviations from spec: none.
-- Open questions: version and marketplace metadata remain on 0.4.0 until the ordered T6.2/T6.3 release commits.
+- Open questions: none; R and M release sequencing is complete below.
+
+### T6.2 Release commit R {#t62}
+- Status: done
+- Files: `package.json`, `package-lock.json`, `.omp-plugin/plugin.json`, `README.md`, `BUILD_REPORT.md`, `docs/limitations.md`, `docs/installation.md`
+- Proof: `npm version 0.5.0 --no-git-tag-version`; package, lockfile, and plugin all report `0.5.0`; `npm run check` passed 59 tests, router 77/77, and asset validation; `test/host/known-failing.json` is empty; the local tag `v0.5.0` points to R.
+- Host proof: `npm run test:host:matrix` passed all 18 scenarios on OMP 18.2.11 and 18.3.0 at R.
+- Decisions: marketplace metadata stayed at 0.4.0 during R, so the tag never pointed at an unpublished catalog state.
+- Deviations from spec: none.
+- Open questions: none.
+
+### T6.3 Marketplace commit M {#t63}
+- Status: done
+- Files: `.omp-plugin/marketplace.json`, `scripts/check-release.mjs`, `scripts/lib/validate.mjs`, `package.json`, `docs/port-notes/progress.md`
+- Proof: marketplace metadata/plugin/source ref are `0.5.0`/`v0.5.0`; `source.sha` is `2cf90f8e582b22a72f24cb1abaaa489fd4b22536`; `npm run check:release`, `npm run validate`, `npm run check:notice`, and `npm run check:upstream` passed.
+- Decisions: `check:release` verifies package/plugin parity, marketplace internal consistency, and local tag SHA equality when the referenced tag exists.
+- Deviations from spec: none.
+- Open questions: tarball install and final independent verification remain in T6.4.

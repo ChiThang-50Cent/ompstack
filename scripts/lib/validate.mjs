@@ -11,7 +11,7 @@ const REQUIRED_FILES = [
   "docs/architecture.md", "docs/installation.md", "docs/configuration.md",
   "docs/mcp-runtime-lifecycle.md", "docs/verification.md", "docs/model-routing.md",
   "docs/limitations.md", "docs/development.md", "docs/security-model.md",
-  "eval/cases.json", "eval/README.md", "scripts/omp-tool-names.json", "scripts/upstream-map.json", "scripts/build-notice.mjs",
+  "eval/cases.json", "eval/README.md", "scripts/omp-tool-names.json", "scripts/upstream-map.json", "scripts/build-notice.mjs", "scripts/check-release.mjs",
 ];
 const CORE_AGENTS = ["pstack-scout", "pstack-architect", "pstack-builder", "pstack-reviewer", "pstack-judge", "pstack-synthesizer", "pstack-verifier"];
 const LEFTOVER_PATTERN = /(?:\bsubagent_type\b|\breadonly\s*:|\brun_in_background\b|\.mdc\b|~\/.cursor\b|\bAskQuestion\b|\bBugbot\b|\/loop\b|\b(?:claude-(?:opus|sonnet|haiku|fable|mythos)|gpt-\d|o[1-9](?:-mini|-pro)?|gemini-\d|grok-\d|deepseek-[\w.-]+|qwen\d[\w.-]+|kimi-[\w.-]+|glm-\d[\w.-]+|composer-\d[\w.-]+|mistral-[\w.-]+|llama-?\d[\w.-]+)\b)/i;

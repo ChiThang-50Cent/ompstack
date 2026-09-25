@@ -532,3 +532,97 @@ test('headless shutdown leaves the exit alone when disabled, gates pass, or a UI
   assert.equal(ui.proc.stderrText, '');
   assert.equal(ui.proc.exitCode, undefined);
 });
+
+async function gitWorkspace(t, mode, { headless = false, config } = {}) {
+  const { setHeadlessProcessForTests } = await import('../dist/src/headless.js');
+  const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-tripwire-'));
+  const git = (...args) => execFileSync('git', args, { cwd, encoding: 'utf8' });
+  git('init', '-q'); git('config', 'user.email', 't@t'); git('config', 'user.name', 't');
+  await writeFile(path.join(cwd, 'app.js'), 'export const a = 1;\n');
+  git('add', '.'); git('commit', '-qm', 'init');
+  if (config) await writeFile(path.join(cwd, 'pstack.json'), JSON.stringify(config));
+  const proc = fakeProcess();
+  setHeadlessProcessForTests(proc);
+  t.after(async () => { setHeadlessProcessForTests(undefined); await rm(cwd, { recursive: true, force: true }); });
+  const mock = createMock(cwd);
+  mock.ctx.hasUI = !headless;
+  pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', mode);
+  await mock.emit('session_start');
+  return { cwd, mock, proc };
+}
+
+const bigChange = cwd => Promise.all([
+  writeFile(path.join(cwd, 'app.js'), 'export const a = 2;\n'),
+  writeFile(path.join(cwd, 'lib.js'), Array.from({ length: 30 }, (_, i) => `export const v${i} = ${i};`).join('\n') + '\n'),
+]);
+
+test('strict blocks direct file writes until a run is open, unless the prompt routed direct', async t => {
+  const { mock } = await gitWorkspace(t, 'strict');
+  await mock.emit('before_agent_start', { prompt: 'the sidebar lags when I scroll', systemPrompt: ['base'] });
+  const blocked = await mock.emit('tool_call', { toolCallId: 'w1', toolName: 'edit', input: { path: 'app.js' } });
+  assert.equal(blocked?.block, true);
+  assert.match(blocked.reason, /open a run before editing/);
+  assert.equal(await mock.emit('tool_call', { toolCallId: 'r1', toolName: 'read', input: { path: 'app.js' } }), undefined, 'reads are never blocked');
+
+  await execute(mock.tools.get('pstack_gate'), { action: 'init', objective: 'Fix lag', playbook: 'performance', ceremony: 'standard', verificationRequired: false, acceptance: [{ id: 'AC-1', text: 'no lag' }] }, mock.ctx);
+  assert.equal(await mock.emit('tool_call', { toolCallId: 'w2', toolName: 'write', input: { path: 'app.js' } }), undefined, 'writes pass once a run is open');
+
+  const direct = await gitWorkspace(t, 'strict');
+  await direct.mock.emit('before_agent_start', { prompt: 'rename this variable', systemPrompt: ['base'] });
+  assert.equal(await direct.mock.emit('tool_call', { toolCallId: 'w3', toolName: 'edit', input: {} }), undefined, 'router-direct prompts may edit without a run');
+
+  const auto = await gitWorkspace(t, 'auto');
+  await auto.mock.emit('before_agent_start', { prompt: 'the sidebar lags when I scroll', systemPrompt: ['base'] });
+  assert.equal(await auto.mock.emit('tool_call', { toolCallId: 'w4', toolName: 'edit', input: {} }), undefined, 'auto never blocks writes');
+});
+
+test('strict blocks the stop twice when the session changed more than the direct budget without a run', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict');
+  await bigChange(cwd);
+  const first = await mock.emit('session_stop');
+  assert.equal(first?.decision, 'block');
+  assert.match(first.reason, /changed 2 file\(s\) \/ 32 line\(s\) without a pstack run/);
+  assert.equal((await mock.emit('session_stop'))?.decision, 'block');
+  assert.equal(await mock.emit('session_stop'), undefined, 'released after the strict budget');
+  assert.match(mock.notices.at(-1).message, /without a pstack run/);
+  const audit = await readFile(path.join(cwd, '.omp/pstack/runs/session-events.jsonl'), 'utf8');
+  assert.equal(audit.match(/"unengaged_stop_blocked"/g)?.length, 2);
+});
+
+test('a change within the direct budget, or any change made under a run, never trips', async t => {
+  const small = await gitWorkspace(t, 'strict');
+  await writeFile(path.join(small.cwd, 'app.js'), 'export const a = 3;\n');
+  assert.equal(await small.mock.emit('session_stop'), undefined);
+
+  const engaged = await gitWorkspace(t, 'strict', { headless: true });
+  await execute(engaged.mock.tools.get('pstack_gate'), { action: 'init', objective: 'Change', playbook: 'feature', ceremony: 'standard', verificationRequired: false, acceptance: [] }, engaged.mock.ctx);
+  await execute(engaged.mock.tools.get('pstack_gate'), { action: 'abandon', reason: 'test' }, engaged.mock.ctx);
+  await bigChange(engaged.cwd);
+  assert.equal(await engaged.mock.emit('session_stop'), undefined, 'an abandoned run still counts as engagement');
+  await engaged.mock.emit('session_shutdown');
+  assert.equal(engaged.proc.stderrText, '');
+  assert.equal(engaged.proc.exitCode, undefined);
+
+  const off = await gitWorkspace(t, 'strict', { config: { engagementTripwire: false } });
+  await bigChange(off.cwd);
+  assert.equal(await off.mock.emit('session_stop'), undefined, 'engagementTripwire=false disables it');
+});
+
+test('headless auto reports an unengaged change on stderr and exits 3; within budget it stays quiet', async t => {
+  const { cwd, mock, proc } = await gitWorkspace(t, 'auto', { headless: true });
+  await bigChange(cwd);
+  assert.equal(await mock.emit('session_stop'), undefined, 'auto does not block');
+  await mock.emit('session_shutdown');
+  assert.match(proc.stderrText, /changed 2 file\(s\) \/ 32 line\(s\) without a pstack run/);
+  assert.match(proc.stderrText, /Exit status 3 signals unverified work/);
+  assert.equal(proc.exitCode, 3);
+  proc.exit(0);
+  assert.deepEqual(proc.exits, [3]);
+
+  const quiet = await gitWorkspace(t, 'auto', { headless: true });
+  await writeFile(path.join(quiet.cwd, 'app.js'), 'export const a = 4;\n');
+  await quiet.mock.emit('session_shutdown');
+  assert.equal(quiet.proc.stderrText, '');
+  assert.equal(quiet.proc.exitCode, undefined);
+});

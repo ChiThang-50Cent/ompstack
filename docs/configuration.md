@@ -20,6 +20,9 @@ Malformed JSON or invalid value types do not crash the extension. Defaults are u
   "requireArtifactFingerprint": true,
   "maxPolicyCharacters": 8000,
   "headlessOpenGateExitCode": 3,
+  "engagementTripwire": true,
+  "directMaxFiles": 1,
+  "directMaxLines": 20,
   "auditDirectory": ".omp/pstack/runs",
   "fingerprintIgnore": [
     ".git",
@@ -82,6 +85,16 @@ How many times `session_stop` may block a gate-only run (no live OMP goal) befor
 ### `headlessOpenGateExitCode`
 
 Exit code for a process without a UI (`omp -p`, `--mode json`, CI, cron) that ends while an auto/strict run is still active with open gates. Default `3`; `0` disables the override. Only a clean exit is changed: a non-zero code chosen by OMP (provider error, abort, signal) is passed through. The same condition always writes a gate report to stderr and a `headless_open_gates` audit event. A run whose gates pass but that was never closed with `pstack_gate action=check` is reported but does not change the exit code. Interactive sessions keep the UI warning and never change the exit code.
+
+### `engagementTripwire`, `directMaxFiles`, `directMaxLines`
+
+Gates only protect work done inside a run, so a model that never opens one bypasses them. In the Stage A bench every false completion came from sessions that changed code without a run, in strict mode too. The tripwire measures the artifact instead of guessing intent: at session start pstack writes the working tree (tracked, modified and untracked files that git does not ignore, minus `.omp/pstack`, `auditDirectory` and `fingerprintIgnore`) to a git tree object through a throwaway index, so the user's index, refs and files are untouched. At stop and shutdown it snapshots again and diffs. When no run was opened during the session (an abandoned run still counts as engagement) and the diff exceeds `directMaxFiles` files or `directMaxLines` added+deleted lines:
+
+- `strict` blocks the stop, with the same budget as `maxStopGateBlocks`, and asks the model to open a run for what it changed. Strict also blocks the direct write tools (`edit`, `write`, `ast_edit`) before a run exists, unless the prompt routed `direct`. `bash` writes are not intercepted; the diff catches them.
+- `auto` never blocks. Interactive sessions get a warning.
+- Without a UI, both modes print the finding on stderr, record `unengaged_change`, and exit `headlessOpenGateExitCode`.
+
+Events without a run go to `<auditDirectory>/session-events.jsonl` (`unengaged_write_blocked`, `unengaged_stop_blocked`, `unengaged_change`). Outside a git work tree, or where `env`/`git` are unavailable, the tripwire stays silent. Defaults: `true`, `1`, `20`.
 
 ### `maxPolicyCharacters`
 

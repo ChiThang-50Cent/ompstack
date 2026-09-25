@@ -25,6 +25,10 @@ import { expectedTaskSpawns, extractTaskItems, TaskLifecycleTracker } from "./ta
 import { registerPstackTools } from "./tools.js";
 import { createId, isRecord, nowIso } from "./utils.js";
 import { stopGateBudget } from "./domain.js";
+import type { ChangeBaseline, EngagementFinding } from "./engagement.js";
+import {
+  appendSessionAudit, diffTrees, engagedSince, exceedsDirectBudget, renderEngagementFinding, snapshotWorkingTree,
+} from "./engagement.js";
 
 /** OMP 18.2.11 does not re-export `GoalUpdatedEvent` from the package root. */
 type GoalUpdatedEvent = Extract<ExtensionEvent, { type: "goal_updated" }>;
@@ -48,6 +52,9 @@ function sessionKey(ctx: ExtensionContext): string {
     return `cwd:${ctx.cwd}`;
   }
 }
+
+/** OMP tools that write files directly. `bash` writes are caught by the stop/shutdown diff instead. */
+const WRITE_TOOLS = new Set(["edit", "write", "ast_edit"]);
 
 export default function pstackExtension(api: ExtensionAPI): void {
   const store = new PstackStore(api);
@@ -74,7 +81,41 @@ export default function pstackExtension(api: ExtensionAPI): void {
     }
   };
 
-  api.on("session_start", hydrate);
+  // Engagement tripwire state, per main session and process: the working-tree
+  // snapshot taken at start, whether the latest user prompt routed direct, and
+  // how many stops the tripwire has blocked.
+  const baselines = new Map<string, ChangeBaseline>();
+  const routedDirect = new Map<string, boolean>();
+  const tripwireBlocks = new Map<string, number>();
+
+  const captureBaseline = async (ctx: ExtensionContext): Promise<void> => {
+    if (!isMainSession(ctx) || baselines.has(sessionKey(ctx))) return;
+    const bucket = await store.get(ctx);
+    if (!bucket.config.engagementTripwire) return;
+    const tree = await snapshotWorkingTree(api, ctx.cwd, bucket.config);
+    if (tree) baselines.set(sessionKey(ctx), { tree, at: nowIso() });
+  };
+
+  const findUnengagedChange = async (ctx: ExtensionContext): Promise<EngagementFinding | undefined> => {
+    const baseline = baselines.get(sessionKey(ctx));
+    const bucket = await store.get(ctx);
+    if (!baseline || !bucket.config.engagementTripwire || bucket.state.mode === "off") return undefined;
+    if (engagedSince(bucket.state, baseline.at)) return undefined;
+    const now = await snapshotWorkingTree(api, ctx.cwd, bucket.config);
+    if (!now) return undefined;
+    const stat = await diffTrees(api, ctx.cwd, baseline.tree, now);
+    if (!stat || !exceedsDirectBudget(stat, bucket.config)) return undefined;
+    return { stat, budget: { files: bucket.config.directMaxFiles, lines: bucket.config.directMaxLines } };
+  };
+
+  api.on("session_start", async (event: unknown, ctx: ExtensionContext) => {
+    await hydrate(event, ctx);
+    try {
+      await captureBaseline(ctx);
+    } catch (error) {
+      api.logger.warn("pstack: engagement baseline failed", { error: String(error) });
+    }
+  });
   api.on("session_switch", hydrate);
   api.on("session_branch", hydrate);
   api.on("session_tree", hydrate);
@@ -85,7 +126,21 @@ export default function pstackExtension(api: ExtensionAPI): void {
     await lifecycle.reconcile(ctx, store);
     const bucket = await store.get(ctx);
     const run = bucket.state.activeRun;
-    if (bucket.state.mode === "off" || !run || run.status !== "active") return;
+    if (bucket.state.mode === "off") return;
+    if (!run || run.status !== "active") {
+      const finding = await findUnengagedChange(ctx);
+      if (!finding) return;
+      const exitCode = bucket.config.headlessOpenGateExitCode;
+      writeStderr([
+        renderEngagementFinding(finding, true),
+        exitCode > 0
+          ? `Exit status ${exitCode} signals unverified work (set engagementTripwire to false or raise directMaxFiles/directMaxLines to change this).`
+          : "Exit status unchanged (headlessOpenGateExitCode is 0).",
+      ].join("\n"));
+      await appendSessionAudit(ctx.cwd, bucket.config, "unengaged_change", { ...finding, exitCode, headless: true });
+      signalOpenGatesOnExit(exitCode);
+      return;
+    }
     const current = await computeArtifactFingerprint(api, ctx.cwd, bucket.config);
     const report = evaluateCompletionGates(bucket.state, current, bucket.config, { ignoreRunStatus: true });
     // Gates that pass but were never closed are reported, not failed: the work
@@ -107,6 +162,9 @@ export default function pstackExtension(api: ExtensionAPI): void {
       api.logger.warn("pstack: headless open-gate report failed", { error: String(error) });
     } finally {
       lifecycle.dropSession(sessionKey(ctx));
+      baselines.delete(sessionKey(ctx));
+      routedDirect.delete(sessionKey(ctx));
+      tripwireBlocks.delete(sessionKey(ctx));
       store.clearSession(ctx);
     }
   });
@@ -117,6 +175,7 @@ export default function pstackExtension(api: ExtensionAPI): void {
     const bucket = await store.get(ctx);
     if (bucket.state.mode === "off") return undefined;
     const routing = classifyTask(event.prompt || bucket.state.activeRun?.objective || "continue active engineering work");
+    if (event.prompt) routedDirect.set(sessionKey(ctx), routing.ceremony === "direct");
     const segment = buildPolicySegment(bucket.state, routing, bucket.config);
     return segment ? { systemPrompt: [...stripPstackPolicy(event.systemPrompt), segment] } : undefined;
   });
@@ -180,6 +239,17 @@ export default function pstackExtension(api: ExtensionAPI): void {
     const input: unknown = event.input;
     if (toolNameOf(event) === "goal" && isRecord(input) && input.op === "complete") {
       return gateGoalCompletion(ctx);
+    }
+    if (WRITE_TOOLS.has(toolNameOf(event)) && isMainSession(ctx)) {
+      const bucket = await store.get(ctx);
+      if (bucket.state.mode === "strict" && bucket.config.engagementTripwire && !bucket.state.activeRun && routedDirect.get(sessionKey(ctx)) !== true) {
+        await appendSessionAudit(ctx.cwd, bucket.config, "unengaged_write_blocked", { tool: toolNameOf(event) });
+        return {
+          block: true,
+          reason: "pstack strict mode: open a run before editing. Call pstack_gate action=init with the playbook you chose from skill://pstack and acceptance criteria, then make the change.",
+        };
+      }
+      return undefined;
     }
     if (toolNameOf(event) !== "task" || !isRecord(event.input)) return undefined;
     const bucket = await store.get(ctx);
@@ -307,7 +377,21 @@ export default function pstackExtension(api: ExtensionAPI): void {
     await lifecycle.reconcile(ctx, store);
     const bucket = await store.get(ctx);
     const run = bucket.state.activeRun;
-    if (bucket.state.mode === "off" || !run || run.status !== "active") return undefined;
+    if (bucket.state.mode === "off") return undefined;
+    if (!run || run.status !== "active") {
+      const finding = await findUnengagedChange(ctx);
+      if (!finding) return undefined;
+      const key = sessionKey(ctx);
+      const blocked = tripwireBlocks.get(key) ?? 0;
+      if (bucket.state.mode === "strict" && blocked < stopGateBudget(bucket.config, bucket.state.mode)) {
+        tripwireBlocks.set(key, blocked + 1);
+        await appendSessionAudit(ctx.cwd, bucket.config, "unengaged_stop_blocked", { ...finding, attempt: blocked + 1 });
+        return { decision: "block", reason: renderEngagementFinding(finding, false) };
+      }
+      // Headless sessions report once at session_shutdown (stderr + exit status).
+      if (!isHeadless(ctx)) ctx.ui.notify(renderEngagementFinding(finding, false), "warning");
+      return undefined;
+    }
     // While the bound goal is live, OMP's goal continuation owns "keep working"
     // and goal op=complete is the gate; blocking the stop too makes the model
     // spin (observed live: 18 blocked stops in ~50s). Without a live goal the

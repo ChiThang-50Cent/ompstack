@@ -27,7 +27,7 @@ import { createId, isRecord, nowIso } from "./utils.js";
 import { stopGateBudget } from "./domain.js";
 import type { ChangeBaseline, EngagementFinding } from "./engagement.js";
 import {
-  appendSessionAudit, diffTrees, engagedSince, exceedsDirectBudget, renderEngagementFinding, snapshotWorkingTree,
+  appendSessionAudit, diffTrees, engagedSince, exceedsDirectBudget, renderEngagementFinding, snapshotWorkingTree, targetsWorkspace,
 } from "./engagement.js";
 
 /** OMP 18.2.11 does not re-export `GoalUpdatedEvent` from the package root. */
@@ -88,12 +88,17 @@ export default function pstackExtension(api: ExtensionAPI): void {
   const routedDirect = new Map<string, boolean>();
   const tripwireBlocks = new Map<string, number>();
 
+  // Taken at session start, and again lazily on the first active turn when
+  // there is none (a session entered without session_start) or pstack was off
+  // when it was taken, so work done before activation is not charged to it.
   const captureBaseline = async (ctx: ExtensionContext): Promise<void> => {
-    if (!isMainSession(ctx) || baselines.has(sessionKey(ctx))) return;
+    if (!isMainSession(ctx)) return;
     const bucket = await store.get(ctx);
     if (!bucket.config.engagementTripwire) return;
+    const existing = baselines.get(sessionKey(ctx));
+    if (existing && !(existing.mode === "off" && bucket.state.mode !== "off")) return;
     const tree = await snapshotWorkingTree(api, ctx.cwd, bucket.config);
-    if (tree) baselines.set(sessionKey(ctx), { tree, at: nowIso() });
+    if (tree) baselines.set(sessionKey(ctx), { tree, at: nowIso(), mode: bucket.state.mode });
   };
 
   const findUnengagedChange = async (ctx: ExtensionContext): Promise<EngagementFinding | undefined> => {
@@ -176,6 +181,7 @@ export default function pstackExtension(api: ExtensionAPI): void {
     if (bucket.state.mode === "off") return undefined;
     const routing = classifyTask(event.prompt || bucket.state.activeRun?.objective || "continue active engineering work");
     if (event.prompt) routedDirect.set(sessionKey(ctx), routing.ceremony === "direct");
+    await captureBaseline(ctx).catch(error => api.logger.warn("pstack: engagement baseline failed", { error: String(error) }));
     const segment = buildPolicySegment(bucket.state, routing, bucket.config);
     return segment ? { systemPrompt: [...stripPstackPolicy(event.systemPrompt), segment] } : undefined;
   });
@@ -240,7 +246,7 @@ export default function pstackExtension(api: ExtensionAPI): void {
     if (toolNameOf(event) === "goal" && isRecord(input) && input.op === "complete") {
       return gateGoalCompletion(ctx);
     }
-    if (WRITE_TOOLS.has(toolNameOf(event)) && isMainSession(ctx)) {
+    if (WRITE_TOOLS.has(toolNameOf(event)) && isMainSession(ctx) && targetsWorkspace(toolNameOf(event), event.input, ctx.cwd)) {
       const bucket = await store.get(ctx);
       if (bucket.state.mode === "strict" && bucket.config.engagementTripwire && !bucket.state.activeRun && routedDirect.get(sessionKey(ctx)) !== true) {
         await appendSessionAudit(ctx.cwd, bucket.config, "unengaged_write_blocked", { tool: toolNameOf(event) });

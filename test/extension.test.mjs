@@ -626,3 +626,29 @@ test('headless auto reports an unengaged change on stderr and exits 3; within bu
   assert.equal(quiet.proc.stderrText, '');
   assert.equal(quiet.proc.exitCode, undefined);
 });
+
+test('strict lets device, sandbox and out-of-workspace writes through before a run', async t => {
+  const { mock } = await gitWorkspace(t, 'strict');
+  await mock.emit('before_agent_start', { prompt: 'the sidebar lags when I scroll', systemPrompt: ['base'] });
+  for (const target of ['xd://some_device', 'local://plan.md', '/tmp/pstack-scratch.txt']) {
+    assert.equal(await mock.emit('tool_call', { toolCallId: target, toolName: 'write', input: { path: target } }), undefined, target);
+  }
+  assert.equal((await mock.emit('tool_call', { toolCallId: 'ws', toolName: 'write', input: { path: 'app.js' } }))?.block, true);
+});
+
+test('activating pstack mid-session retakes the baseline, so work done while off is not charged', async t => {
+  const { cwd, mock, proc } = await gitWorkspace(t, 'off', { headless: true });
+  await bigChange(cwd);
+  await mock.commands.get('pstack').handler('auto', mock.ctx);
+  await mock.emit('before_agent_start', { prompt: 'continue', systemPrompt: ['base'] });
+  await writeFile(path.join(cwd, 'app.js'), 'export const a = 5;\n');
+  await mock.emit('session_shutdown');
+  assert.equal(proc.stderrText, '', 'only the one-line edit made after activation counts');
+  assert.equal(proc.exitCode, undefined);
+
+  const control = await gitWorkspace(t, 'auto', { headless: true });
+  await bigChange(control.cwd);
+  await control.mock.emit('before_agent_start', { prompt: 'continue', systemPrompt: ['base'] });
+  await control.mock.emit('session_shutdown');
+  assert.equal(control.proc.exitCode, 3, 'an active-from-start baseline is not retaken');
+});

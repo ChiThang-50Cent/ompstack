@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed
+
+- Strict's pre-run write block no longer stops OMP device calls (`write xd://…`), sandbox drafts (`local://…`, any `scheme://`), hashline-wrapped sandbox paths, or writes outside the workspace; unknown input shapes stay blocked.
+- The tripwire counts edits to assume-unchanged and skip-worktree files.
+- The tripwire baseline is retaken on the first active turn when pstack was off at session start, or when no baseline exists.
+
 ### Added
 
 - Engagement tripwire (`engagementTripwire`, `directMaxFiles`, `directMaxLines`). A session that changes more than the direct budget without opening a pstack run is treated like one with open gates: strict blocks the stop and blocks `edit`/`write`/`ast_edit` before a run exists (unless the prompt routed direct); headless auto and strict report on stderr and exit `headlessOpenGateExitCode`. The change is measured from git tree snapshots taken through a throwaway index, so `bash` writes count and the user's index is untouched. Four host scenarios cover it.

@@ -5,7 +5,7 @@ import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { DEFAULT_CONFIG } from '../dist/src/domain.js';
-import { diffTrees, engagedSince, exceedsDirectBudget, snapshotWorkingTree } from '../dist/src/engagement.js';
+import { diffTrees, engagedSince, exceedsDirectBudget, snapshotWorkingTree, targetsWorkspace } from '../dist/src/engagement.js';
 import { createInitialState } from '../dist/src/state.js';
 
 const exec = {
@@ -78,4 +78,33 @@ test('engagement and the direct budget', () => {
   assert.equal(exceedsDirectBudget({ files: 1, lines: 20, paths: [] }, DEFAULT_CONFIG), false);
   assert.equal(exceedsDirectBudget({ files: 2, lines: 2, paths: [] }, DEFAULT_CONFIG), true);
   assert.equal(exceedsDirectBudget({ files: 1, lines: 21, paths: [] }, DEFAULT_CONFIG), true);
+});
+
+test('edits to assume-unchanged and skip-worktree files are still counted, and the real index keeps its bits', async t => {
+  const { cwd, git } = await repo(t);
+  await writeFile(path.join(cwd, 'b.txt'), 'b\n');
+  git('add', 'b.txt'); git('commit', '-qm', 'b');
+  git('update-index', '--assume-unchanged', 'a.txt');
+  git('update-index', '--skip-worktree', 'b.txt');
+  const before = await snapshotWorkingTree(exec, cwd, DEFAULT_CONFIG);
+  await writeFile(path.join(cwd, 'a.txt'), 'changed\n');
+  await writeFile(path.join(cwd, 'b.txt'), 'changed\n');
+  const stat = await diffTrees(exec, cwd, before, await snapshotWorkingTree(exec, cwd, DEFAULT_CONFIG));
+  assert.deepEqual(stat.paths.sort(), ['a.txt', 'b.txt']);
+  assert.match(git('ls-files', '-v', 'a.txt', 'b.txt'), /^h a\.txt\nS b\.txt\n$/, 'bits untouched in the real index');
+});
+
+test('targetsWorkspace: devices, sandboxes and paths outside the workspace are not workspace writes', () => {
+  const cwd = '/work/repo';
+  assert.equal(targetsWorkspace('write', { path: 'src/a.ts' }, cwd), true);
+  assert.equal(targetsWorkspace('write', { path: '/work/repo/src/a.ts' }, cwd), true);
+  assert.equal(targetsWorkspace('edit', { path: '[src/a.ts#1A2B]' }, cwd), true, 'hashline header path');
+  assert.equal(targetsWorkspace('write', { path: 'xd://pstack_acceptance' }, cwd), false, 'xd:// device call');
+  assert.equal(targetsWorkspace('write', { path: 'local://plan.md' }, cwd), false);
+  assert.equal(targetsWorkspace('edit', { path: '[local://scratch.md#ABCD]' }, cwd), false);
+  assert.equal(targetsWorkspace('write', { path: '/tmp/scratch.txt' }, cwd), false);
+  assert.equal(targetsWorkspace('write', { path: '../other/file.ts' }, cwd), false);
+  assert.equal(targetsWorkspace('ast_edit', { paths: ['local://a', 'src/b.ts'] }, cwd), true, 'any workspace path counts');
+  assert.equal(targetsWorkspace('ast_edit', { paths: ['local://a'] }, cwd), false);
+  assert.equal(targetsWorkspace('edit', { input: '*** Begin Patch' }, cwd), true, 'unknown shape stays blocked');
 });

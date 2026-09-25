@@ -1,0 +1,54 @@
+{
+  "name": "tripwire-strict-device-write",
+  "mode": "strict",
+  "prompt": "the sidebar lags when I scroll",
+  "rules": [
+    {
+      "id": "main",
+      "steps": [
+        {
+          "tool": "write",
+          "args": {
+            "path": "local://notes.md",
+            "content": "scratch notes\n"
+          }
+        },
+        {
+          "tool": "write",
+          "args": {
+            "path": "lib.js",
+            "content": "export const x = 1;\n"
+          }
+        },
+        {
+          "final": "stopped"
+        }
+      ]
+    }
+  ],
+  "assert": [
+    {
+      "type": "toolResultMatches",
+      "rule": "main",
+      "regex": "^(?![\\s\\S]*open a run before editing[\\s\\S]*open a run before editing)"
+    },
+    {
+      "type": "toolResultContains",
+      "rule": "main",
+      "text": "open a run before editing"
+    },
+    {
+      "type": "jsonlWhere",
+      "file": ".omp/pstack/runs/session-events.jsonl",
+      "where": {
+        "type": "unengaged_write_blocked",
+        "data.tool": "write"
+      },
+      "min": 1
+    },
+    {
+      "type": "pathAbsent",
+      "path": "lib.js"
+    }
+  ]
+}

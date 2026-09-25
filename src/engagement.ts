@@ -21,6 +21,8 @@ import type { ExecRunner } from "./fingerprint.js";
 export interface ChangeBaseline {
   tree: string;
   at: string;
+  /** pstack mode when the snapshot was taken; an `off` baseline is retaken when pstack activates. */
+  mode: string;
 }
 
 export interface ChangeStat {
@@ -72,6 +74,19 @@ export async function snapshotWorkingTree(exec: ExecRunner, cwd: string, config:
       if (!seeded) {
         const head = await git(exec, root, ["read-tree", "HEAD"], scratch);
         if (head.code !== 0 && (await git(exec, root, ["read-tree", "--empty"], scratch)).code !== 0) return undefined;
+      }
+      // assume-unchanged (lowercase tag) and skip-worktree (S) entries make `add -A`
+      // ignore edits to those files; clear the bits in the scratch index only.
+      const listed = await git(exec, root, ["ls-files", "-v", "-z"], scratch);
+      if (listed.code !== 0) return undefined;
+      const hidden = listed.stdout.split("\0").filter(entry => /^[a-zS] /.test(entry)).map(entry => entry.slice(2));
+      for (let start = 0; start < hidden.length; start += 500) {
+        const batch = hidden.slice(start, start + 500);
+        // One flag per call: git applies only the first of these two in a single update-index.
+        for (const flag of ["--no-assume-unchanged", "--no-skip-worktree"]) {
+          const cleared = await git(exec, root, ["update-index", flag, "--", ...batch], scratch);
+          if (cleared.code !== 0) return undefined;
+        }
       }
       const added = await git(exec, root, ["add", "-A", "--", ".", ...excludes(config)], scratch);
       if (added.code !== 0) return undefined;
@@ -131,4 +146,32 @@ export async function appendSessionAudit(cwd: string, config: PstackConfig, type
   const directory = path.resolve(cwd, config.auditDirectory);
   await mkdir(directory, { recursive: true });
   await appendFile(path.join(directory, "session-events.jsonl"), `${JSON.stringify({ at: new Date().toISOString(), type, data })}\n`, "utf8");
+}
+
+/** URL-like targets (xd://, local://, agent://, ssh://, ...) are OMP devices or sandboxes, not workspace files. */
+const SCHEME_TARGET = /^[a-z][a-z0-9+.-]*:\/\//i;
+
+/** `edit` hashline headers wrap the path as `[path#ABCD]`. */
+function unwrapHashlinePath(target: string): string {
+  const match = /^\[(.+?)(?:#[0-9A-Fa-f]{4})?\]$/.exec(target.trim());
+  return match ? (match[1] as string) : target.trim();
+}
+
+/**
+ * Whether a direct write tool call targets a file in the workspace. Unknown
+ * shapes count as workspace writes, so strict stays strict when in doubt.
+ */
+export function targetsWorkspace(toolName: string, input: unknown, cwd: string): boolean {
+  const record = typeof input === "object" && input !== null ? input as Record<string, unknown> : {};
+  const targets = toolName === "ast_edit"
+    ? (Array.isArray(record.paths) ? record.paths : [])
+    : (typeof record.path === "string" ? [record.path] : []);
+  if (targets.length === 0 || targets.some(target => typeof target !== "string")) return true;
+  const root = path.resolve(cwd);
+  return (targets as string[]).some(target => {
+    const clean = unwrapHashlinePath(target);
+    if (SCHEME_TARGET.test(clean)) return false;
+    const absolute = path.resolve(root, clean);
+    return absolute === root || absolute.startsWith(`${root}${path.sep}`);
+  });
 }

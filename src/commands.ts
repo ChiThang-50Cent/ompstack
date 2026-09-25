@@ -8,22 +8,6 @@ import { renderState } from "./status.js";
 import type { PstackStore } from "./store.js";
 import { nowIso } from "./utils.js";
 
-function commandSessionKey(ctx: ExtensionCommandContext): string {
-  try {
-    return ctx.sessionManager.getSessionId();
-  } catch {
-    return `cwd:${ctx.cwd}`;
-  }
-}
-
-function commandCwd(ctx: ExtensionCommandContext): string {
-  try {
-    return resolve(ctx.sessionManager.getCwd());
-  } catch {
-    return resolve(ctx.cwd);
-  }
-}
-
 export function tokenizeCommand(input: string): string[] {
   const tokens: string[] = [];
   let current = "";
@@ -151,15 +135,7 @@ export function registerCommands(
   api: ExtensionAPI,
   store: PstackStore,
   reconcile?: (ctx: ExtensionCommandContext) => Promise<void>,
-  onModeChange?: (
-    ctx: ExtensionCommandContext,
-    mode: PstackMode,
-    previous: PstackMode,
-    phase: "before" | "after",
-    token?: number,
-  ) => Promise<number | undefined>,
 ): void {
-  const modeQueues = new Map<string, Promise<void>>();
   api.registerCommand("pstack", {
     description: "Control pstack evidence-first workflows (/pstack help)",
     getArgumentCompletions: (prefix: string) => {
@@ -181,26 +157,7 @@ export function registerCommands(
         }
         if ((PSTACK_MODES as readonly string[]).includes(command)) {
           const mode = command as PstackMode;
-          const queueKey = commandSessionKey(ctx);
-          const admittedCwd = resolve(ctx.cwd);
-          const prior = modeQueues.get(queueKey) ?? Promise.resolve();
-          const change = prior.then(async () => {
-            if (commandSessionKey(ctx) !== queueKey || commandCwd(ctx) !== admittedCwd) return;
-            const previous = (await store.get(ctx)).state.mode;
-            const token = await onModeChange?.(ctx, mode, previous, "before");
-            try {
-              if (commandSessionKey(ctx) !== queueKey || commandCwd(ctx) !== admittedCwd) return;
-              await store.mutate(ctx, { type: "set_mode", mode, at });
-            } finally {
-              await onModeChange?.(ctx, mode, previous, "after", token);
-            }
-          });
-          const queued = change.catch(() => {});
-          modeQueues.set(queueKey, queued);
-          void queued.then(() => {
-            if (modeQueues.get(queueKey) === queued) modeQueues.delete(queueKey);
-          });
-          await change;
+          await store.mutate(ctx, { type: "set_mode", mode, at });
           return;
         }
 

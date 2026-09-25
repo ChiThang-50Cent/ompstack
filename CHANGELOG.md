@@ -2,15 +2,6 @@
 
 ## Unreleased
 
-### Added
-
-- Engagement tripwire (`engagementTripwire`, `directMaxFiles`, `directMaxLines`). A session that changes more than the direct budget without opening a pstack run is treated like one with open gates: strict blocks the stop and blocks `edit`/`write`/`ast_edit` before a run exists (unless the prompt routed direct); headless auto and strict report on stderr and exit `headlessOpenGateExitCode`. The change is measured from git tree snapshots taken through a throwaway index, so `bash` writes count and the user's index is untouched. Four host scenarios cover it.
-
-### Changed
-
-- Strict mode no longer lets an ungrounded request stay direct: the policy requires `pstack_gate action=init` before editing. Auto states the direct budget explicitly.
-- `capture-writer-tools` changes three files through builders without a run, so it now expects the tripwire's exit 3.
-
 ### Fixed
 
 - The router no longer forces a playbook it cannot justify. A request without a playbook signal (no keyword match, a lone generic verb, or non-English text) is `grounded: false`; the injected policy names no playbook and tells the model to choose from the `skill://pstack` routing table, stay direct for small local edits, and use `pstack-figure-it-out` when no row fits. Grounded suggestions may be overridden by a better row. `pstack_gate init` says when its playbook is only the fallback. "rename this variable" routes `direct`.

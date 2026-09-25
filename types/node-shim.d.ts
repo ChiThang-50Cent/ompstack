@@ -21,8 +21,6 @@ declare module "node:fs" {
 
 declare module "node:fs/promises" {
   export function appendFile(path: string, data: string, encoding?: string): Promise<void>;
-  export function copyFile(src: string, dest: string): Promise<void>;
-  export function rm(path: string, options?: { force?: boolean; recursive?: boolean }): Promise<void>;
   export function mkdir(path: string, options?: Record<string, unknown>): Promise<void>;
   export function rename(oldPath: string, newPath: string): Promise<void>;
   export function writeFile(path: string, data: string, encoding?: string): Promise<void>;
@@ -59,8 +57,4 @@ declare module "node:util" {
 
 declare module "node:child_process" {
   export function execFile(command: string, args: string[], options: Record<string, unknown>, callback: (...args: any[]) => void): void;
-}
-
-declare module "node:os" {
-  export function tmpdir(): string;
 }

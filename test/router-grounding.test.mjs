@@ -30,7 +30,7 @@ test('prompts without a playbook signal are ungrounded and hand the choice to th
     assert.doesNotMatch(policy, /playbooks\/feature\.md/, `${prompt}: no forced feature playbook`);
     assert.doesNotMatch(policy, /Router suggestion/, prompt);
     assert.match(policy, /Choose the playbook yourself/, prompt);
-    assert.match(policy, /change within 1 file\(s\) \/ 20 changed line\(s\) may stay direct/, prompt);
+    assert.match(policy, /small, local, reversible edit stays direct/, prompt);
   }
 });
 
@@ -54,20 +54,4 @@ test('"rename this variable" is direct', () => {
   const decision = classifyTask('rename this variable');
   assert.equal(decision.ceremony, 'direct');
   assert.match(policyFor('rename this variable'), /Keep this task direct/);
-  assert.match(policyFor('rename this variable'), /within 1 file\(s\) \/ 20 changed line\(s\)/);
-});
-
-test('strict mode never leaves an ungrounded request to the model to skip the run', () => {
-  const policy = policyFor('Tab PR không hoạt động nữa, sửa giúp', 'strict');
-  assert.match(policy, /Edits without a run are blocked when a Git baseline is available/);
-  assert.match(policy, /outside Git the tripwire stays silent/);
-  assert.doesNotMatch(policy, /may stay direct/);
-});
-
-test('no-Git policy capability suppresses tripwire promises for direct and grounded prompts', () => {
-  const state = { ...createInitialState(DEFAULT_CONFIG), mode: 'strict' };
-  const direct = buildPolicySegment(state, classifyTask('rename this variable'), DEFAULT_CONFIG, false);
-  const grounded = buildPolicySegment(state, classifyTask('fix this reproduced bug and verify it'), DEFAULT_CONFIG, false);
-  assert.doesNotMatch(direct, /larger run-less changes are reported|strict blocks stop attempts/);
-  assert.doesNotMatch(grounded, /changes beyond 1 file\(s\) \/ 20 changed line\(s\) are reported/);
 });

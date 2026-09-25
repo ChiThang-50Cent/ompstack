@@ -7,12 +7,11 @@ import { nowIso, sha256 } from "./utils.js";
 
 /** Process runner seam; `ExtensionAPI.exec` satisfies it. */
 export interface ExecRunner {
-  exec(command: string, args: string[], options?: { cwd?: string; timeout?: number; signal?: AbortSignal }): Promise<{ stdout: string; stderr: string; code: number }>;
+  exec(command: string, args: string[], options?: { cwd?: string; timeout?: number }): Promise<{ stdout: string; stderr: string; code: number }>;
 }
 
-async function runGit(exec: ExecRunner, cwd: string, args: string[], signal?: AbortSignal): Promise<string> {
-  if (signal?.aborted) throw signal.reason ?? new Error("Fingerprint aborted");
-  const result = await exec.exec("git", args, { cwd, ...(signal ? { signal } : {}) });
+async function runGit(exec: ExecRunner, cwd: string, args: string[]): Promise<string> {
+  const result = await exec.exec("git", args, { cwd });
   if (result.code !== 0) throw new Error(`git ${args.join(" ")} exited ${result.code}: ${result.stderr.trim()}`);
   return result.stdout;
 }
@@ -34,10 +33,9 @@ function ignored(relative: string, config: PstackConfig): boolean {
   };
   return matches(".omp/pstack") || matches(config.auditDirectory) || config.fingerprintIgnore.some(matches);
 }
-async function hashFile(filePath: string, maxBytes: number, signal?: AbortSignal): Promise<{ digest: string; partial: boolean; size: number }> {
-  if (signal?.aborted) throw signal.reason ?? new Error("Fingerprint aborted");
+
+async function hashFile(filePath: string, maxBytes: number): Promise<{ digest: string; partial: boolean; size: number }> {
   const info = await lstat(filePath);
-  if (signal?.aborted) throw signal.reason ?? new Error("Fingerprint aborted");
   if (info.size > maxBytes) {
     return {
       digest: sha256(`oversize\0${info.size}\0${Math.floor(info.mtimeMs)}`),
@@ -47,7 +45,7 @@ async function hashFile(filePath: string, maxBytes: number, signal?: AbortSignal
   }
   const hash = createHash("sha256");
   await new Promise<void>((resolve, reject) => {
-    const stream = createReadStream(filePath, signal ? { signal } : undefined);
+    const stream = createReadStream(filePath);
     stream.on("data", chunk => hash.update(chunk));
     stream.on("error", reject);
     stream.on("end", resolve);
@@ -55,28 +53,26 @@ async function hashFile(filePath: string, maxBytes: number, signal?: AbortSignal
   return { digest: hash.digest("hex"), partial: false, size: info.size };
 }
 
-async function gitFingerprint(exec: ExecRunner, cwd: string, config: PstackConfig, signal?: AbortSignal): Promise<ArtifactFingerprint | undefined> {
+async function gitFingerprint(exec: ExecRunner, cwd: string, config: PstackConfig): Promise<ArtifactFingerprint | undefined> {
   try {
-    const inside = (await runGit(exec, cwd, ["rev-parse", "--is-inside-work-tree"], signal)).trim();
+    const inside = (await runGit(exec, cwd, ["rev-parse", "--is-inside-work-tree"])).trim();
     if (inside !== "true") return undefined;
 
     let headSha = "unborn";
     try {
-      headSha = (await runGit(exec, cwd, ["rev-parse", "HEAD"], signal)).trim();
-    } catch (error) {
-      if (signal?.aborted) throw error;
+      headSha = (await runGit(exec, cwd, ["rev-parse", "HEAD"])).trim();
+    } catch {
       // An unborn repository still has a meaningful working-tree fingerprint.
     }
 
     let trackedDiff = "";
     try {
-      trackedDiff = await runGit(exec, cwd, ["diff", "--binary", "--no-ext-diff", "HEAD", "--", "."], signal);
-    } catch (error) {
-      if (signal?.aborted) throw error;
-      trackedDiff = await runGit(exec, cwd, ["diff", "--binary", "--no-ext-diff", "--", "."], signal);
+      trackedDiff = await runGit(exec, cwd, ["diff", "--binary", "--no-ext-diff", "HEAD", "--", "."]);
+    } catch {
+      trackedDiff = await runGit(exec, cwd, ["diff", "--binary", "--no-ext-diff", "--", "."]);
     }
 
-    const untrackedRaw = await runGit(exec, cwd, ["ls-files", "--others", "--exclude-standard", "-z"], signal);
+    const untrackedRaw = await runGit(exec, cwd, ["ls-files", "--others", "--exclude-standard", "-z"]);
     const untracked = untrackedRaw
       .split("\0")
       .map(normalizeRelative)
@@ -89,11 +85,10 @@ async function gitFingerprint(exec: ExecRunner, cwd: string, config: PstackConfi
     for (const relative of untracked) {
       const absolute = path.join(cwd, relative);
       try {
-        const hashed = await hashFile(absolute, config.maxHashedFileBytes, signal);
+        const hashed = await hashFile(absolute, config.maxHashedFileBytes);
         partial ||= hashed.partial;
         manifest.push(`${relative}\0${hashed.size}\0${hashed.digest}`);
       } catch (error) {
-        if (signal?.aborted) throw error;
         partial = true;
         manifest.push(`${relative}\0unreadable\0${String(error)}`);
       }
@@ -116,26 +111,24 @@ async function gitFingerprint(exec: ExecRunner, cwd: string, config: PstackConfi
   }
 }
 
-async function workspaceFingerprint(cwd: string, config: PstackConfig, signal?: AbortSignal): Promise<ArtifactFingerprint> {
+async function workspaceFingerprint(cwd: string, config: PstackConfig): Promise<ArtifactFingerprint> {
   const entries: string[] = [];
   const notes: string[] = [];
   let partial = false;
   let visited = 0;
 
   async function walk(directory: string): Promise<void> {
-    if (signal?.aborted) throw signal.reason ?? new Error("Fingerprint aborted");
+    if (visited >= config.maxWorkspaceFiles) return;
     let children;
     try {
       children = await readdir(directory, { withFileTypes: true });
     } catch (error) {
-      if (signal?.aborted) throw error;
       partial = true;
       notes.push(`Could not read ${normalizeRelative(path.relative(cwd, directory))}: ${String(error)}`);
       return;
     }
     children.sort((left, right) => left.name.localeCompare(right.name));
     for (const child of children) {
-      if (signal?.aborted) throw signal.reason ?? new Error("Fingerprint aborted");
       if (visited >= config.maxWorkspaceFiles) {
         partial = true;
         notes.push(`Workspace scan stopped at ${config.maxWorkspaceFiles} files.`);
@@ -151,11 +144,10 @@ async function workspaceFingerprint(cwd: string, config: PstackConfig, signal?: 
         await walk(absolute);
       } else if (child.isFile()) {
         try {
-          const hashed = await hashFile(absolute, config.maxHashedFileBytes, signal);
+          const hashed = await hashFile(absolute, config.maxHashedFileBytes);
           partial ||= hashed.partial;
           entries.push(`${relative}\0${hashed.size}\0${hashed.digest}`);
         } catch (error) {
-          if (signal?.aborted) throw error;
           partial = true;
           entries.push(`${relative}\0unreadable\0${String(error)}`);
         }
@@ -174,16 +166,8 @@ async function workspaceFingerprint(cwd: string, config: PstackConfig, signal?: 
   };
 }
 
-export async function computeArtifactFingerprint(
-  exec: ExecRunner,
-  cwd: string,
-  config: PstackConfig,
-  signal?: AbortSignal,
-): Promise<ArtifactFingerprint> {
-  if (signal?.aborted) throw signal.reason ?? new Error("Fingerprint aborted");
-  const git = await gitFingerprint(exec, cwd, config, signal);
-  if (signal?.aborted) throw signal.reason ?? new Error("Fingerprint aborted");
-  return git ?? workspaceFingerprint(cwd, config, signal);
+export async function computeArtifactFingerprint(exec: ExecRunner, cwd: string, config: PstackConfig): Promise<ArtifactFingerprint> {
+  return (await gitFingerprint(exec, cwd, config)) ?? workspaceFingerprint(cwd, config);
 }
 
 export async function readFingerprintFromFile(filePath: string): Promise<ArtifactFingerprint | undefined> {

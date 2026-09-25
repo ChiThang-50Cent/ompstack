@@ -58,21 +58,7 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 125,
-      "description": "Exit code for a headless OMP process that ends with open run gates or an over-budget unengaged change. 0 disables. Default 3."
-    },
-    "engagementTripwire": {
-      "type": "boolean",
-      "description": "In auto/strict, treat a session that changes more than the direct budget without opening a pstack run like open gates. Default true."
-    },
-    "directMaxFiles": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Direct-change budget: changed files allowed without a run. Default 1."
-    },
-    "directMaxLines": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Direct-change budget: added+deleted lines allowed without a run. Default 20."
+      "description": "Exit code for a headless OMP process that ends with an active run whose gates are open. 0 disables. Default 3."
     }
   }
 }

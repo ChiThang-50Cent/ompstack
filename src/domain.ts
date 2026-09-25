@@ -90,21 +90,10 @@ export interface PstackConfig {
    */
   maxStopGateBlocks?: number;
   /**
-   * Exit code a headless (no UI) OMP process returns when it ends with an
-   * active run whose gates are open or an unengaged change exceeds the direct
-   * budget. OMP's own non-zero exit codes are never masked. 0 disables it.
+   * Exit code a headless (no UI) OMP process returns when it ends with an active run whose gates are open.
+   * OMP's own non-zero exit codes are never masked. 0 disables the override.
    */
   headlessOpenGateExitCode: number;
-  /**
-   * Engagement tripwire: in auto/strict, a session that changes more than the
-   * direct budget without opening a pstack run is treated like open gates
-   * (strict blocks the stop; headless reports and exits headlessOpenGateExitCode).
-   */
-  engagementTripwire: boolean;
-  /** Direct-change budget: more changed files than this needs a run. */
-  directMaxFiles: number;
-  /** Direct-change budget: more added+deleted lines than this needs a run. */
-  directMaxLines: number;
   auditDirectory: string;
   fingerprintIgnore: string[];
   maxWorkspaceFiles: number;
@@ -128,9 +117,6 @@ export const DEFAULT_CONFIG: PstackConfig = {
   requireArtifactFingerprint: true,
   maxPolicyCharacters: 8_000,
   headlessOpenGateExitCode: 3,
-  engagementTripwire: true,
-  directMaxFiles: 1,
-  directMaxLines: 20,
   auditDirectory: ".omp/pstack/runs",
   fingerprintIgnore: [
     ".git",
@@ -248,8 +234,6 @@ export interface PstackSessionState {
   version: typeof PSTACK_STATE_VERSION;
   mode: PstackMode;
   updatedAt: string;
-  /** Canonical workspace identity for persisted session-state isolation. */
-  workspace?: string;
   activeRun?: PstackRun;
   completedRuns: Array<Pick<PstackRun, "id" | "objective" | "playbook" | "ceremony" | "status" | "createdAt" | "completedAt">>;
 }

@@ -169,11 +169,6 @@
       "type": "fileContains",
       "path": "README.md",
       "text": "synthesizer-BASH"
-    },
-    {
-      "type": "outputContains",
-      "text": "changed 3 file(s) / 6 line(s) without a pstack run"
     }
-  ],
-  "expectExit": 3
+  ]
 }

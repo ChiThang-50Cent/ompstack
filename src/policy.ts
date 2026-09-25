@@ -29,7 +29,8 @@ function activeRunPolicy(state: PstackSessionState): string {
   ].join("\n");
 }
 
-function routerPolicy(decision: RouterDecision): string {
+function routerPolicy(decision: RouterDecision, state: PstackSessionState, config: PstackConfig): string {
+  const budget = `${config.directMaxFiles} file(s) / ${config.directMaxLines} changed line(s)`;
   if (decision.ceremony === "direct") {
     return [
       `Router suggestion: ${decision.playbook}/${decision.ceremony} (${Math.round(decision.confidence * 100)}% confidence).`,
@@ -38,9 +39,13 @@ function routerPolicy(decision: RouterDecision): string {
     ].join("\n");
   }
   if (!decision.grounded) {
-    const floor = decision.ceremony === "strict" || decision.ceremony === "program"
-      ? `Risk signals set a ${decision.ceremony} ceremony floor: open proof state with pstack_gate action=init and an explicit playbook before implementation.`
-      : "Size it yourself: a small, local, reversible edit stays direct (no pstack run; verify proportionately). Anything larger opens proof state with pstack_gate action=init and an explicit playbook before implementation.";
+    const floor = state.mode === "strict" && config.engagementTripwire
+      ? `Strict mode: open proof state with pstack_gate action=init and an explicit playbook before editing. Edits without a run are blocked, and a session that changes more than ${budget} without a run cannot finish.`
+      : decision.ceremony === "strict" || decision.ceremony === "program"
+        ? `Risk signals set a ${decision.ceremony} ceremony floor: open proof state with pstack_gate action=init and an explicit playbook before implementation.`
+        : config.engagementTripwire
+          ? `Size it yourself: a change within ${budget} may stay direct (no pstack run; verify proportionately). Anything larger opens proof state with pstack_gate action=init and an explicit playbook before implementation; larger changes without a run are reported as unverified.`
+          : "Size it yourself: a small, local, reversible edit stays direct (no pstack run; verify proportionately). Anything larger opens proof state with pstack_gate action=init and an explicit playbook before implementation.";
     return [
       "Router: no playbook signal in this request (keyword router; it cannot read intent or non-English text).",
       "Choose the playbook yourself from the routing table in skill://pstack; if no row fits, use its no-playbook-fits path instead of defaulting to feature.",
@@ -63,6 +68,6 @@ export function buildPolicySegment(
   config: PstackConfig,
 ): string | undefined {
   if (state.mode === "off") return undefined;
-  const body = state.activeRun ? activeRunPolicy(state) : routerPolicy(decision);
+  const body = state.activeRun ? activeRunPolicy(state) : routerPolicy(decision, state, config);
   return truncate(`${START}\n[PSTACK OMP - ${state.mode.toUpperCase()}]\n${body}\n${END}`, config.maxPolicyCharacters);
 }

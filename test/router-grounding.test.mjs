@@ -30,7 +30,7 @@ test('prompts without a playbook signal are ungrounded and hand the choice to th
     assert.doesNotMatch(policy, /playbooks\/feature\.md/, `${prompt}: no forced feature playbook`);
     assert.doesNotMatch(policy, /Router suggestion/, prompt);
     assert.match(policy, /Choose the playbook yourself/, prompt);
-    assert.match(policy, /small, local, reversible edit stays direct/, prompt);
+    assert.match(policy, /change within 1 file\(s\) \/ 20 changed line\(s\) may stay direct/, prompt);
   }
 });
 
@@ -54,4 +54,11 @@ test('"rename this variable" is direct', () => {
   const decision = classifyTask('rename this variable');
   assert.equal(decision.ceremony, 'direct');
   assert.match(policyFor('rename this variable'), /Keep this task direct/);
+});
+
+test('strict mode never leaves an ungrounded request to the model to skip the run', () => {
+  const policy = policyFor('Tab PR không hoạt động nữa, sửa giúp', 'strict');
+  assert.match(policy, /Strict mode: open proof state with pstack_gate action=init and an explicit playbook before editing/);
+  assert.match(policy, /Edits without a run are blocked/);
+  assert.doesNotMatch(policy, /may stay direct/);
 });

@@ -60,6 +60,7 @@ The `agents/` directory defines capability-separated workers. OMP applies their 
 | `result-ingestion.ts` | child structured-output correlation, evidence ingestion, acceptance updates, and verdict ingestion |
 | `model-routing.ts` | verifier cross-family reordering of OMP-resolved patterns |
 | `fingerprint.ts` | Git/non-Git artifact identity |
+| `engagement.ts` | Git-tree baseline/diff tripwire and run-less audit rendering |
 | `gates.ts` | deterministic completion predicate |
 | `tools.ts` | parent/coordinator run-control and recovery surface |
 | `commands.ts` | operator-facing `/pstack` commands |
@@ -78,6 +79,7 @@ session_start / session_switch / session_branch / session_tree
   → scan the active parent branch for the latest pstack state snapshot
   → restore state; expose status through /pstack and pstack_status
   → apply --pstack-mode override, if supplied
+  → capture a Git-tree baseline for the main session when the tripwire is enabled
 ```
 
 The latest valid custom session entry is the source of truth. Audit files support inspection and recovery, but do not override session state.
@@ -94,6 +96,11 @@ before_agent_start
 ```
 
 Repeated turns replace rather than duplicate policy text.
+
+### Engagement tripwire
+
+The main-session extension keeps a process-local baseline per session key and lifecycle/mode epoch. When `auto` or `strict` mode has the tripwire enabled, it snapshots the working tree through a throwaway Git index after session hydration or mode activation. At stop and headless shutdown it diffs a fresh tree against that baseline. A run opened during the lifecycle, including one later abandoned, counts as engagement; otherwise changes beyond the direct file/line budget are reported, blocked, or turned into the configured headless exit according to mode.
+
 
 ### Parent task call
 

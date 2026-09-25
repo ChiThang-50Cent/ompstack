@@ -532,3 +532,558 @@ test('headless shutdown leaves the exit alone when disabled, gates pass, or a UI
   assert.equal(ui.proc.stderrText, '');
   assert.equal(ui.proc.exitCode, undefined);
 });
+
+async function gitWorkspace(t, mode, { headless = false, config } = {}) {
+  const { setHeadlessProcessForTests } = await import('../dist/src/headless.js');
+  const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-tripwire-'));
+  const git = (...args) => execFileSync('git', args, { cwd, encoding: 'utf8' });
+  git('init', '-q'); git('config', 'user.email', 't@t'); git('config', 'user.name', 't');
+  await writeFile(path.join(cwd, 'app.js'), 'export const a = 1;\n');
+  git('add', '.'); git('commit', '-qm', 'init');
+  if (config) await writeFile(path.join(cwd, 'pstack.json'), JSON.stringify(config));
+  const proc = fakeProcess();
+  setHeadlessProcessForTests(proc);
+  t.after(async () => { setHeadlessProcessForTests(undefined); await rm(cwd, { recursive: true, force: true }); });
+  const mock = createMock(cwd);
+  mock.ctx.hasUI = !headless;
+  pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', mode);
+  await mock.emit('session_start');
+  return { cwd, mock, proc };
+}
+
+const bigChange = cwd => Promise.all([
+  writeFile(path.join(cwd, 'app.js'), 'export const a = 2;\n'),
+  writeFile(path.join(cwd, 'lib.js'), Array.from({ length: 30 }, (_, i) => `export const v${i} = ${i};`).join('\n') + '\n'),
+]);
+
+test('strict blocks direct file writes until a run is open, unless the prompt routed direct', async t => {
+  const { mock } = await gitWorkspace(t, 'strict');
+  await mock.emit('before_agent_start', { prompt: 'the sidebar lags when I scroll', systemPrompt: ['base'] });
+  const blocked = await mock.emit('tool_call', { toolCallId: 'w1', toolName: 'edit', input: { path: 'app.js' } });
+  assert.equal(blocked?.block, true);
+  assert.match(blocked.reason, /open a run before editing/);
+  assert.equal(await mock.emit('tool_call', { toolCallId: 'r1', toolName: 'read', input: { path: 'app.js' } }), undefined, 'reads are never blocked');
+
+  await execute(mock.tools.get('pstack_gate'), { action: 'init', objective: 'Fix lag', playbook: 'performance', ceremony: 'standard', verificationRequired: false, acceptance: [{ id: 'AC-1', text: 'no lag' }] }, mock.ctx);
+  assert.equal(await mock.emit('tool_call', { toolCallId: 'w2', toolName: 'write', input: { path: 'app.js' } }), undefined, 'writes pass once a run is open');
+
+  const direct = await gitWorkspace(t, 'strict');
+  await direct.mock.emit('before_agent_start', { prompt: 'rename this variable', systemPrompt: ['base'] });
+  assert.equal(await direct.mock.emit('tool_call', { toolCallId: 'w3', toolName: 'edit', input: {} }), undefined, 'router-direct prompts may edit without a run');
+  await direct.mock.emit('before_agent_start', { prompt: '', systemPrompt: ['base'] });
+  const staleDirect = await direct.mock.emit('tool_call', { toolCallId: 'w3b', toolName: 'edit', input: {} });
+  assert.equal(staleDirect?.block, true, 'an empty continuation prompt clears the direct exemption');
+
+  const auto = await gitWorkspace(t, 'auto');
+  await auto.mock.emit('before_agent_start', { prompt: 'the sidebar lags when I scroll', systemPrompt: ['base'] });
+  assert.equal(await auto.mock.emit('tool_call', { toolCallId: 'w4', toolName: 'edit', input: {} }), undefined, 'auto never blocks writes');
+});
+
+test('strict leaves OMP protocol writes to their internal dispatchers', async t => {
+  const { mock } = await gitWorkspace(t, 'strict');
+  for (const path of ['agent://review', 'proc://job', 'xd://pstack_status', '[agent://review#ABCD]', '[proc://job#ABCD]', '[xd://pstack_status#ABCD]', '[local://artifact#ABCD]']) {
+    assert.equal(
+      await mock.emit('tool_call', { toolCallId: `protocol-${path}`, toolName: 'write', input: { path, content: 'payload' } }),
+      undefined,
+      `${path} is not a workspace file write`,
+    );
+  }
+});
+
+test('strict permits internal ast_edit paths but blocks workspace or mixed paths', async t => {
+  const { mock } = await gitWorkspace(t, 'strict');
+  const internal = { paths: ['[local://scratch.md#ABCD]'], ops: [] };
+  assert.equal(await mock.emit('tool_call', { toolCallId: 'ast-internal', toolName: 'ast_edit', input: internal }), undefined);
+  const mixed = { paths: ['local://scratch.md', 'src/app.js'], ops: [] };
+  const blocked = await mock.emit('tool_call', { toolCallId: 'ast-mixed', toolName: 'ast_edit', input: mixed });
+  assert.equal(blocked?.block, true);
+});
+
+
+test('strict blocks the stop twice when the session changed more than the direct budget without a run', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict');
+  await bigChange(cwd);
+  const first = await mock.emit('session_stop');
+  assert.equal(first?.decision, 'block');
+  assert.match(first.reason, /changed 2 file\(s\) \/ 32 line\(s\) without a pstack run/);
+  assert.equal((await mock.emit('session_stop'))?.decision, 'block');
+  assert.equal(await mock.emit('session_stop'), undefined, 'released after the strict budget');
+  assert.match(mock.notices.at(-1).message, /without a pstack run/);
+  const audit = await readFile(path.join(cwd, '.omp/pstack/runs/session-events.jsonl'), 'utf8');
+  assert.equal(audit.match(/"unengaged_stop_blocked"/g)?.length, 2);
+  assert.equal(audit.match(/"unengaged_change"/g)?.length, 1, 'interactive final findings are audited once');
+});
+
+test('a change within the direct budget, or any change made under a run, never trips', async t => {
+  const small = await gitWorkspace(t, 'strict');
+  await writeFile(path.join(small.cwd, 'app.js'), 'export const a = 3;\n');
+  assert.equal(await small.mock.emit('session_stop'), undefined);
+
+  const engaged = await gitWorkspace(t, 'strict', { headless: true });
+  await execute(engaged.mock.tools.get('pstack_gate'), { action: 'init', objective: 'Change', playbook: 'feature', ceremony: 'standard', verificationRequired: false, acceptance: [] }, engaged.mock.ctx);
+  await execute(engaged.mock.tools.get('pstack_gate'), { action: 'abandon', reason: 'test' }, engaged.mock.ctx);
+  await bigChange(engaged.cwd);
+  assert.equal(await engaged.mock.emit('session_stop'), undefined, 'an abandoned run still counts as engagement');
+  await engaged.mock.emit('session_shutdown');
+  assert.equal(engaged.proc.stderrText, '');
+  assert.equal(engaged.proc.exitCode, undefined);
+
+  const off = await gitWorkspace(t, 'strict', { config: { engagementTripwire: false } });
+  await bigChange(off.cwd);
+  assert.equal(await off.mock.emit('session_stop'), undefined, 'engagementTripwire=false disables it');
+});
+
+test('headless auto reports an unengaged change on stderr and exits 3; within budget it stays quiet', async t => {
+  const { cwd, mock, proc } = await gitWorkspace(t, 'auto', { headless: true });
+  await bigChange(cwd);
+  assert.equal(await mock.emit('session_stop'), undefined, 'auto does not block');
+  await mock.emit('session_shutdown');
+  assert.match(proc.stderrText, /changed 2 file\(s\) \/ 32 line\(s\) without a pstack run/);
+  assert.match(proc.stderrText, /Exit status 3 signals unverified work/);
+  assert.equal(proc.exitCode, 3);
+  proc.exit(0);
+  assert.deepEqual(proc.exits, [3]);
+
+  const quiet = await gitWorkspace(t, 'auto', { headless: true });
+  await writeFile(path.join(quiet.cwd, 'app.js'), 'export const a = 4;\n');
+  await quiet.mock.emit('session_shutdown');
+  assert.equal(quiet.proc.stderrText, '');
+  assert.equal(quiet.proc.exitCode, undefined);
+});
+
+test('headless shutdown reuses a finding when a later Git recheck is unavailable', async t => {
+  const { cwd, mock, proc } = await gitWorkspace(t, 'auto', { headless: true });
+  await bigChange(cwd);
+  await mock.emit('session_stop');
+  mock.api.exec = async () => ({ stdout: '', stderr: 'unavailable', code: 1 });
+  await mock.emit('session_stop');
+  await mock.emit('session_shutdown');
+  assert.match(proc.stderrText, /changed 2 file\(s\) \/ 32 line\(s\) without a pstack run/);
+  assert.equal(proc.exitCode, 3);
+});
+test('headless shutdown refreshes a cached finding after the workspace is reverted', async t => {
+  const { cwd, mock, proc } = await gitWorkspace(t, 'auto', { headless: true });
+  await bigChange(cwd);
+  await mock.emit('session_stop');
+  await writeFile(path.join(cwd, 'app.js'), 'export const a = 1;\n');
+  await rm(path.join(cwd, 'lib.js'));
+  await mock.emit('session_shutdown');
+  assert.equal(proc.stderrText, '');
+  assert.equal(proc.exitCode, undefined);
+});
+
+
+test('headless shutdown fails closed when its first Git scan times out', async t => {
+  const { cwd, mock, proc } = await gitWorkspace(t, 'auto', { headless: true });
+  await bigChange(cwd);
+  const originalExec = mock.api.exec;
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      await new Promise(resolve => setTimeout(resolve, 1_000));
+    }
+    return originalExec(command, args, options);
+  };
+  await mock.emit('session_shutdown');
+  assert.match(proc.stderrText, /could not complete its Git scan/);
+  assert.equal(proc.exitCode, 3);
+});
+
+test('headless shutdown reports an indeterminate lifecycle baseline', async t => {
+  const { cwd, mock, proc } = await gitWorkspace(t, 'auto', { headless: true });
+  await bigChange(cwd);
+  const originalExec = mock.api.exec;
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      await new Promise(resolve => setTimeout(resolve, 5_200));
+    }
+    return originalExec(command, args, options);
+  };
+  await mock.emit('session_tree');
+  await mock.emit('session_shutdown');
+  assert.match(proc.stderrText, /could not establish a Git baseline/);
+  assert.equal(proc.exitCode, 3);
+});
+test('headless shutdown reports before its host deadline while a baseline is pending', async t => {
+  const { cwd, mock, proc } = await gitWorkspace(t, 'auto', { headless: true });
+  await bigChange(cwd);
+  const originalExec = mock.api.exec;
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      enteredResolve();
+      await release;
+    }
+    return originalExec(command, args, options);
+  };
+  const rebasing = mock.emit('session_tree');
+  await entered;
+  const startedAt = Date.now();
+  await mock.emit('session_shutdown');
+  assert.ok(Date.now() - startedAt < 1_800);
+  assert.match(proc.stderrText, /could not establish a Git baseline/);
+  assert.equal(proc.exitCode, 3);
+  releaseResolve();
+  await rebasing;
+});
+test('mode activation from the default off state arms a fresh tripwire baseline', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'off');
+  await mock.commands.get('pstack').handler('strict', mock.ctx);
+  await bigChange(cwd);
+  assert.equal((await mock.emit('session_stop'))?.decision, 'block');
+});
+
+test('auto mode activation never blocks a write while its baseline is arming', async t => {
+  const { mock } = await gitWorkspace(t, 'off');
+  const originalExec = mock.api.exec;
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+
+      enteredResolve();
+    }
+    await release;
+
+    return originalExec(command, args, options);
+  };
+  const modeChange = mock.commands.get('pstack').handler('auto', mock.ctx);
+  await entered;
+  const write = mock.emit('tool_call', { toolCallId: 'auto-arming-write', toolName: 'write', input: { path: 'app.js', content: 'payload' } });
+  releaseResolve();
+  assert.equal(await write, undefined);
+  await modeChange;
+});
+
+test('workspace Bash calls wait for a mode baseline before executing', async t => {
+  const { mock } = await gitWorkspace(t, 'off');
+  const originalExec = mock.api.exec;
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      enteredResolve();
+      await release;
+    }
+    return originalExec(command, args, options);
+  };
+  const modeChange = mock.commands.get('pstack').handler('strict', mock.ctx);
+  await entered;
+  let settled = false;
+  const bash = mock.emit('tool_call', { toolCallId: 'arming-bash', toolName: 'bash', input: { command: 'printf payload' } })
+    .then(() => { settled = true; });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(settled, false);
+  releaseResolve();
+  await Promise.all([bash, modeChange]);
+});
+
+test('strict-to-auto transition does not block a concurrent workspace write', async t => {
+  const { mock } = await gitWorkspace(t, 'strict');
+  const originalExec = mock.api.exec;
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      enteredResolve();
+      await release;
+    }
+    return originalExec(command, args, options);
+  };
+  const modeChange = mock.commands.get('pstack').handler('auto', mock.ctx);
+  await entered;
+  const write = mock.emit('tool_call', { toolCallId: 'strict-auto-write', toolName: 'edit', input: { path: 'app.js' } });
+  releaseResolve();
+  assert.equal(await write, undefined);
+  await modeChange;
+});
+
+test('strict activation outside Git keeps concurrent writes silent', async t => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-mode-no-git-'));
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+  const mock = createMock(cwd);
+  pstackExtension(mock.api);
+  await mock.emit('session_start');
+  const originalExec = mock.api.exec;
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      enteredResolve();
+      await release;
+    }
+    return originalExec(command, args, options);
+  };
+  const modeChange = mock.commands.get('pstack').handler('strict', mock.ctx);
+  await entered;
+  const write = mock.emit('tool_call', { toolCallId: 'no-git-mode-write', toolName: 'edit', input: {} });
+  releaseResolve();
+  assert.equal(await write, undefined);
+  await modeChange;
+});
+
+test('mode commands serialize across distinct OMP command contexts', async t => {
+  const { mock } = await gitWorkspace(t, 'off');
+  const originalExec = mock.api.exec;
+  const firstContext = { ...mock.ctx, sessionManager: mock.ctx.sessionManager };
+  const secondContext = { ...mock.ctx, sessionManager: mock.ctx.sessionManager };
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let calls = 0;
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    calls++;
+    if (first) {
+      first = false;
+      enteredResolve();
+      await release;
+    }
+    return originalExec(command, args, options);
+  };
+  const strict = mock.commands.get('pstack').handler('strict', firstContext);
+  await entered;
+  const auto = mock.commands.get('pstack').handler('auto', secondContext);
+  await Promise.resolve();
+  assert.equal(calls, 1);
+  releaseResolve();
+  await Promise.all([strict, auto]);
+  const policy = await mock.emit('before_agent_start', { prompt: 'continue', systemPrompt: ['base'] });
+  assert.match(policy.systemPrompt.at(-1), /\[PSTACK OMP - AUTO\]/);
+});
+test('a timed-out lifecycle snapshot cannot arm a late strict baseline', async t => {
+  const { mock } = await gitWorkspace(t, 'strict');
+  const originalExec = mock.api.exec;
+  let first = true;
+  let delayedSignal;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      delayedSignal = options?.signal;
+      await new Promise(resolve => setTimeout(resolve, 5_200));
+    }
+    return originalExec(command, args, options);
+  };
+  await mock.emit('session_tree');
+  await new Promise(resolve => setTimeout(resolve, 400));
+  assert.equal(delayedSignal?.aborted, true);
+  assert.equal(
+    await mock.emit('tool_call', { toolCallId: 'late-baseline-write', toolName: 'edit', input: { path: 'app.js' } }),
+    undefined,
+  );
+});
+
+test('strict tripwire is silent when Git cannot provide a baseline', async t => {
+  const cwd = await mkdtemp(path.join(tmpdir(), 'pstack-ext-no-git-'));
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+  const mock = createMock(cwd);
+  pstackExtension(mock.api);
+  mock.flags.set('pstack-mode', 'strict');
+  await mock.emit('session_start');
+  await mock.emit('before_agent_start', { prompt: 'the sidebar lags when I scroll', systemPrompt: ['base'] });
+  assert.equal(await mock.emit('tool_call', { toolCallId: 'nogit-write', toolName: 'edit', input: {} }), undefined);
+  assert.equal(await mock.emit('session_stop'), undefined);
+});
+
+test('workspace relocation invalidates the old baseline before a new no-Git write', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict');
+  const moved = await mkdtemp(path.join(tmpdir(), 'pstack-ext-moved-no-git-'));
+  t.after(() => rm(moved, { recursive: true, force: true }));
+  let liveCwd = cwd;
+  Object.defineProperty(mock.ctx, 'cwd', { configurable: true, get: () => liveCwd });
+  mock.ctx.sessionManager.getCwd = () => liveCwd;
+  liveCwd = moved;
+  await mock.emit('before_agent_start', { prompt: 'the sidebar lags when I scroll', systemPrompt: ['base'] });
+  assert.equal(
+    await mock.emit('tool_call', { toolCallId: 'moved-write', toolName: 'edit', input: { path: 'moved.js' } }),
+    undefined,
+  );
+  assert.equal(await mock.emit('session_stop'), undefined);
+});
+
+test('workspace relocation does not restore the prior workspace active run', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'off');
+  await mock.commands.get('pstack').handler('strict', mock.ctx);
+  await execute(mock.tools.get('pstack_gate'), {
+    action: 'init',
+    objective: 'old workspace work',
+    playbook: 'feature',
+    ceremony: 'standard',
+    verificationRequired: false,
+    acceptance: [],
+  }, mock.ctx);
+  const moved = await mkdtemp(path.join(tmpdir(), 'pstack-ext-moved-git-'));
+  t.after(() => rm(moved, { recursive: true, force: true }));
+  const git = (...args) => execFileSync('git', args, { cwd: moved, encoding: 'utf8' });
+  git('init', '-q');
+  git('config', 'user.email', 't@t');
+  git('config', 'user.name', 't');
+  await writeFile(path.join(moved, 'app.js'), 'export const moved = 1;\n');
+  git('add', '.');
+  git('commit', '-qm', 'init');
+  let liveCwd = cwd;
+  Object.defineProperty(mock.ctx, 'cwd', { configurable: true, get: () => liveCwd });
+  mock.ctx.sessionManager.getCwd = () => liveCwd;
+  liveCwd = moved;
+  await mock.emit('before_agent_start', { prompt: 'the sidebar lags when I scroll', systemPrompt: ['base'] });
+  assert.equal(
+    (await mock.emit('tool_call', { toolCallId: 'moved-active-run-write', toolName: 'edit', input: { path: 'app.js' } }))?.block,
+    true,
+  );
+});
+
+test('session switches capture a fresh main-session baseline', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict');
+  await writeFile(path.join(cwd, 'app.js'), 'export const a = 2;\n');
+  await writeFile(path.join(cwd, 'lib.js'), Array.from({ length: 30 }, (_, i) => `export const v${i} = ${i};`).join('\n') + '\n');
+  mock.ctx.sessionManager.getSessionId = () => 'session-2';
+  await mock.emit('session_switch');
+  await writeFile(path.join(cwd, 'app.js'), 'export const a = 3;\n');
+  await writeFile(path.join(cwd, 'lib.js'), Array.from({ length: 31 }, (_, i) => `export const v${i} = ${i + 1};`).join('\n') + '\n');
+  assert.equal((await mock.emit('session_stop'))?.decision, 'block');
+});
+
+test('session stop waits for a pending lifecycle baseline before scanning', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict');
+  await bigChange(cwd);
+  const originalExec = mock.api.exec;
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      enteredResolve();
+      await release;
+    }
+    return originalExec(command, args, options);
+  };
+  const rebasing = mock.emit('session_tree');
+  await entered;
+  let settled = false;
+  const stop = mock.emit('session_stop').then(result => {
+    settled = true;
+    return result;
+  });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(settled, false);
+  releaseResolve();
+  await rebasing;
+  assert.equal(await stop, undefined);
+});
+
+test('a stale stop scan cannot consume a rebased lifecycle budget', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict');
+  await bigChange(cwd);
+  const originalExec = mock.api.exec;
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      enteredResolve();
+      await release;
+    }
+    return originalExec(command, args, options);
+  };
+  const stop = mock.emit('session_stop');
+  await entered;
+  await mock.emit('session_tree');
+  releaseResolve();
+  assert.equal(await stop, undefined);
+});
+
+test('a stop scan cannot report a change after a run opens and is abandoned', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict');
+  await bigChange(cwd);
+  const originalExec = mock.api.exec;
+  let enteredResolve;
+  const entered = new Promise(resolve => { enteredResolve = resolve; });
+  let releaseResolve;
+  const release = new Promise(resolve => { releaseResolve = resolve; });
+  let first = true;
+  mock.api.exec = async (command, args, options) => {
+    if (first) {
+      first = false;
+      enteredResolve();
+      await release;
+    }
+    return originalExec(command, args, options);
+  };
+  const stop = mock.emit('session_stop');
+  await entered;
+  await execute(mock.tools.get('pstack_gate'), {
+    action: 'init',
+    objective: 'Engage the change',
+    playbook: 'feature',
+    ceremony: 'standard',
+    verificationRequired: false,
+    acceptance: [],
+  }, mock.ctx);
+  await execute(mock.tools.get('pstack_gate'), { action: 'abandon', reason: 'test' }, mock.ctx);
+  releaseResolve();
+  assert.equal(await stop, undefined);
+});
+
+
+
+test('repeated lifecycle hooks rebase even when the session id is unchanged', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict');
+  await bigChange(cwd);
+  await mock.emit('session_tree');
+  await writeFile(path.join(cwd, 'app.js'), 'export const a = 3;\n');
+  assert.equal(await mock.emit('session_stop'), undefined, 'the fresh baseline sees only the small follow-up change');
+});
+
+test('a fresh lifecycle can audit a new unengaged finding for the same session key', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'auto');
+  await bigChange(cwd);
+  await mock.emit('session_stop');
+  await mock.emit('session_tree');
+  await writeFile(path.join(cwd, 'app.js'), 'export const a = 3;\n');
+  await writeFile(path.join(cwd, 'lib.js'), Array.from({ length: 31 }, (_, i) => `export const v${i} = ${i + 1};`).join('\n') + '\n');
+  await mock.emit('session_stop');
+  const audit = await readFile(path.join(cwd, '.omp/pstack/runs/session-events.jsonl'), 'utf8');
+  assert.equal(audit.match(/"unengaged_change"/g)?.length, 2);
+});
+
+
+test('audit write failures do not release strict tripwire enforcement', async t => {
+  const { cwd, mock } = await gitWorkspace(t, 'strict', { config: { auditDirectory: 'audit-file' } });
+  await writeFile(path.join(cwd, 'audit-file'), 'not a directory\n');
+  await bigChange(cwd);
+  const blocked = await mock.emit('session_stop');
+  assert.equal(blocked?.decision, 'block');
+  assert.match(blocked.reason, /without a pstack run/);
+});

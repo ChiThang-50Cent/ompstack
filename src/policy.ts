@@ -29,18 +29,32 @@ function activeRunPolicy(state: PstackSessionState): string {
   ].join("\n");
 }
 
-function routerPolicy(decision: RouterDecision): string {
+function routerPolicy(
+  decision: RouterDecision,
+  state: PstackSessionState,
+  config: PstackConfig,
+  tripwireAvailable: boolean,
+): string {
+  const budget = `${config.directMaxFiles} file(s) / ${config.directMaxLines} changed line(s)`;
+  const tripwire = config.engagementTripwire && tripwireAvailable;
   if (decision.ceremony === "direct") {
     return [
       `Router suggestion: ${decision.playbook}/${decision.ceremony} (${Math.round(decision.confidence * 100)}% confidence).`,
       "Keep this task direct. Do not spawn a panel or create a pstack run unless new risk or cross-boundary scope appears.",
+      tripwire
+        ? `Direct changes may stay without a run only within ${budget}; larger run-less changes are reported as unverified${state.mode === "strict" ? " and strict blocks stop attempts up to the configured budget" : ""}.`
+        : undefined,
       "Still verify the changed behavior proportionately before reporting completion.",
-    ].join("\n");
+    ].filter(Boolean).join("\n");
   }
   if (!decision.grounded) {
-    const floor = decision.ceremony === "strict" || decision.ceremony === "program"
-      ? `Risk signals set a ${decision.ceremony} ceremony floor: open proof state with pstack_gate action=init and an explicit playbook before implementation.`
-      : "Size it yourself: a small, local, reversible edit stays direct (no pstack run; verify proportionately). Anything larger opens proof state with pstack_gate action=init and an explicit playbook before implementation.";
+    const floor = state.mode === "strict" && tripwire
+      ? `Strict mode: open proof state with pstack_gate action=init and an explicit playbook before editing. Edits without a run are blocked when a Git baseline is available; outside Git the tripwire stays silent. A session that changes more than ${budget} without a run is blocked for the configured stop budget before it may end with an unverified warning.`
+      : decision.ceremony === "strict" || decision.ceremony === "program"
+        ? `Risk signals set a ${decision.ceremony} ceremony floor: open proof state with pstack_gate action=init and an explicit playbook before implementation.`
+        : tripwire
+          ? `Size it yourself: a change within ${budget} may stay direct (no pstack run; verify proportionately). Anything larger opens proof state with pstack_gate action=init and an explicit playbook before implementation; larger changes without a run are reported as unverified.`
+          : "Size it yourself: a small, local, reversible edit stays direct (no pstack run; verify proportionately). Anything larger opens proof state with pstack_gate action=init and an explicit playbook before implementation.";
     return [
       "Router: no playbook signal in this request (keyword router; it cannot read intent or non-English text).",
       "Choose the playbook yourself from the routing table in skill://pstack; if no row fits, use its no-playbook-fits path instead of defaulting to feature.",
@@ -52,17 +66,21 @@ function routerPolicy(decision: RouterDecision): string {
     `Router suggestion: ${decision.playbook}/${decision.ceremony} (${Math.round(decision.confidence * 100)}% confidence).`,
     `Load skill://pstack/playbooks/${decision.playbook}.md for the workflow, unless a better row in the skill://pstack routing table fits the request; then use that one.`,
     "Open proof state with pstack_gate action=init, naming the playbook you chose, before implementation.",
+    tripwire
+      ? `Without a run, changes beyond ${budget} are reported as unverified${state.mode === "strict" ? " and strict blocks stop attempts up to the configured budget before it may end with an unverified warning" : ""}.`
+      : undefined,
     "Ground observable facts before design. Resolve empirical uncertainty by running or measuring, not by asking the user.",
     "Delegate bounded artifacts only; use an independent verifier for final acceptance.",
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 export function buildPolicySegment(
   state: PstackSessionState,
   decision: RouterDecision,
   config: PstackConfig,
+  tripwireAvailable = true,
 ): string | undefined {
   if (state.mode === "off") return undefined;
-  const body = state.activeRun ? activeRunPolicy(state) : routerPolicy(decision);
+  const body = state.activeRun ? activeRunPolicy(state) : routerPolicy(decision, state, config, tripwireAvailable);
   return truncate(`${START}\n[PSTACK OMP - ${state.mode.toUpperCase()}]\n${body}\n${END}`, config.maxPolicyCharacters);
 }

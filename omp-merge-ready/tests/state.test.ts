@@ -147,6 +147,23 @@ describe("merge-ready state transitions", () => {
 		})).toThrow(TransitionError);
 	});
 
+	test("a working phase can pause for approval and returns only to the phase it left", () => {
+		const review = runAtReview();
+		expect(() => transition(review, "AWAITING_APPROVAL", "  ", "2026-01-01T00:00:09Z")).toThrow(TransitionError);
+		const paused = transition(review, "AWAITING_APPROVAL", "approve local commit", "2026-01-01T00:00:09Z");
+		expect(() => transition(paused, "VERIFY", "skip ahead", "2026-01-01T00:00:10Z")).toThrow(TransitionError);
+		expect(transition(paused, "REVIEW", "approved", "2026-01-01T00:00:10Z").phase).toBe("REVIEW");
+		expect(() => transition({ ...review, phase: "INTAKE" }, "AWAITING_APPROVAL", "x", "2026-01-01T00:00:09Z")).toThrow(
+			TransitionError,
+		);
+	});
+
+	test("local runs may go SELF_PROOF -> REVIEW while forge runs must open a PR", () => {
+		const selfProof: RunState = { ...runAtReview(), phase: "SELF_PROOF" };
+		expect(() => transition(selfProof, "REVIEW", "r", "2026-01-01T00:00:09Z")).toThrow(TransitionError);
+		expect(transition({ ...selfProof, forge: "none" }, "REVIEW", "r", "2026-01-01T00:00:09Z").phase).toBe("REVIEW");
+	});
+
 	test("accepts FINAL_GATE -> MERGE_READY with a merge_ready gate", () => {
 		let state = runAtReview();
 		state = transition(state, "VERIFY", "verification complete", "2026-01-01T00:00:09Z");

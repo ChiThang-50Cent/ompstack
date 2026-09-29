@@ -425,6 +425,19 @@ test("session_stop allows clarification waits and external-approval-ready runs",
 	expect((await approval.store.load("gate-run"))?.consecutiveBlocks).toBe(0);
 });
 
+test("session_stop allows a run paused for user approval", async () => {
+	const { store, fake } = setup();
+	const paused = transition(
+		{ ...gateState(false), phase: "IMPLEMENTING" },
+		"AWAITING_APPROVAL",
+		"approve local commit of the fix",
+		"2026-01-01T00:00:09.000Z",
+	);
+	store.seed(paused);
+	expect(await invoke(fake.handlers.get("session_stop"), { type: "session_stop" }, context())).toBeUndefined();
+	expect((await store.load("gate-run"))?.consecutiveBlocks).toBe(0);
+});
+
 test("session_start notifies the operator and tells the model to refresh without triggering a turn", async () => {
 	const { fake } = setup();
 	await startRun(fake);
@@ -547,6 +560,35 @@ test("review packets use the current git diff and persist issued binding", async
 			context(),
 		),
 	).rejects.toThrow("empty diff");
+});
+
+test("mr_receipt overrides the root's claimed model for an agent with the agent's configured role", async () => {
+	const store = new MemoryStore();
+	const { fake } = setup(store);
+	const seeded = { ...gateState(false), forge: "none" as const, pr: undefined };
+	store.seed(seeded);
+	await invoke(
+		fake.tools.get("mr_receipt")?.execute,
+		"verify",
+		{
+			id: "verify-b",
+			kind: "independent_verification",
+			producer: { type: "agent", id: "mr-code-reviewer-b", model: "mr-code-reviewer-b" },
+			baseSha: seeded.patch?.baseSha,
+			headSha: seeded.patch?.headSha,
+			patchId: seeded.patch?.patchId,
+			contractVersion: 1,
+			status: "pass",
+			covers: ["AC-1"],
+			evidence: [{ kind: "command", ref: "smoke", exitCode: 0 }],
+			summary: "ok",
+		},
+		undefined,
+		undefined,
+		context(),
+	);
+	const stored = (await store.load("gate-run"))?.receipts.find((r) => r.id === "verify-b");
+	expect(stored?.producer.model).toBe("@slow");
 });
 test("mr_receipt rejects model-asserted ci evidence even when it claims a script producer", async () => {
 	const store = new MemoryStore();

@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@oh-my-pi/pi-coding-agent";
 
+import { agentModelRole } from "./agents";
 import { parseSkippedTests } from "./checks";
 import { addReceipt, applyPatchChange } from "./evidence";
 import { effectiveRigor, effectiveRigorReasons, evaluateGate } from "./gate";
@@ -13,7 +14,7 @@ import {
 	recordDecision,
 	resolveQuestion,
 	stateFingerprint,
-	TRANSITIONS,
+	allowedTransitions,
 	transition,
 } from "./state";
 import type { ForgePort, GitPort, GateResult, RunState, RunStore } from "./types";
@@ -215,7 +216,7 @@ function stateSummary(state: RunState | undefined): Record<string, unknown> {
 		workingTreeClean: state.workingTreeClean,
 		contractVersion: contract?.version,
 		effectiveRigor: effectiveRigor(state),
-		validTransitions: TRANSITIONS[state.phase],
+		validTransitions: allowedTransitions(state),
 		gate: evaluateGate(state),
 		skippedTests: currentReceipts.filter((receipt) => receipt.kind === "ci").flatMap((receipt) => receipt.skipped ?? []),
 		effectiveRigorReasons: rigorReasons.map((entry) => `${entry.level}: ${entry.reason}`),
@@ -475,7 +476,10 @@ export function registerTools(pi: ExtensionAPI, deps: MergeReadyToolDependencies
 				throw new Error(`producer type ${String(producer.type)} is reserved for the controller`);
 			}
 			// The gate orders receipts by createdAt, so the controller owns the timestamp.
-			const next = addReceipt(active.run, { ...receipt, createdAt: deps.now() } as never);
+			// Agent model identity comes from the agent definition, not the root's claim.
+			const role = producer?.type === "agent" && typeof producer.id === "string" ? await agentModelRole(producer.id) : undefined;
+			const bound = role ? { ...receipt, producer: { ...producer, model: role } } : receipt;
+			const next = addReceipt(active.run, { ...bound, createdAt: deps.now() } as never);
 			await saveState(deps, next, "mr_receipt");
 			return textResult(JSON.stringify(stateSummary(next), null, 2), stateSummary(next));
 		},

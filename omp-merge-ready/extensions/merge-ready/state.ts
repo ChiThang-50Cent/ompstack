@@ -79,6 +79,7 @@ export const TRANSITIONS: Readonly<Record<Phase, readonly Phase[]>> = {
 		"MERGE_READY",
 		...TERMINAL_EXIT_PHASES,
 	],
+	AWAITING_APPROVAL: [...TERMINAL_EXIT_PHASES],
 	MERGE_READY: [],
 	BLOCKED_PRODUCT: [],
 	BLOCKED_ENVIRONMENT: [],
@@ -86,6 +87,25 @@ export const TRANSITIONS: Readonly<Record<Phase, readonly Phase[]>> = {
 	INCONCLUSIVE: [],
 	ABORTED: [],
 };
+
+/**
+ * Edges available from the current state. Beyond the static graph:
+ * - local runs may skip PR_OPEN (there is no PR to open);
+ * - any working phase may pause in AWAITING_APPROVAL (a user-gated action such
+ *   as a commit the repo requires approval for) and only returns to the phase
+ *   it left, so no phase is skipped.
+ */
+export function allowedTransitions(state: RunState): Phase[] {
+	const allowed = [...TRANSITIONS[state.phase]];
+	if (state.phase === "SELF_PROOF" && (state.forge ?? "github") === "none") allowed.push("REVIEW");
+	if (state.phase === "AWAITING_APPROVAL") {
+		const previous = state.phaseHistory.at(-1)?.from;
+		if (previous) allowed.push(previous);
+	} else if (state.phase !== "INTAKE" && !TERMINAL_PHASES.includes(state.phase)) {
+		allowed.push("AWAITING_APPROVAL");
+	}
+	return allowed;
+}
 
 const TERMINAL_PHASE_LOOKUP: Readonly<Partial<Record<Phase, true>>> = {
 	MERGE_READY: true,
@@ -224,10 +244,13 @@ export function transition(
 	now: string,
 	gate?: GateResult,
 ): RunState {
-	if (!isPhase(to) || !TRANSITIONS[state.phase].includes(to)) {
-		throw new TransitionError(
-			`invalid transition ${state.phase} -> ${to}; valid: ${(TRANSITIONS[state.phase] ?? []).join(", ") || "none"}`,
-		);
+	const allowed = allowedTransitions(state);
+	if (!isPhase(to) || !allowed.includes(to)) {
+		throw new TransitionError(`invalid transition ${state.phase} -> ${to}; valid: ${allowed.join(", ") || "none"}`);
+	}
+
+	if (to === "AWAITING_APPROVAL" && !reason.trim()) {
+		throw new TransitionError("AWAITING_APPROVAL requires a reason naming the action that needs approval");
 	}
 
 	if (to === "MERGE_READY" && gate?.status !== "merge_ready") {

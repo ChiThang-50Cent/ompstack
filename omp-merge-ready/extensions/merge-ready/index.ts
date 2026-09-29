@@ -309,6 +309,7 @@ export function createController(options: ControllerDependencies): MergeReadyCon
 			const gate = evaluateGate(run);
 			if (
 				run.phase === "CLARIFICATION_REQUIRED" ||
+				run.phase === "AWAITING_APPROVAL" ||
 				gate.status === "merge_ready" ||
 				gate.status === "ready_except_external_approval" ||
 				gate.status === "terminal_blocked"

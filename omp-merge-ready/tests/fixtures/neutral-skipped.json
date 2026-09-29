@@ -1,0 +1,13 @@
+{
+  "number": 49,
+  "url": "https://github.com/example/project/pull/49",
+  "headRefOid": "7123456789abcdef0123456789abcdef01234567",
+  "isDraft": false,
+  "mergeable": "MERGEABLE",
+  "statusCheckRollup": [
+    { "name": "optional-check", "status": "COMPLETED", "conclusion": "NEUTRAL" },
+    { "name": "not-applicable", "status": "COMPLETED", "conclusion": "SKIPPED" }
+  ],
+  "reviewDecision": "APPROVED",
+  "body": "Contract-Version: 3"
+}

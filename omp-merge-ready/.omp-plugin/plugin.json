@@ -1,0 +1,15 @@
+{
+  "name": "omp-merge-ready",
+  "version": "0.1.0",
+  "description": "Oh My Pi controller that drives an intent to a merge-ready PR with fail-closed evidence gates",
+  "author": {
+    "name": "ChiThang-50Cent"
+  },
+  "license": "MIT",
+  "keywords": [
+    "omp",
+    "merge-ready",
+    "verification",
+    "review"
+  ]
+}

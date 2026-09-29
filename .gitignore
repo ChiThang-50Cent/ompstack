@@ -1,9 +1,4 @@
 node_modules/
-dist/
-.test-dist/
-*.tgz
-.omp/pstack/runs/
-.omp/audit/
 bun.lock
-logs/
 .DS_Store
+omp.md

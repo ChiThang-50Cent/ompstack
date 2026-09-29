@@ -1,0 +1,10 @@
+{
+  "number": 48,
+  "url": "https://github.com/example/project/pull/48",
+  "headRefOid": "6123456789abcdef0123456789abcdef01234567",
+  "isDraft": false,
+  "mergeable": "UNKNOWN",
+  "statusCheckRollup": [],
+  "reviewDecision": null,
+  "body": "Contract-Version: 3"
+}

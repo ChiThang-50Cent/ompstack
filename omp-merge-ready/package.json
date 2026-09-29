@@ -1,0 +1,19 @@
+{
+	"name": "omp-merge-ready",
+	"version": "0.1.0",
+	"description": "Oh My Pi controller that drives an intent to a merge-ready PR with fail-closed evidence gates",
+	"type": "module",
+	"omp": {
+		"name": "merge-ready",
+		"extensions": [
+			"./extensions/merge-ready/index.ts"
+		]
+	},
+	"scripts": {
+		"test": "bun test"
+	},
+	"license": "MIT",
+	"peerDependencies": {
+		"@oh-my-pi/pi-coding-agent": ">=18.4.0"
+	}
+}

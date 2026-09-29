@@ -13,13 +13,7 @@
       "description": "Drive an intent to a merge-ready branch/PR with fail-closed evidence gates",
       "version": "0.1.0",
       "category": "development",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/ChiThang-50Cent/ompstack.git",
-        "path": "omp-merge-ready",
-        "ref": "omp-merge-ready-v0.1.0",
-        "sha": "c0115362693a0b69597c38188d8bca58c505e1c6"
-      }
+      "source": "./"
     }
   ]
 }

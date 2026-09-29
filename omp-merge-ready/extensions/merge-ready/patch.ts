@@ -106,12 +106,26 @@ export class GitCli implements GitPort {
 	}
 }
 
+/**
+ * Prefer the remote-tracking ref of a base branch: a stale local branch would
+ * yield a wrong merge-base, an oversized diff, and false mergeability.
+ */
+export async function resolveBaseRef(git: GitPort, baseBranch: string): Promise<string> {
+	if (baseBranch.startsWith("origin/") || baseBranch.startsWith("refs/")) return baseBranch;
+	try {
+		await git.revParse(`refs/remotes/origin/${baseBranch}`);
+		return `origin/${baseBranch}`;
+	} catch {
+		return baseBranch;
+	}
+}
+
 /** Compute the semantic identity of the current HEAD against a base branch. */
 export async function computePatchIdentity(
 	git: GitPort,
 	baseBranch: string,
 ): Promise<PatchIdentity> {
-	const baseSha = await git.mergeBase(baseBranch, "HEAD");
+	const baseSha = await git.mergeBase(await resolveBaseRef(git, baseBranch), "HEAD");
 	const headSha = await git.revParse("HEAD");
 	const patchId = await git.patchId(baseSha, headSha);
 	return { baseSha, headSha, patchId };

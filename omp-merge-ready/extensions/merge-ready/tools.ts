@@ -2,9 +2,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@oh-my-pi/pi-coding-agent";
 
+import { parseSkippedTests } from "./checks";
 import { addReceipt, applyPatchChange } from "./evidence";
 import { effectiveRigor, effectiveRigorReasons, evaluateGate } from "./gate";
-import { computePatchIdentity } from "./patch";
+import { computePatchIdentity, resolveBaseRef } from "./patch";
 import { buildReviewPacket, packetDigest, recordIssuedPacket } from "./packet";
 import {
 	currentContract,
@@ -12,6 +13,7 @@ import {
 	recordDecision,
 	resolveQuestion,
 	stateFingerprint,
+	TRANSITIONS,
 	transition,
 } from "./state";
 import type { ForgePort, GitPort, GateResult, RunState, RunStore } from "./types";
@@ -72,6 +74,8 @@ async function activeRun(
 }
 
 const LOCAL_CHECK_TIMEOUT_MS = 5 * 60 * 1000;
+/** A review diff spanning more files than this usually means the base branch is wrong. */
+const LARGE_DIFF_FILES = 100;
 
 interface LocalCheckResult {
 	exitCode: number;
@@ -108,8 +112,9 @@ async function refreshLocalEvidence(
 ): Promise<RunState> {
 	if ((state.forge ?? "github") !== "none") return state;
 	if (!git.mergeTreeClean) throw new Error("git adapter cannot compute local mergeability");
-	const mergeTreeCommand = `git merge-tree --write-tree ${state.repo.baseBranch} HEAD`;
-	const mergeClean = await git.mergeTreeClean(state.repo.baseBranch, "HEAD");
+	const baseRef = await resolveBaseRef(git, state.repo.baseBranch);
+	const mergeTreeCommand = `git merge-tree --write-tree ${baseRef} HEAD`;
+	const mergeClean = await git.mergeTreeClean(baseRef, "HEAD");
 	const workingTreeClean = await git.isClean();
 	let next: RunState = {
 		...state,
@@ -210,6 +215,9 @@ function stateSummary(state: RunState | undefined): Record<string, unknown> {
 		workingTreeClean: state.workingTreeClean,
 		contractVersion: contract?.version,
 		effectiveRigor: effectiveRigor(state),
+		validTransitions: TRANSITIONS[state.phase],
+		gate: evaluateGate(state),
+		skippedTests: currentReceipts.filter((receipt) => receipt.kind === "ci").flatMap((receipt) => receipt.skipped ?? []),
 		effectiveRigorReasons: rigorReasons.map((entry) => `${entry.level}: ${entry.reason}`),
 		contract,
 		patch: state.patch,
@@ -314,6 +322,7 @@ export function registerTools(pi: ExtensionAPI, deps: MergeReadyToolDependencies
 		confidence: z.enum(["high", "medium", "low"]),
 		reversibility: optional(z.enum(["cheap", "moderate", "expensive", "one_way"])),
 		required: z.boolean(),
+		evidenceTests: optional(z.array(stringSchema)),
 	});
 	const questionSchema = schema(pi, {
 		id: stringSchema,
@@ -389,12 +398,12 @@ export function registerTools(pi: ExtensionAPI, deps: MergeReadyToolDependencies
 		return textResult(active.run ? JSON.stringify(details, null, 2) : "No active merge-ready run.", details);
 	});
 
-	const contractOperation = z.enum(["get", "propose_version", "record_decision", "resolve_question"]);
+	const contractOperation = z.enum(["get", "propose_version", "record_decision", "resolve_question", "set_base"]);
 	register(
 		pi,
 		"mr_contract",
 		"Merge-ready contract",
-		"Inspect or append a validated product-contract version and decisions.",
+		"Inspect or append a validated product-contract version and decisions. op=set_base with baseBranch changes the branch the patch, review diff, and mergeability are measured against (default: origin HEAD), then refreshes evidence.",
 		schema(pi, {
 			op: optional(contractOperation),
 			draft: optional(contractDraftSchema),
@@ -402,6 +411,7 @@ export function registerTools(pi: ExtensionAPI, deps: MergeReadyToolDependencies
 			id: optional(stringSchema),
 			questionId: optional(stringSchema),
 			decisionId: optional(stringSchema),
+			baseBranch: optional(stringSchema),
 		}),
 		async (_id, rawParams, _signal, _onUpdate, ctx) => {
 			const params = inputRecord(rawParams);
@@ -425,6 +435,13 @@ export function registerTools(pi: ExtensionAPI, deps: MergeReadyToolDependencies
 				const decisionId = stringValue(params.decisionId);
 				if (!questionId || !decisionId) throw new Error("mr_contract resolve_question requires questionId and decisionId");
 				next = resolveQuestion(active.run, questionId, decisionId, deps.now());
+			} else if (operation === "set_base") {
+				const baseBranch = stringValue(params.baseBranch);
+				if (!baseBranch) throw new Error("mr_contract set_base requires baseBranch");
+				await active.ports.git.revParse(await resolveBaseRef(active.ports.git, baseBranch));
+				const rebased: RunState = { ...active.run, repo: { ...active.run.repo, baseBranch }, updatedAt: deps.now() };
+				const patch = await computePatchIdentity(active.ports.git, baseBranch);
+				next = await refreshEvidence(deps, applyPatchChange(rebased, patch, deps.now()), active.ports);
 			} else {
 				throw new Error(`unknown mr_contract operation: ${operation}`);
 			}
@@ -501,6 +518,7 @@ export function registerTools(pi: ExtensionAPI, deps: MergeReadyToolDependencies
 				workingTreeClean,
 				updatedAt: deps.now(),
 			};
+			const skipped = parseSkippedTests(result.output);
 			const next = addReceipt(stateWithCommand, {
 				id: checkId,
 				kind: "ci",
@@ -514,15 +532,18 @@ export function registerTools(pi: ExtensionAPI, deps: MergeReadyToolDependencies
 					{ kind: "command", ref: command, exitCode: result.exitCode },
 					{ kind: "file", ref: outputPath },
 				],
-				summary: result.timedOut
-					? `local check timed out after ${LOCAL_CHECK_TIMEOUT_MS}ms`
-					: result.exitCode === 0
-						? "local checks passed"
-						: `local checks failed with exit code ${result.exitCode}`,
+				skipped,
+				summary:
+					(result.timedOut
+						? `local check timed out after ${LOCAL_CHECK_TIMEOUT_MS}ms`
+						: result.exitCode === 0
+							? "local checks passed"
+							: `local checks failed with exit code ${result.exitCode}`) +
+					(skipped.length > 0 ? `; ${skipped.length} skipped-test line(s) reported` : ""),
 				createdAt: deps.now(),
 			});
 			await saveState(deps, next, "mr_run_checks");
-			const details = { ...stateSummary(next), command, outputPath, exitCode: result.exitCode, timedOut: result.timedOut };
+			const details = { ...stateSummary(next), command, outputPath, exitCode: result.exitCode, timedOut: result.timedOut, skipped };
 			return textResult(JSON.stringify(details, null, 2), details);
 		},
 	);
@@ -611,7 +632,12 @@ export function registerTools(pi: ExtensionAPI, deps: MergeReadyToolDependencies
 			const digest = packetDigest(packet);
 			const issued = recordIssuedPacket(active.run, digest);
 			await saveState(deps, issued, "mr_review_packet");
-			const details = { packet, digest, diffPath: frozenDiffPath };
+			const changedFiles = (diff.match(/^diff --git /gm) ?? []).length;
+			const warnings =
+				changedFiles > LARGE_DIFF_FILES
+					? [`diff spans ${changedFiles} files against base ${active.run.repo.baseBranch}; if that base is wrong, call mr_contract set_base and mr_refresh before review`]
+					: [];
+			const details = { packet, digest, diffPath: frozenDiffPath, warnings };
 			return textResult(JSON.stringify(details, null, 2), details);
 		},
 	);

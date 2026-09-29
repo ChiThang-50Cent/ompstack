@@ -67,6 +67,11 @@ export interface AcceptanceCriterion {
 	reversibility?: Reversibility;
 	/** Required ACs must be covered by passing current receipts for the gate. */
 	required: boolean;
+	/**
+	 * Names (or substrings) of tests that must actually execute to prove this
+	 * criterion. The gate fails if a current check run reports one as skipped.
+	 */
+	evidenceTests?: string[];
 }
 
 export interface DecisionRecord {
@@ -153,6 +158,8 @@ export interface EvidenceReceipt {
 	contractGaps?: string[];
 	evidence: EvidencePointer[];
 	summary: string;
+	/** Skipped-test lines parsed by the controller from a local check run. */
+	skipped?: string[];
 	createdAt: string;
 	stale: boolean;
 	staleReason?: string;

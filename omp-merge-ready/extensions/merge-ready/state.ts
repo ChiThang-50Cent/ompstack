@@ -225,7 +225,9 @@ export function transition(
 	gate?: GateResult,
 ): RunState {
 	if (!isPhase(to) || !TRANSITIONS[state.phase].includes(to)) {
-		throw new TransitionError(`invalid transition ${state.phase} -> ${to}`);
+		throw new TransitionError(
+			`invalid transition ${state.phase} -> ${to}; valid: ${(TRANSITIONS[state.phase] ?? []).join(", ") || "none"}`,
+		);
 	}
 
 	if (to === "MERGE_READY" && gate?.status !== "merge_ready") {

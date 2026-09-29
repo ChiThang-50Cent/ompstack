@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { addReceipt } from "../extensions/merge-ready/evidence.ts";
 import { evaluateGate } from "../extensions/merge-ready/gate.ts";
-import { GitCli, computePatchIdentity } from "../extensions/merge-ready/patch.ts";
+import { GitCli, computePatchIdentity, resolveBaseRef } from "../extensions/merge-ready/patch.ts";
 import { createRun, proposeContract } from "../extensions/merge-ready/state.ts";
 import type { EvidenceReceipt, RunState } from "../extensions/merge-ready/types.ts";
 
@@ -58,6 +58,32 @@ test("patch-id stays stable across an equivalent rebase and changes with content
 		await commit(root, "different feature change");
 		const changed = await computePatchIdentity(gitPort, "main");
 		expect(changed.patchId).not.toBe(afterRebase.patchId);
+	} finally {
+		await rm(root, { recursive: true, force: true });
+	}
+});
+
+test("base resolution prefers the remote-tracking ref over a stale local branch", async () => {
+	const root = await mkdtemp(join(tmpdir(), "omp-merge-ready-remote-base-"));
+	try {
+		await git(root, "init", "-b", "main");
+		await git(root, "config", "user.email", "test@example.com");
+		await git(root, "config", "user.name", "Merge Ready Test");
+		await writeFile(join(root, "a.txt"), "1\n");
+		await commit(root, "c0");
+		await git(root, "checkout", "-b", "release");
+		await writeFile(join(root, "b.txt"), "release work\n");
+		const releaseTip = await commit(root, "release work");
+		await git(root, "update-ref", "refs/remotes/origin/release", releaseTip);
+		await git(root, "checkout", "-b", "feature");
+		await writeFile(join(root, "a.txt"), "2\n");
+		await commit(root, "feature");
+
+		const gitPort = new GitCli(root);
+		expect(await resolveBaseRef(gitPort, "release")).toBe("origin/release");
+		expect((await computePatchIdentity(gitPort, "release")).baseSha).toBe(releaseTip);
+		// No remote-tracking ref for `main`: the local branch is used as-is.
+		expect(await resolveBaseRef(gitPort, "main")).toBe("main");
 	} finally {
 		await rm(root, { recursive: true, force: true });
 	}

@@ -615,6 +615,32 @@ test("local refresh records mergeability and local checks", async () => {
 	expect(await Bun.file(outputPath).text()).toContain("local-check-output");
 });
 
+test("mr_run_checks records skipped-test lines and mr_contract set_base rebinds the base", async () => {
+	const store = new MemoryStore();
+	const root = process.cwd();
+	const { fake } = setup(store, fakeGit(root, { mergeTreeClean: true, clean: true }));
+	const initial = gateState(false);
+	store.seed({ ...initial, repo: { ...initial.repo, root }, forge: "none", pr: undefined });
+	const ctx = context("main", undefined, root);
+
+	await invoke(fake.tools.get("mr_contract")?.execute, "base", { op: "set_base", baseBranch: "release/2026-09-15" }, undefined, undefined, ctx);
+	const rebased = await store.load("gate-run");
+	expect(rebased?.repo.baseBranch).toBe("release/2026-09-15");
+	expect(rebased?.receipts.some((r) => r.kind === "mergeability" && !r.stale && r.evidence[0]?.ref.includes("release/2026-09-15"))).toBe(true);
+
+	const result = await invoke(
+		fake.tools.get("mr_run_checks")?.execute,
+		"checks",
+		{ command: "echo 'skipped TestX.test_y: MongoDB is not configured'" },
+		undefined,
+		undefined,
+		ctx,
+	);
+	expect(result).toMatchObject({ details: { skipped: ["skipped TestX.test_y: MongoDB is not configured"] } });
+	const check = (await store.load("gate-run"))?.receipts.find((r) => r.kind === "ci" && !r.stale && r.producer.id === "local-checks");
+	expect(check?.skipped).toEqual(["skipped TestX.test_y: MongoDB is not configured"]);
+});
+
 test("local mode refuses environment or external blockers while local work remains", async () => {
 	const store = new MemoryStore();
 	const { fake } = setup(store);

@@ -268,6 +268,19 @@ export function evaluateGate(state: RunState): GateResult {
 		else selfProofIssue = true;
 	}
 
+	const skippedByCheck = latestCurrentReceipts(state, "ci").flatMap((receipt) => receipt.skipped ?? []);
+	for (const criterion of requiredAcceptance) {
+		for (const test of criterion.evidenceTests ?? []) {
+			if (!skippedByCheck.some((line) => line.includes(test))) continue;
+			addUnique(
+				failed,
+				`required acceptance criterion ${criterion.id}: proof test ${test} was skipped in the current check run; run it in an environment where it executes`,
+			);
+			if (needsIndependent) verificationIssue = true;
+			else selfProofIssue = true;
+		}
+	}
+
 	if (rigor !== "LOW" && !requireKind("product_review")) reviewIssue = true;
 	for (const receipt of latestCurrentReceipts(state, "product_review")) {
 		if (receipt.contractGaps && receipt.contractGaps.length > 0) {

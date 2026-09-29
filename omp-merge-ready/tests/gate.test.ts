@@ -366,3 +366,21 @@ test("local mode blocks a dirty tree or empty patch", () => {
 	expect(empty.status).toBe("blocked");
 	expect(empty.missing.some((message) => message.includes("no changes"))).toBe(true);
 });
+
+function withEvidenceTest(skipped: string[]): RunState {
+	const state = localFixture();
+	const [current] = state.contracts;
+	const acceptance = current!.acceptance.map((criterion) => ({ ...criterion, evidenceTests: ["test_reopening"] }));
+	const base = withLocalEvidence({ ...state, contracts: [{ ...current!, acceptance }] }, false);
+	return addReceipt(base, receipt(base, "ci", { producer: { type: "script", id: "local-checks" }, skipped }));
+}
+
+test("a skipped proof test named by an acceptance criterion blocks the gate", () => {
+	const result = evaluateGate(withEvidenceTest(["skipped TestClose.test_reopening_catches_up: MongoDB is not configured"]));
+	expect(result.status).toBe("blocked");
+	expect(result.failed.some((message) => message.includes("AC-1") && message.includes("test_reopening"))).toBe(true);
+});
+
+test("unrelated skipped tests do not block the gate", () => {
+	expect(evaluateGate(withEvidenceTest(["skipped TestImage.test_heic: pillow-heif missing"])).status).toBe("merge_ready");
+});

@@ -17,7 +17,7 @@ Turn the operator's immutable intent into one merge-ready branch or pull request
 
 # Phase loop
 
-1. Call `mr_state`; inspect the active phase, contract, patch, forge mode, receipts, and blockers.
+1. Call `mr_state`; inspect the active phase, `validTransitions`, `gate` (what is still missing), contract, patch, forge mode, receipts, and blockers. If the base branch is wrong (default is `origin/HEAD`), fix it early with `mr_contract` `op: "set_base"`; local refs are resolved to `origin/<base>` when present.
 2. In `SPEC_DISCOVERY`, inspect product surfaces, invariants, analogous flows, tests, and history. Trace the root cause beyond the symptom and use `references/spec-discovery.md`.
 3. Before contract readiness, enumerate sibling sites and build a behavior matrix with `inverse_direction`, `round_trip`, and `backward_compat` rows. Ask: “what else shares this root cause?”, “what is the inverse operation (parse↔serialize, read↔write, create↔delete)?”, and “does a round trip preserve meaning?”
 4. Propose a contract with root-cause evidence, sibling-site decisions, and matrix rows; record any unresolved blocking `openQuestions` before asking for clarification. If a consequential choice remains unresolved, transition to `CLARIFICATION_REQUIRED`, ask one grouped question, and end the turn; stop is allowed only in this clarification phase. Otherwise answer everything available from the repository or a cheap experiment. Use `references/clarification.md`.

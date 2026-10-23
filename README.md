@@ -1,71 +1,73 @@
-# omp-merge-ready
+# ompstack
 
-`omp-merge-ready` is an Oh My Pi extension package that carries one engineering intent through evidence-backed discovery, implementation, review, verification, CI, and a deterministic merge-ready gate. It stops at a verified, green branch or pull request; a hosted PR is optional and it never merges.
+[pstack](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan, packaged for [Oh My Pi](https://github.com/can1357/oh-my-pi) (OMP).
+
+pstack is a set of Cursor skills for deep-first agent work. This package ships the 33 that OMP lacks, unchanged: `poteto-mode` and its playbooks, `how`, `why`, `architect`, `arena`, `interrogate`, `swarm`, `figure-it-out`, `show-me-your-work`, `no-comments`, `benchmark-checklist`, `technical-writing`, `unslop`, `typescript-best-practices`, and 19 `principle-*` skills. It adds a thin OMP layer:
+
+- `skills/pstack-omp`: the adapter. It maps Cursor tools, subagent fields, model roles, and paths to OMP, and sets the run policy (OMP reply style, local autonomy, no pushes or remote writes).
+- `agents/`: one agent per pstack role line, each pinned to an OMP model role, plus pstack's `comment-sicko`.
+- `rules/pstack.md`: an always-on rule that points every session at the adapter.
+
+The vendored pstack version is in [`UPSTREAM`](UPSTREAM).
 
 ## Install
 
-From the marketplace (any machine):
-
 ```sh
-omp plugin marketplace add ChiThang-50Cent/ompstack
-omp plugin install omp-merge-ready@ompstack
+omp plugin install github:ChiThang-50Cent/ompstack
 ```
 
-Restart OMP afterwards.
-
-The package can be loaded directly while developing:
-
-```sh
-omp -e /path/omp-merge-ready
-```
-
-For a persistent installation, add the package root to the global OMP extension setting:
+Git installs are user-scoped: every project sees the skills, agents, and rule. To load the package for one project only, clone it and list the clone in that project's `.omp/config.yml`:
 
 ```yaml
-# ~/.omp/agent/config.yml
-extensions: ["/absolute/path/omp-merge-ready"]
+extensions: ["/path/to/ompstack"]
 ```
 
-Only extension roots supplied through `-e`/`--extension`, the configured `extensions` array, or an installed plugin expose the sibling `skills/` and `agents/` directories alongside the extension module.
+For a single session, use `omp -e /path/to/ompstack`.
 
-This package has no npm dependencies. Use the supplied extension with Bun/OMP and keep the package directory intact so the controller, skill, references, and custom agents are discovered together.
+## Configure
 
-## Model roles
+pstack's agents use OMP's built-in model roles. Set them in `~/.omp/agent/config.yml`:
 
-Replicated code review reuses OMP's built-in model roles, so no extra configuration is required: `mr-code-reviewer-a` → `@task`, `mr-code-reviewer-b` → `@slow`, `mr-code-reviewer-c` → `@default`. HIGH rigor needs distinct reviewer models, so point these roles at different models in `modelRoles` if they currently resolve to the same one. Each reviewer receives the same frozen packet and rubric. Other workers use `@task`.
-
-## Usage
-
-Start a run from the repository root with the raw operator intent:
-
-```text
-/merge-ready Add project sharing. Existing API behavior must remain compatible.
+```yaml
+modelRoles:
+  task: <code model>       # poteto-agent, pstack-worker, pstack-panel-b
+  slow: <judgment model>   # poteto-judgment, pstack-judge, pstack-panel-a
 ```
 
-The root session performs repository-grounded specification discovery, records blocking `openQuestions` before asking any clarification, versions a product contract, chooses LOW/MEDIUM/HIGH rigor, and delegates bounded work as appropriate. In forge mode it opens a non-draft PR, calls `mr_refresh` and `mr_review_packet` for the current patch, passes that packet path/digest to independent reviewers, and babysits conflicts/comments/CI. In local mode it does not create a PR: `mr_refresh` proves patch/merge-tree/working-tree state and `mr_run_checks` records local CI. Continue until `mr_gate` passes or a truthful terminal blocker is recorded.
+Point `slow` and `task` at different model families so the `arena` and `interrogate` panels get two independent views. The arena cross-judge reads `cfg://modelRoles` to pick the seat whose family differs from its own.
 
-Useful commands:
+pstack runs parallel workers in their own worktrees. Enable OMP task isolation, and keep `apply: false` so worker changes come back for review instead of landing on your checkout:
 
-```text
-/merge-ready-status
-/merge-ready-abort
+```yaml
+task:
+  isolation:
+    enabled: true
+    apply: false
 ```
 
-Controller tools include `mr_state`, `mr_contract`, `mr_receipt`, `mr_gate`, `mr_run_checks`, `mr_transition`, `mr_refresh`, and `mr_review_packet`. Reviewers and verifiers are read-only and receive packet data from the root; they do not mutate controller state or call `mr_*` tools.
+## Use
 
-## Limitations and safety boundary
+Start a run with `/skill:poteto-mode <what you want>`. Other entry points: `/skill:how`, `/skill:why`, `/skill:architect`, `/skill:arena`, `/skill:interrogate`.
 
-- **Headless mode does not work:** observed with v18.4.0: `omp -p "/merge-ready …"` runs the command handler (the run is created in `INTAKE`) and then exits, so the kickoff turn never runs. Use an interactive session.
-- **No merge:** the extension has no merge/close/ship operation and blocks `gh pr merge` and equivalent automatic merge commands while a run is active. A separate, explicit shipping workflow is required.
-- **Forge is optional:** with no GitHub/forge, local mode can reach `merge_ready` without a PR when the branch has a non-empty patch, a clean working tree, passing controller-produced checks, and clean `git merge-tree` evidence. In forge mode, missing required branch-protection approval is reported as `ready_except_external_approval`, not `merge_ready`.
-- **Evidence is patch-bound:** pushes, rebases, semantic fixes, and contract changes can stale receipts and require fresh proof/review. A green check from an old head does not count.
-- **The controller is fail-closed:** missing, stale, failed, or inconclusive required evidence blocks completion; repeated blocking without progress eventually becomes `INCONCLUSIVE` rather than a false success.
+pstack skills are hidden from the model's skill list (`disable-model-invocation`), so they run only when invoked or when another pstack skill calls them.
 
-For local completion, report: `merge-ready branch <name> @ <sha>, merges cleanly into <base>`.
+## Differences from Cursor
 
-## Package layout
+- 22 pstack skills are not shipped. Five duplicate rules OMP's system prompt already enforces (`tdd`, `principle-prove-it-works`, `principle-test-behavior-not-implementation`, `principle-migrate-callers-then-delete-legacy-apis`, `principle-never-block-on-the-human`); `principle-guard-the-context-window` conflicts with OMP's no-budget rule; the rest are standalone commands no poteto-mode playbook uses, or Cursor setup (`setup-pstack`, `poteto-help`). The adapter's "Skills not shipped" table maps each one to its OMP replacement.
+- Model choice comes from `modelRoles`, not `pstack-models.mdc`.
+- Cursor Automations, Bugbot setup, cloud agents, and `/deslop` are not available. The agent skips those steps with a `Skipped in OMP:` line.
+- The agent never pushes, merges, or writes to a remote database. A PR step it cannot finish ends with the exact command for you to run.
 
-- `extensions/merge-ready/` — controller, state, evidence, gate, forge, and guard implementation.
-- `skills/merge-ready/SKILL.md` — concise control-plane methodology.
-- `skills/merge-ready/references/` — discovery, clarification, change-shape, design, review, verification, PR, and risk playbooks.
-- `agents/mr-*.md` — read-only scouts/reviewers/verifier, architecture and implementation workers, and three replicated code-review lanes.
+## Update
+
+```sh
+scripts/sync-pstack.sh [ref]   # vendor pstack from cursor/plugins (default: main)
+```
+
+The script copies the skills in its `KEEP` list, `agents/comment-sicko.md`, and pstack's license, rewrites `UPSTREAM`, and prints upstream skills it skipped. A new upstream skill needs a keep or drop decision: add it to `KEEP`, or add a row to the adapter's "Skills not shipped" table. Review the diff against `skills/pstack-omp` before committing: new Cursor names need a row in the adapter.
+
+After a new commit lands on GitHub, run `omp plugin upgrade ompstack`.
+
+## License
+
+MIT for this package ([`LICENSE`](LICENSE)). pstack is MIT, copyright Lauren Tan ([`LICENSE.pstack`](LICENSE.pstack)).

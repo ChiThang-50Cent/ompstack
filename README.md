@@ -4,7 +4,7 @@
 
 pstack is a set of Cursor skills for deep-first agent work. This package ships the 33 that OMP lacks, unchanged: `poteto-mode` and its playbooks, `how`, `why`, `architect`, `arena`, `interrogate`, `swarm`, `figure-it-out`, `show-me-your-work`, `no-comments`, `benchmark-checklist`, `technical-writing`, `unslop`, `typescript-best-practices`, and 19 `principle-*` skills. It adds a thin OMP layer:
 
-- `skills/pstack-omp`: the adapter. It maps Cursor tools, subagent fields, model roles, and paths to OMP, and sets the run policy (OMP reply style, local autonomy, no pushes or remote writes).
+- `skills/pstack-omp`: the adapter. It maps Cursor tools, subagent fields, model roles, and paths to OMP, and sets the run policy (OMP reply style, local autonomy, explicit approval for remote-ref changes, no remote deploys or data writes).
 - `agents/`: one agent per pstack role line, each pinned to an OMP model role, plus pstack's `comment-sicko`.
 - `rules/pstack.md`: an always-on rule that points every session at the adapter.
 
@@ -56,7 +56,7 @@ pstack skills are hidden from the model's skill list (`disable-model-invocation`
 - 22 pstack skills are not shipped. Five duplicate rules OMP's system prompt already enforces (`tdd`, `principle-prove-it-works`, `principle-test-behavior-not-implementation`, `principle-migrate-callers-then-delete-legacy-apis`, `principle-never-block-on-the-human`); `principle-guard-the-context-window` conflicts with OMP's no-budget rule; the rest are standalone commands no poteto-mode playbook uses, or Cursor setup (`setup-pstack`, `poteto-help`). The adapter's "Skills not shipped" table maps each one to its OMP replacement.
 - Model choice comes from `modelRoles`, not `pstack-models.mdc`.
 - Cursor Automations, Bugbot setup, cloud agents, and `/deslop` are not available. The agent skips those steps with a `Skipped in OMP:` line.
-- The agent never pushes, merges, or writes to a remote database. A PR step it cannot finish ends with the exact command for you to run.
+- Local-only experiments are allowed even when a script calls them "deploy". Before each push, merge, or other remote-ref change, the agent shows the exact command and remote/ref scope, asks for explicit approval, and waits. Approval applies only to that command and scope. Deploys to non-local environments and writes/deletes against non-local databases or data services remain forbidden; skipped PR steps end with the exact command for you to run.
 
 ## Update
 

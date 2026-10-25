@@ -14,11 +14,11 @@ The user set these. They override any pstack text that conflicts.
 1. **Reply style follows OMP.** Chat replies follow OMP's system prompt, not poteto-mode's "Writing the reply" or pstack's prose-style rules. `unslop` and `technical-writing` apply to artifacts only: docs, PR descriptions, commit messages, plan files, and SKILL.md files. Evidence and verification requirements still govern the work; they do not impose a separate chat style.
 2. **Subagents verify as pstack prescribes.** OMP subagents skip builds, tests, and smoke runs unless their assignment says otherwise. So every brief whose worker must build, test, measure, or drive the app says so: `Verification is part of this assignment: run <commands>.` Workers that verify in parallel run with `isolated: true` so they do not race on the shared checkout.
 3. **Prescribed fan-out wins.** When a pstack skill or playbook step prescribes spawning subagents, follow it even if the system prompt's Delegation section says inline first, never open with a scout, or never delegate one slice. That wording depends on the active model's delegation bias, and a pstack step counts as the skill asking. Outside prescribed steps, the Delegation section governs.
-4. **Local autonomy, no remote writes.** Inside a pstack run, local work proceeds without asking: file edits, deletes, local commits, branches, worktrees, dependency installs, project scripts, and local databases. This waives the user's AGENTS.md confirmation list for local actions only. Never run, and never ask a subagent to run:
-   - `git push` in any form, or anything else that moves a remote ref (`gh pr merge`, `gh pr create` with push, merge-queue arming).
-   - Writes or deletes against any non-local database or data service.
-   - Deploys.
-   When a step needs one of these, skip it with the line from Cursor-only features and hand the human the exact command. The configured `bash.patterns` prompts stay as a backstop, not as permission. pstack's own "Always pause" list still applies.
+4. **Local autonomy, remote-ref approval, no remote deploys or data writes.** Inside a pstack run, local work proceeds without asking: file edits, deletes, local commits, branches, worktrees, dependency installs, project scripts, and local databases. This waives the user's AGENTS.md confirmation list for local actions only.
+   - **Local experiments are allowed.** Building, installing, starting, restarting, or testing an app, service, or container solely on the local machine is local work, even if its command or script calls it a "deploy". Classify by the actual target and effects, not the command's name. A local command that changes a remote environment is not a local experiment.
+   - **Remote-ref changes require explicit user approval.** Before each `git push` (including force pushes and remote branch/tag deletion), or any other action that moves a remote ref (`gh pr merge`, `gh pr create` with push, merge-queue arming), show the exact command, remote/repository, and affected refs; request approval and wait. Use the runtime approval prompt when available; otherwise ask in chat. Silence, a general task request, or a previous command's approval is not approval. Execute only the approved command and scope; ask again if either changes. Subagents must obey the same gate and cannot bypass it.
+   - **Remote deploys and data writes remain forbidden.** Never run, or ask a subagent to run, a command that publishes or rolls out an app/service to a non-local environment (including staging, preview, and production), or writes/deletes against a non-local database or data service.
+   For a forbidden step, skip it with the line from Cursor-only features and hand the human the exact command. For a remote-ref step awaiting approval, block its todo and wait; do not skip it or mark it done. If approval is declined, drop the step and state why. The configured `bash.patterns` prompts remain a backstop; they do not override these restrictions. pstack's own "Always pause" list still applies.
 5. **OMP's system prompt wins a direct conflict.** Where a pstack rule and an OMP system-prompt rule prescribe different actions for the same situation, follow OMP. Examples: never set or narrate turn or token budgets; reuse the codebase's existing patterns instead of adding a second convention; remove throwaway scripts at cleanup, while tooling with lasting value stays.
 
 ## Tools
@@ -35,7 +35,7 @@ The user set these. They override any pstack text that conflicts.
 | `deslop` from `cursor-team-kit` | Not installed. Skip with the line. |
 | `control-ui` | The `browser` helper in `eval`. |
 | `control-cli` | `bash` with `pty: true`, or tmux. |
-| A built-in PR tool | `gh pr create` without pushing, which needs a branch the human already pushed. Otherwise skip per Policy 4. |
+| A built-in PR tool | `gh pr create` without pushing can use an already-pushed branch. Any required push must first pass Policy 4's explicit approval gate. |
 
 ## Subagent fields
 
@@ -84,14 +84,14 @@ Panels spawn one seat per panel agent, so Reviewer A is `pstack-panel-a` and Rev
 
 ## Cursor-only features
 
-OMP has no Cursor Automations, Bugbot, or Cursor cloud agents. When a step needs one, or Policy 4 forbids it, put one line in your reply, `Skipped in OMP: <step>. <reason>.`, then go on to the next step. Do not stop, ask, or retry. When a later step needs what the skipped step made, such as a URL or a key, leave a placeholder and name it in the line.
+OMP has no Cursor Automations, Bugbot, or Cursor cloud agents. When a step needs one, or Policy 4 forbids it, put one line in your reply, `Skipped in OMP: <step>. <reason>.`, then go on to the next step. Do not stop, ask, or retry for these forbidden or unavailable steps. This does not apply to remote-ref changes: request approval and wait per Policy 4. When a later step needs what the skipped step made, such as a URL or a key, leave a placeholder and name it in the line. A PR step that cannot be completed gets todo `drop`, never `done`, and the exact command for the human.
 
 | Cursor | OMP |
 | --- | --- |
 | Cursor Automations: routines, `update_state` routine calls, `api2.cursor.sh/automations` webhooks, routine wakes, and `SendToUser` secret requests | Skip with the line. This covers `make-bot-ui` and `automations/benny`. |
 | Bugbot | Bugbot comments on a GitHub PR are ordinary review threads, so triage them with the forge command the step gives. Skip a step that starts, waits for, or configures Bugbot when the PR has no Bugbot check or comment. |
 | Cursor cloud agents | `environment: "cloud"` maps to `isolated: true`, as in Subagent fields. Skip a step that needs the cloud agent itself, such as its dashboard status or its own machine. |
-| Pushing, merging, or arming a merge queue | Skip with the line and give the human the exact command, per Policy 4. |
+| Pushing, merging, or arming a merge queue | Show the exact command and remote/ref scope, request explicit user approval, and wait before executing, per Policy 4. |
 
 ## Skills not shipped
 

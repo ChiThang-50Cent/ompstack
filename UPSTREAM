@@ -1,1 +1,3 @@
-cursor/plugins pstack 0.15.30 @ 8b3326d99fd4b993cb33a24dad8af03175c642c5
+Source baseline: cursor/plugins pstack 0.15.30 @ 8b3326d99fd4b993cb33a24dad8af03175c642c5
+This records the imported pstack baseline, not an exact revision of every file in this package.
+Review upstream changes manually and record selective ports below. Keep local OMP skills separate.

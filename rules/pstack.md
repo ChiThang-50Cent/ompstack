@@ -4,6 +4,8 @@ alwaysApply: true
 ---
 pstack skills (`poteto-mode`, `principle-*`, `how`, `architect`, `arena`, …) are written for Cursor. Before you follow any of them, read `skill://pstack-omp` once per session. Its Policy section overrides conflicting pstack text.
 
+When poteto-mode starts, apply the adapter's "Brainstorm routing" before selecting a playbook. Explicit ideation routes to `skill://brainstorm`; evidence-only investigations and clear implementation requests keep their normal routes. Brainstorm ends at a brief unless the user explicitly authorizes a separate design or implementation phase.
+
 During a pstack run, these hold every turn:
 - Write the final chat reply in OMP's style (system prompt Tone), not poteto-mode's "Writing the reply" format. pstack prose rules apply to artifacts only.
 - Local-only experiments (including app/service/container builds, installs, starts, and restarts) are allowed even when called "deploy"; classify by actual target and effects. Never deploy to a non-local environment or write/delete against a non-local database or data service.

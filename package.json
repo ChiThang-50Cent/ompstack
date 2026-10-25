@@ -1,6 +1,6 @@
 {
   "name": "ompstack",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "pstack (cursor/plugins) packaged for Oh My Pi: skills, agents, and an OMP adapter",
   "license": "MIT",
   "repository": "github:ChiThang-50Cent/ompstack",

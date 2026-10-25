@@ -21,6 +21,19 @@ The user set these. They override any pstack text that conflicts.
    For a forbidden step, skip it with the line from Cursor-only features and hand the human the exact command. For a remote-ref step awaiting approval, block its todo and wait; do not skip it or mark it done. If approval is declined, drop the step and state why. The configured `bash.patterns` prompts remain a backstop; they do not override these restrictions. pstack's own "Always pause" list still applies.
 5. **OMP's system prompt wins a direct conflict.** Where a pstack rule and an OMP system-prompt rule prescribe different actions for the same situation, follow OMP. Examples: never set or narrate turn or token budgets; reuse the codebase's existing patterns instead of adding a second convention; remove throwaway scripts at cleanup, while tooling with lasting value stays.
 
+## Brainstorm routing
+
+Before selecting a poteto-mode playbook, classify the user's intent:
+
+- For explicit brainstorming or collaborative exploration of an unsettled idea, follow `skill://brainstorm`. The skill also works without poteto-mode.
+- For an evidence-based question such as "should we do X?", use Investigation unless the user wants to develop an idea together.
+- For a clear implementation request, use the matching playbook. Do not add a brainstorm phase.
+- If an implementation request lacks one product decision, ask about that decision. Do not turn every clarification into a brainstorm session.
+
+Brainstorm is a local, no-code workflow. Its readiness gate authorizes reviewers, not implementation. Accepting its brief does not authorize `architect`, executable sketches, or code changes. Only an explicit request to enter a separate design or implementation phase permits that handoff. If the original request includes implementation, confirm the transition before leaving brainstorm. For design without implementation, invoke `architect` with its checkpoint enabled.
+
+Keep routing here and the workflow in `skill://brainstorm`. Do not duplicate the workflow in vendored poteto-mode files.
+
 ## Tools
 
 | Cursor | OMP |

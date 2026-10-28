@@ -1,10 +1,10 @@
 {
   "name": "ompstack",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "pstack (cursor/plugins) packaged for Oh My Pi: skills, agents, and an OMP adapter",
   "license": "MIT",
   "repository": "github:ChiThang-50Cent/ompstack",
   "keywords": ["omp-plugin", "pstack", "poteto-mode"],
-  "files": ["skills", "agents", "rules", "LICENSE", "LICENSE.pstack", "UPSTREAM"],
+  "files": ["skills", "agents", "rules", "LICENSE", "LICENSE.pstack", "LICENSE.advisor", "UPSTREAM"],
   "omp": {}
 }

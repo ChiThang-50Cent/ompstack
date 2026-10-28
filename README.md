@@ -5,7 +5,8 @@
 pstack is a set of Cursor skills for deep-first agent work. This package ships the 33 that OMP lacks, unchanged: `poteto-mode` and its playbooks, `how`, `why`, `architect`, `arena`, `interrogate`, `swarm`, `figure-it-out`, `show-me-your-work`, `no-comments`, `benchmark-checklist`, `technical-writing`, `unslop`, `typescript-best-practices`, and 19 `principle-*` skills. It adds a thin OMP layer:
 
 - `skills/pstack-omp`: the adapter. It maps Cursor tools, subagent fields, model roles, and paths to OMP, and sets the run policy (OMP reply style, local autonomy, explicit approval for remote-ref changes, no remote deploys or data writes).
-- `agents/`: pstack role profiles and pstack's `comment-sicko`. Model selection uses OMP roles.
+- `skills/advisor`: a cross-model consultation before substantial implementation, adapted from Cursor's Advisor workflow.
+- `agents/`: pstack role profiles, advisor profiles, and pstack's `comment-sicko`. Model selection uses OMP roles.
 - `rules/pstack.md`: an always-on rule that points every session at the adapter.
 
 [`UPSTREAM`](UPSTREAM) records the imported pstack baseline and selective ports. It does not claim that local skills or the whole package match one upstream revision.
@@ -30,8 +31,9 @@ pstack's agents use OMP's built-in model roles. Set them in `~/.omp/agent/config
 
 ```yaml
 modelRoles:
-  task: <code model>       # poteto-agent, pstack-worker, pstack-panel-b
-  slow: <judgment model>   # poteto-judgment, pstack-judge, pstack-panel-a
+  task: <code model>       # poteto-agent, pstack-worker, pstack-panel-b, advisor-task
+  slow: <judgment model>   # poteto-judgment, pstack-judge, pstack-panel-a, advisor-slow
+  advisor: <advisor model> # advisor-role
 ```
 
 Point `slow` and `task` at different model families so the `arena` and `interrogate` panels get independent model perspectives. The arena cross-judge reads `cfg://modelRoles` to pick the seat whose family differs from its own.
@@ -50,6 +52,10 @@ task:
 Start a run with `/skill:poteto-mode <what you want>`. Other entry points: `/skill:how`, `/skill:why`, `/skill:architect`, `/skill:arena`, `/skill:interrogate`.
 
 pstack skills are hidden from the model's skill list (`disable-model-invocation`), so they run only when invoked or when another pstack skill calls them.
+
+For a substantial implementation, `advisor` consults a read-only agent from a different model family before changes. Configure `advisor` above to a different family from the active session model. The skill prefers that role, then checks `slow` and `task`. You can also invoke `/skill:advisor` for an explicit consultation. If the actual model identities cannot be verified, the workflow reports that the consultation is unverified.
+
+Follow-up questions reuse the same agent when available and send only new evidence. Provider prompt-cache reuse is not guaranteed.
 
 ## Differences from Cursor
 
@@ -76,4 +82,4 @@ After a new commit lands on GitHub, run `omp plugin upgrade ompstack`.
 
 ## License
 
-MIT for this package ([`LICENSE`](LICENSE)). pstack is MIT, copyright Lauren Tan ([`LICENSE.pstack`](LICENSE.pstack)).
+MIT for this package ([`LICENSE`](LICENSE)). pstack is MIT, copyright Lauren Tan ([`LICENSE.pstack`](LICENSE.pstack)). Cursor Advisor is MIT, copyright Cursor ([`LICENSE.advisor`](LICENSE.advisor)).

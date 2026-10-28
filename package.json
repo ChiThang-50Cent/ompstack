@@ -5,6 +5,6 @@
   "license": "MIT",
   "repository": "github:ChiThang-50Cent/ompstack",
   "keywords": ["omp-plugin", "pstack", "poteto-mode"],
-  "files": ["skills", "agents", "rules", "LICENSE", "LICENSE.pstack", "LICENSE.advisor", "UPSTREAM"],
+  "files": ["skills", "agents", "rules", "LICENSE", "LICENSE.pstack", "LICENSE.advisor", "CHANGELOG.md", "UPSTREAM"],
   "omp": {}
 }

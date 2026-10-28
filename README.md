@@ -11,6 +11,8 @@ pstack is a set of Cursor skills for deep-first agent work. This package ships t
 
 [`UPSTREAM`](UPSTREAM) records the imported pstack baseline and selective ports. It does not claim that local skills or the whole package match one upstream revision.
 
+See [`CHANGELOG.md`](CHANGELOG.md) for plugin release changes.
+
 ## Install
 
 ```sh
